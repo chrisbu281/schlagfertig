@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-"""
-Schlagfertig – Flask Server mit WebSocket
-"""
 from flask import Flask, request, jsonify, send_from_directory, redirect, Response
 from flask_socketio import SocketIO, emit
-import json, os, csv, io, subprocess, threading
+import json, os, csv, io, subprocess
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'schlagfertig2024'
@@ -15,26 +12,24 @@ KONFIG      = os.path.join(BASIS, "quiz_config.json")
 STATE_DATEI = os.path.join(BASIS, ".spiel_state")
 spiel_prozess = None
 
-# Spielzustand
 spiel_state = {
-    "modus": "warten",        # warten | spiel
+    "modus": "warten",
     "aktuelle_frage": None,
     "frage_idx": 0,
     "warteschlange": [],
     "punkte": {},
-    "mc_aktiv": False
+    "spielmodus": "frei",
+    "mc_gewaehlt": None,
+    "punktestand_sichtbar": False
 }
 
 def schreibe_state(modus):
-    with open(STATE_DATEI, "w") as f:
-        f.write(modus)
+    with open(STATE_DATEI, "w") as f: f.write(modus)
 
 def lese_state():
     try:
-        with open(STATE_DATEI, "r") as f:
-            return f.read().strip()
-    except:
-        return "warten"
+        with open(STATE_DATEI, "r") as f: return f.read().strip()
+    except: return "warten"
 
 def spiel_laeuft():
     return spiel_prozess is not None and spiel_prozess.poll() is None
@@ -48,101 +43,7 @@ def starte_quiz():
     )
     schreibe_state("warten")
 
-# ─────────────────────────────────────────────
-#  WEBSOCKET EVENTS
-# ─────────────────────────────────────────────
-
-@socketio.on('connect')
-def on_connect():
-    emit('state_update', spiel_state)
-
-@socketio.on('mod_starten')
-def on_mod_starten(data):
-    """Moderator startet das Spiel"""
-    spiel_state['modus'] = 'spiel'
-    spiel_state['frage_idx'] = 0
-    spiel_state['aktuelle_frage'] = data.get('frage')
-    spiel_state['warteschlange'] = []
-    spiel_state['punkte'] = data.get('punkte', {})
-    schreibe_state("spiel")
-    socketio.emit('state_update', spiel_state)
-    socketio.emit('zeige_frage', {
-        'frage': spiel_state['aktuelle_frage'],
-        'idx': spiel_state['frage_idx'],
-        'gesamt': data.get('gesamt', 1),
-        'mc_aktiv': spiel_state['mc_aktiv']
-    })
-
-@socketio.on('mod_naechste_frage')
-def on_naechste_frage(data):
-    """Moderator wechselt zur nächsten Frage"""
-    spiel_state['aktuelle_frage'] = data.get('frage')
-    spiel_state['frage_idx'] = data.get('idx', 0)
-    spiel_state['warteschlange'] = []
-    spiel_state['mc_aktiv'] = False
-    socketio.emit('state_update', spiel_state)
-    socketio.emit('zeige_frage', {
-        'frage': spiel_state['aktuelle_frage'],
-        'idx': spiel_state['frage_idx'],
-        'gesamt': data.get('gesamt', 1),
-        'mc_aktiv': False
-    })
-
-@socketio.on('mod_richtig')
-def on_richtig(data):
-    """Moderator bewertet Antwort als richtig"""
-    spiel_state['punkte'] = data.get('punkte', {})
-    spiel_state['warteschlange'] = []
-    socketio.emit('state_update', spiel_state)
-    socketio.emit('zeige_ergebnis', {'richtig': True, 'delta': data.get('delta', 10)})
-
-@socketio.on('mod_falsch')
-def on_falsch(data):
-    """Moderator bewertet Antwort als falsch"""
-    spiel_state['punkte'] = data.get('punkte', {})
-    if spiel_state['warteschlange']:
-        spiel_state['warteschlange'].pop(0)
-    socketio.emit('state_update', spiel_state)
-    socketio.emit('zeige_ergebnis', {'richtig': False, 'delta': data.get('delta', 5)})
-
-@socketio.on('mod_freigeben')
-def on_freigeben():
-    """Moderator gibt Buzzer frei"""
-    spiel_state['warteschlange'] = []
-    socketio.emit('state_update', spiel_state)
-    socketio.emit('buzzer_freigeben')
-
-@socketio.on('mod_mc_toggle')
-def on_mc_toggle(data):
-    """Moderator blendet MC Antworten ein/aus"""
-    spiel_state['mc_aktiv'] = data.get('aktiv', False)
-    socketio.emit('zeige_frage', {
-        'frage': spiel_state['aktuelle_frage'],
-        'idx': spiel_state['frage_idx'],
-        'gesamt': data.get('gesamt', 1),
-        'mc_aktiv': spiel_state['mc_aktiv']
-    })
-
-@socketio.on('buzzer_gedrueckt')
-def on_buzzer(data):
-    """quiz_buzzer.py meldet Buzzer-Druck"""
-    eintrag = {'nr': data.get('nr'), 'ms': data.get('ms')}
-    if not any(e['nr'] == eintrag['nr'] for e in spiel_state['warteschlange']):
-        spiel_state['warteschlange'].append(eintrag)
-    socketio.emit('state_update', spiel_state)
-
-@socketio.on('mod_stoppen')
-def on_stoppen():
-    """Moderator stoppt das Spiel"""
-    spiel_state['modus'] = 'warten'
-    spiel_state['warteschlange'] = []
-    schreibe_state("stoppen")
-    socketio.emit('state_update', spiel_state)
-
-# ─────────────────────────────────────────────
-#  REST API
-# ─────────────────────────────────────────────
-
+# ── ROUTES ──
 @app.route("/")
 def index(): return redirect("/editor")
 
@@ -193,10 +94,7 @@ def spiel_stoppen():
 
 @app.route("/api/spiel/status")
 def spiel_status():
-    return jsonify({
-        "laeuft": spiel_laeuft(),
-        "state": lese_state()
-    })
+    return jsonify({"laeuft": spiel_laeuft(), "state": lese_state()})
 
 @app.route("/api/csv-upload", methods=["POST"])
 def csv_upload():
@@ -220,14 +118,14 @@ def csv_upload():
             mc_c = row.get("antwort_c","").strip()
             mc_d = row.get("antwort_d","").strip()
             richtig = row.get("richtige_antwort","").strip().upper()
-            fo = {"frage":frage,"antwort":antwort,"kategorie":kat,"schwierigkeit":schw,"modus":"auto"}
+            fo = {"frage":frage,"antwort":antwort,"kategorie":kat,"schwierigkeit":schw,"modus":"frei"}
             if mc_a and mc_b and mc_c and mc_d:
                 fo["antworten_mc"] = [mc_a,mc_b,mc_c,mc_d]
                 fo["richtige_antwort_index"] = {"A":0,"B":1,"C":2,"D":3}.get(richtig,0)
                 fo["modus"] = "mc"
             fragen.append(fo)
         if not fragen:
-            return jsonify({"error":"Keine Fragen","fehler":fehler}), 400
+            return jsonify({"error":"Keine gültigen Fragen gefunden","fehler":fehler}), 400
         config = json.load(open(KONFIG,"r",encoding="utf-8")) if os.path.exists(KONFIG) else {"einstellungen":{},"spieler":[],"fragen":[]}
         if request.args.get("modus") == "hinzufuegen":
             config["fragen"].extend(fragen)
@@ -243,8 +141,118 @@ def csv_vorlage():
     v  = "frage,antwort,kategorie,schwierigkeit,antwort_a,antwort_b,antwort_c,antwort_d,richtige_antwort\n"
     v += "Was ist die Hauptstadt von Frankreich?,Paris,Geografie,leicht,Berlin,Paris,Madrid,Rom,B\n"
     v += "Wie viele Planeten hat unser Sonnensystem?,8,Astronomie,leicht,,,,,\n"
+    v += "Wer hat euch verkuppelt?,Max Mustermann,Hochzeit,leicht,,,,,\n"
     return Response(v, mimetype="text/csv",
                     headers={"Content-Disposition":"attachment; filename=schlagfertig_vorlage.csv"})
+
+# ── WEBSOCKET EVENTS ──
+@socketio.on('connect')
+def on_connect():
+    emit('state_update', spiel_state)
+
+@socketio.on('mod_starten')
+def on_mod_starten(data):
+    spiel_state['modus'] = 'spiel'
+    spiel_state['frage_idx'] = 0
+    spiel_state['aktuelle_frage'] = data.get('frage')
+    spiel_state['warteschlange'] = []
+    spiel_state['punkte'] = data.get('punkte', {})
+    spiel_state['spielmodus'] = data.get('spielmodus', 'frei')
+    spiel_state['punktestand_sichtbar'] = False
+    schreibe_state("spiel")
+    socketio.emit('state_update', spiel_state)
+    socketio.emit('zeige_frage', {
+        'frage': spiel_state['aktuelle_frage'],
+        'idx': 0,
+        'gesamt': data.get('gesamt', 1),
+        'spielmodus': spiel_state['spielmodus']
+    })
+
+@socketio.on('mod_naechste_frage')
+def on_naechste_frage(data):
+    spiel_state['aktuelle_frage'] = data.get('frage')
+    spiel_state['frage_idx'] = data.get('idx', 0)
+    spiel_state['warteschlange'] = []
+    spiel_state['mc_gewaehlt'] = None
+    socketio.emit('state_update', spiel_state)
+    socketio.emit('zeige_frage', {
+        'frage': spiel_state['aktuelle_frage'],
+        'idx': spiel_state['frage_idx'],
+        'gesamt': data.get('gesamt', 1),
+        'spielmodus': data.get('spielmodus', 'frei')
+    })
+
+@socketio.on('mod_richtig')
+def on_richtig(data):
+    spiel_state['punkte'] = data.get('punkte', {})
+    spiel_state['warteschlange'] = []
+    socketio.emit('state_update', spiel_state)
+    socketio.emit('zeige_ergebnis', {'richtig': True, 'delta': data.get('delta', 10)})
+
+@socketio.on('mod_falsch')
+def on_falsch(data):
+    spiel_state['punkte'] = data.get('punkte', {})
+    if spiel_state['warteschlange']:
+        spiel_state['warteschlange'].pop(0)
+    socketio.emit('state_update', spiel_state)
+    socketio.emit('zeige_ergebnis', {'richtig': False, 'delta': data.get('delta', 5)})
+
+@socketio.on('mod_mc_auswahl')
+def on_mc_auswahl(data):
+    spiel_state['mc_gewaehlt'] = data.get('idx')
+    socketio.emit('zeige_mc_auswahl', {
+        'idx': data.get('idx'),
+        'antwort': data.get('antwort')
+    })
+
+@socketio.on('mod_mc_aufloesen')
+def on_mc_aufloesen(data):
+    spiel_state['punkte'] = data.get('punkte', {})
+    spiel_state['warteschlange'] = []
+    socketio.emit('state_update', spiel_state)
+    socketio.emit('zeige_mc_aufloesen', {
+        'gewaehlt': data.get('gewaehlt'),
+        'richtig_idx': data.get('richtig_idx'),
+        'richtig': data.get('richtig'),
+        'delta': data.get('delta', 10)
+    })
+
+@socketio.on('mod_freigeben')
+def on_freigeben():
+    spiel_state['warteschlange'] = []
+    socketio.emit('state_update', spiel_state)
+    socketio.emit('buzzer_freigeben')
+
+@socketio.on('mod_toggle_punktestand')
+def on_toggle_punktestand(data):
+    spiel_state['punktestand_sichtbar'] = not spiel_state.get('punktestand_sichtbar', False)
+    socketio.emit('zeige_punktestand', {
+        'sichtbar': spiel_state['punktestand_sichtbar'],
+        'punkte': data.get('punkte', {}),
+        'spieler': data.get('spieler', [])
+    })
+
+@socketio.on('mod_sieger')
+def on_sieger(data):
+    spiel_state['modus'] = 'sieger'
+    socketio.emit('zeige_sieger', {
+        'punkte': data.get('punkte', {}),
+        'spieler': data.get('spieler', [])
+    })
+
+@socketio.on('mod_stoppen')
+def on_stoppen():
+    spiel_state['modus'] = 'warten'
+    spiel_state['warteschlange'] = []
+    schreibe_state("stoppen")
+    socketio.emit('state_update', spiel_state)
+
+@socketio.on('buzzer_gedrueckt')
+def on_buzzer(data):
+    eintrag = {'nr': data.get('nr'), 'ms': data.get('ms')}
+    if not any(e['nr'] == eintrag['nr'] for e in spiel_state['warteschlange']):
+        spiel_state['warteschlange'].append(eintrag)
+    socketio.emit('state_update', spiel_state)
 
 if __name__ == "__main__":
     print("Schlagfertig Server startet...")

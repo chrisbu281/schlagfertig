@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Schlagfertig</title>
+<title>Schlagfertig App</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: system-ui, sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 15px; }
 
-/* ── HEADER ── */
 header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .logo { font-size: 19px; font-weight: 800; letter-spacing: -0.5px; }
 .logo span { color: #E24B4A; }
@@ -17,11 +16,9 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .status-dot.aktiv { background: #2d8a4e; animation: puls 1.5s ease infinite; }
 @keyframes puls { 0%,100%{opacity:1}50%{opacity:.4} }
 
-/* ── ANSICHTEN ── */
 .ansicht { display: none; }
 .ansicht.aktiv { display: block; }
 
-/* ── TABS (Editor) ── */
 .tabs { display: flex; border-bottom: 2px solid #ddd; background: #fff; padding: 0 24px; overflow-x: auto; }
 .tab { padding: 12px 18px; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
 .tab.aktiv { color: #1a1a2e; border-bottom-color: #1a1a2e; }
@@ -29,12 +26,10 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .seite { display: none; padding: 22px 24px; max-width: 1100px; margin: 0 auto; }
 .seite.aktiv { display: block; }
 
-/* ── KARTEN ── */
 .karte { background: #fff; border-radius: 12px; border: 1px solid #e0e0e0; padding: 20px; margin-bottom: 16px; }
 .karte-kopf { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
 .karte-kopf h2 { font-size: 15px; font-weight: 600; }
 
-/* ── BUTTONS ── */
 .btn { padding: 8px 14px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s; display: inline-flex; align-items: center; gap: 5px; }
 .btn:hover { background: #f5f5f5; }
 .btn.primaer { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
@@ -42,19 +37,29 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .btn.rot { background: #c0392b; color: #fff; border-color: #c0392b; }
 .btn.orange { background: #e67e22; color: #fff; border-color: #e67e22; }
 .btn.gold { background: #f39c12; color: #fff; border-color: #f39c12; }
+.btn.lila { background: #8e44ad; color: #fff; border-color: #8e44ad; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 .spiel-btn { padding: 9px 18px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
 .spiel-btn.starten { background: #2d8a4e; color: #fff; }
 .spiel-btn.stoppen { background: #c0392b; color: #fff; display: none; }
 
-/* ── FRAGEN LISTE MIT HÄKCHEN ── */
+/* FRAGEN */
 .fragen-toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
 .suche { flex: 1; min-width: 120px; padding: 7px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; outline: none; }
 .filter-sel { padding: 7px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; background: #fff; outline: none; }
+.filter-check-gruppe { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.filter-check { display: flex; align-items: center; gap: 4px; padding: 5px 10px; border: 1px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 500; background: #fff; transition: all .15s; }
+.filter-check.aktiv { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+.filter-check.leicht.aktiv { background: #2d8a4e; border-color: #2d8a4e; }
+.filter-check.mittel.aktiv { background: #e67e22; border-color: #e67e22; }
+.filter-check.schwer.aktiv { background: #c0392b; border-color: #c0392b; }
+.filter-check.mc-f.aktiv { background: #8e44ad; border-color: #8e44ad; }
+.filter-check.frei-f.aktiv { background: #2980b9; border-color: #2980b9; }
+.zufall-gruppe { display: flex; gap: 6px; flex-wrap: wrap; }
 .frage-item { display: flex; align-items: flex-start; gap: 12px; padding: 11px 14px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background .1s; }
 .frage-item:hover { background: #fafafa; }
 .frage-item:last-child { border-bottom: none; }
-.frage-checkbox { width: 20px; height: 20px; border-radius: 5px; border: 2px solid #ddd; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all .15s; }
+.frage-checkbox { width: 20px; height: 20px; border-radius: 5px; border: 2px solid #ddd; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
 .frage-item.gewaehlt .frage-checkbox { background: #1a1a2e; border-color: #1a1a2e; color: #fff; }
 .frage-inhalt { flex: 1; }
 .frage-text { font-size: 14px; line-height: 1.4; }
@@ -65,11 +70,12 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .badge-schwer { background: #f8d7da; color: #721c24; }
 .badge-mc { background: #fef3c7; color: #92400e; }
 .badge-frei { background: #e8f0fe; color: #1a56db; }
+.badge-auto { background: #f0fdf4; color: #166534; }
 .icon-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 3px 5px; border-radius: 5px; }
 .icon-btn:hover { background: #eee; }
-.auswahl-info { font-size: 13px; color: #888; margin-left: auto; }
+.auswahl-info { font-size: 13px; color: #888; }
 
-/* ── SPIELER ── */
+/* SPIELER */
 .spieler-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(210px,1fr)); gap: 12px; }
 .spieler-karte { background: #fff; border-radius: 12px; border: 2px solid #e0e0e0; padding: 14px; }
 .avatar-ring { width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 3px solid #eee; background: #f5f5f5; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; cursor: pointer; margin: 0 auto 8px; }
@@ -83,7 +89,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .farb-zeile input[type=color] { width: 32px; height: 28px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; padding: 2px; }
 .gpio-badge { font-size: 11px; background: #f0f0f0; border-radius: 5px; padding: 2px 8px; color: #555; }
 
-/* ── PUNKTE EDITOR ── */
+/* PUNKTE */
 .punkte-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 12px; margin-bottom: 20px; }
 .punkte-karte { border-radius: 12px; padding: 16px; text-align: center; color: #fff; }
 .p-avatar { width: 54px; height: 54px; border-radius: 50%; margin: 0 auto 7px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; border: 3px solid rgba(255,255,255,.3); }
@@ -102,7 +108,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .rang-balken { height: 100%; border-radius: 4px; }
 .trennlinie { height: 1px; background: #eee; margin: 18px 0; }
 
-/* ── EINSTELLUNGEN ── */
+/* EINSTELLUNGEN */
 .einstell-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media(max-width:700px){.einstell-grid{grid-template-columns:1fr;}}
 .toggle-zeile { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid #f0f0f0; }
@@ -117,11 +123,30 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
 .num-input { width: 72px; padding: 6px 9px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; outline: none; text-align: center; }
 
-/* ── MODERATOR ANSICHT ── */
+/* SPIELMODUS */
+.modus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modus-karte { border: 2px solid #e0e0e0; border-radius: 10px; padding: 16px; cursor: pointer; }
+.modus-karte.aktiv { border-color: #1a1a2e; background: #f8f8ff; }
+.modus-karte .m-icon { font-size: 24px; margin-bottom: 6px; }
+.modus-karte .m-titel { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.modus-karte .m-desc { font-size: 11px; color: #888; line-height: 1.4; }
+
+/* MODERATOR */
 #ansicht-moderator { background: #0a0a0f; min-height: 100vh; color: #fff; }
-.mod-header { background: #12121a; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1c1c28; }
+.mod-header { background: #12121a; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1c1c28; flex-wrap: wrap; gap: 8px; }
 .mod-header .logo { font-size: 18px; }
-.mod-body { padding: 16px 20px; max-width: 700px; margin: 0 auto; }
+.mod-header-buttons { display: flex; gap: 8px; }
+.mod-body { padding: 14px 20px; max-width: 700px; margin: 0 auto; }
+
+/* Punkte Chips */
+.mod-punkte { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
+.mod-punkte::-webkit-scrollbar { display: none; }
+.mod-p-chip { flex-shrink: 0; border-radius: 10px; padding: 10px 14px; text-align: center; min-width: 90px; }
+.mod-p-chip .chip-avatar { width: 36px; height: 36px; border-radius: 50%; margin: 0 auto 5px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; }
+.mod-p-chip .chip-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.mod-p-chip .chip-name { font-size: 11px; color: rgba(255,255,255,.7); margin-bottom: 2px; }
+.mod-p-chip .chip-punkte { font-size: 22px; font-weight: 700; color: #fff; }
+.mod-p-chip.aktiv-chip { outline: 2px solid #E24B4A; }
 
 /* Warteschlange */
 .wq-box { background: #12121a; border: 1px solid #1c1c28; border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
@@ -138,7 +163,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .wq-badge.warte { background: #1c1c28; color: #555; }
 .wq-leer { padding: 16px 14px; text-align: center; font-size: 13px; color: #333; }
 
-/* Aktuelle Frage */
+/* Frage Card */
 .frage-card { background: #12121a; border: 1px solid #1c1c28; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
 .frage-card .meta { display: flex; justify-content: space-between; margin-bottom: 10px; }
 .frage-card .meta span { font-size: 11px; color: #555; letter-spacing: 1px; text-transform: uppercase; }
@@ -146,32 +171,32 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .antwort-box { background: rgba(42,157,92,.1); border: 1px solid rgba(42,157,92,.3); border-radius: 8px; padding: 10px 14px; }
 .antwort-box .a-label { font-size: 11px; color: #3d9; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
 .antwort-box .a-text { font-size: 15px; font-weight: 600; color: #3dbd74; }
-.mc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
-.mc-item { border-radius: 8px; padding: 8px 10px; font-size: 12px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 6px; }
-.mc-item.richtig-item { border: 2px solid #3dbd74; }
-.mc-lbl { width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+
+/* MC Buttons im Moderator */
+.mc-auswahl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.mc-auswahl-btn { padding: 12px; border-radius: 10px; border: 3px solid transparent; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer; transition: all .15s; text-align: center; }
+.mc-auswahl-btn:active { transform: scale(.96); }
+.mc-auswahl-btn.mc-a { background: #4361ee; }
+.mc-auswahl-btn.mc-b { background: #f72585; }
+.mc-auswahl-btn.mc-c { background: #f4a261; color: #1a1a1a; }
+.mc-auswahl-btn.mc-d { background: #2ec4b6; }
+.mc-auswahl-btn.gewaehlt { border-color: #fff; transform: scale(1.03); }
+.mc-auswahl-btn.richtig-btn { border-color: #3dbd74; box-shadow: 0 0 12px rgba(61,189,116,.5); }
+.mc-auswahl-btn.falsch-btn { opacity: .4; }
 
 /* Aktionen */
 .mod-aktionen { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
 .mod-btn-reihe { display: flex; gap: 8px; }
-.mod-btn { flex: 1; padding: 14px 10px; border-radius: 12px; border: none; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform .1s, opacity .1s; letter-spacing: 0.5px; }
-.mod-btn:active { transform: scale(.96); opacity: .85; }
+.mod-btn { flex: 1; padding: 14px 10px; border-radius: 12px; border: none; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform .1s; }
+.mod-btn:active { transform: scale(.96); }
 .mod-btn.gruen { background: #2d8a4e; color: #fff; }
 .mod-btn.rot { background: #c0392b; color: #fff; }
 .mod-btn.grau { background: #1c1c28; color: #fff; border: 1px solid #2a2a38; }
+.mod-btn.gold { background: #f39c12; color: #fff; }
+.mod-btn.lila { background: #8e44ad; color: #fff; }
 .mod-btn:disabled { opacity: .3; cursor: not-allowed; }
 
-/* Punktestand Moderator */
-.mod-punkte { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
-.mod-punkte::-webkit-scrollbar { display: none; }
-.mod-p-chip { flex-shrink: 0; border-radius: 10px; padding: 10px 14px; text-align: center; min-width: 90px; }
-.mod-p-chip .chip-avatar { width: 36px; height: 36px; border-radius: 50%; margin: 0 auto 5px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; }
-.mod-p-chip .chip-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.mod-p-chip .chip-name { font-size: 11px; color: rgba(255,255,255,.7); margin-bottom: 2px; }
-.mod-p-chip .chip-punkte { font-size: 22px; font-weight: 700; color: #fff; font-family: system-ui; }
-.mod-p-chip.aktiv-chip { outline: 2px solid #E24B4A; }
-
-/* Fragen-Auswahl Moderator */
+/* Fragen Nav */
 .fragen-nav { background: #12121a; border: 1px solid #1c1c28; border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
 .fragen-nav-kopf { padding: 10px 14px; font-size: 11px; color: #555; letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid #1c1c28; }
 .frage-nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #1c1c28; cursor: pointer; transition: background .1s; }
@@ -225,25 +250,16 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .toast.gruen { background: #2d8a4e; }
 .toast.rot { background: #c0392b; }
 
-/* Modus-Karten */
-.modus-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
-@media(max-width:600px){.modus-grid{grid-template-columns:1fr;}}
-.modus-karte { border: 2px solid #e0e0e0; border-radius: 10px; padding: 14px; cursor: pointer; }
-.modus-karte.aktiv { border-color: #1a1a2e; background: #f8f8ff; }
-.modus-karte .m-icon { font-size: 24px; margin-bottom: 6px; }
-.modus-karte .m-titel { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
-.modus-karte .m-desc { font-size: 11px; color: #888; line-height: 1.4; }
+.info-box { background: #e8f4fd; border: 1px solid #b3d7f5; border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #1a4a6e; margin-bottom: 16px; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
 
-<!-- ═══ EDITOR ANSICHT ═══ -->
+<!-- EDITOR -->
 <div class="ansicht aktiv" id="ansicht-editor">
   <header>
-    <div class="logo">Schlag<span>fertig</span></div>
-    <div style="width:1px;height:18px;background:rgba(255,255,255,.2)"></div>
-    <span style="font-size:12px;color:#aaa">Editor</span>
+    <div class="logo">Schlag<span>fertig</span> <span style="font-size:12px;color:#aaa;font-weight:400">App</span></div>
     <div class="header-rechts">
       <span style="font-size:12px;color:#aaa">
         <span class="status-dot" id="status-dot"></span>
@@ -269,16 +285,14 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
       <div class="karte-kopf"><span style="font-size:18px">🎮</span><h2>Spielmodus</h2></div>
       <div class="modus-grid">
         <div class="modus-karte" id="mk-frei" onclick="setzeSpielmodus('frei')">
-          <div class="m-icon">🎤</div><div class="m-titel">Freie Antwort</div>
-          <div class="m-desc">Wer buzzert antwortet frei.</div>
+          <div class="m-icon">🎤</div>
+          <div class="m-titel">Freie Antwort</div>
+          <div class="m-desc">Wer buzzert antwortet frei. Moderator entscheidet richtig/falsch.</div>
         </div>
         <div class="modus-karte" id="mk-mc" onclick="setzeSpielmodus('mc')">
-          <div class="m-icon">🅰️</div><div class="m-titel">Multiple Choice</div>
-          <div class="m-desc">4 Antworten auf dem Beamer.</div>
-        </div>
-        <div class="modus-karte" id="mk-flex" onclick="setzeSpielmodus('flex')">
-          <div class="m-icon">🔀</div><div class="m-titel">Flexibel</div>
-          <div class="m-desc">Moderator entscheidet pro Frage.</div>
+          <div class="m-icon">🅰️</div>
+          <div class="m-titel">Multiple Choice</div>
+          <div class="m-desc">4 Antworten auf dem Beamer. Moderator wählt A/B/C/D nach dem Buzzer.</div>
         </div>
       </div>
     </div>
@@ -288,8 +302,8 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
         <div class="toggle-info"><strong>Buzzer-Warteschlange</strong><span>Moderator sieht 1./2./3. Platz</span></div>
         <label class="toggle"><input type="checkbox" id="opt-warteschlange" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
       </div>
-      <div class="toggle-zeile">
-        <div class="toggle-info"><strong>Zweite Chance</strong><span>Bei falscher Antwort kommt der Nächste dran</span></div>
+      <div class="toggle-zeile" id="zeile-zweite-chance">
+        <div class="toggle-info"><strong>Zweite Chance</strong><span>Bei falscher Antwort kommt der Nächste dran (nur Freie Antwort)</span></div>
         <label class="toggle"><input type="checkbox" id="opt-zweite-chance" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
       </div>
       <div class="toggle-zeile">
@@ -307,7 +321,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
     </div>
   </div>
 
-  <!-- FRAGEN WÄHLEN -->
+  <!-- FRAGEN -->
   <div class="seite" id="seite-fragen">
     <div class="karte">
       <div class="karte-kopf">
@@ -322,15 +336,34 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
     </div>
     <div class="karte">
       <div class="karte-kopf">
-        <span style="font-size:18px">✅</span><h2>Fragen für dieses Spiel wählen</h2>
-        <span class="auswahl-info" id="auswahl-info"></span>
+        <span style="font-size:18px">✅</span><h2>Fragen wählen</h2>
+        <span class="auswahl-info" id="auswahl-info" style="margin-left:auto"></span>
       </div>
+      <!-- Filter -->
       <div class="fragen-toolbar">
+        <input class="suche" type="text" placeholder="Suchen..." oninput="rendereFragen()" id="suche">
+        <select class="filter-sel" id="filter-kat" onchange="rendereFragen()"><option value="">Alle Kategorien</option></select>
+      </div>
+      <!-- Schwierigkeit Filter -->
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:12px;color:#888;font-weight:500">Schwierigkeit:</span>
+        <div class="filter-check leicht aktiv" id="fcheck-leicht" onclick="toggleFilter('leicht')">✓ Leicht</div>
+        <div class="filter-check mittel aktiv" id="fcheck-mittel" onclick="toggleFilter('mittel')">✓ Mittel</div>
+        <div class="filter-check schwer aktiv" id="fcheck-schwer" onclick="toggleFilter('schwer')">✓ Schwer</div>
+        <span style="font-size:12px;color:#888;font-weight:500;margin-left:8px">Modus:</span>
+        <div class="filter-check frei-f aktiv" id="fcheck-frei" onclick="toggleFilter('frei-f')">✓ Freie Antwort</div>
+        <div class="filter-check mc-f aktiv" id="fcheck-mc" onclick="toggleFilter('mc-f')">✓ Multiple Choice</div>
+      </div>
+      <!-- Aktionen -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <button class="btn" onclick="alleWaehlen()">Alle wählen</button>
         <button class="btn" onclick="keineWaehlen()">Keine</button>
         <button class="btn primaer" onclick="frageModal()">+ Hinzufügen</button>
-        <input class="suche" type="text" placeholder="Suchen..." oninput="rendereFragen()" id="suche">
-        <select class="filter-sel" id="filter-kat" onchange="rendereFragen()"><option value="">Alle Kategorien</option></select>
+        <span style="font-size:12px;color:#888;margin-left:4px;align-self:center">Zufällig:</span>
+        <button class="btn lila" onclick="zufaelligWaehlen(5)">5</button>
+        <button class="btn lila" onclick="zufaelligWaehlen(10)">10</button>
+        <button class="btn lila" onclick="zufaelligWaehlen(15)">15</button>
+        <button class="btn lila" onclick="zufaelligWaehlen(20)">20</button>
       </div>
       <div id="fragen-liste"></div>
     </div>
@@ -374,7 +407,10 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
           <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Punkte: richtig</label><input class="num-input" type="number" id="opt-p-richtig" min="0" max="100" oninput="saveEinstell()"></div>
           <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Punkte: falsch</label><input class="num-input" type="number" id="opt-p-falsch" min="0" max="100" oninput="saveEinstell()"></div>
           <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Sperrzeit (ms)</label><input class="num-input" type="number" id="opt-sperrzeit" min="10" max="500" oninput="saveEinstell()"></div>
-          <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Timeout (Sek.)</label><input class="num-input" type="number" id="opt-timeout" min="5" max="120" oninput="saveEinstell()"></div>
+          <div>
+            <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Timeout (Sek. / 0=aus)</label>
+            <input class="num-input" type="number" id="opt-timeout" min="0" max="120" oninput="saveEinstell()">
+          </div>
         </div>
       </div>
       <div class="karte">
@@ -386,27 +422,24 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
   </div>
 </div>
 
-<!-- ═══ MODERATOR ANSICHT ═══ -->
+<!-- MODERATOR -->
 <div class="ansicht" id="ansicht-moderator">
   <div class="mod-header">
     <div class="logo">Schlag<span>fertig</span> <span style="font-size:13px;color:#555;font-weight:400">Moderator</span></div>
-    <button class="btn rot" onclick="spielStoppen()">✕ Exit</button>
+    <div class="mod-header-buttons">
+      <button class="btn gold" onclick="togglePunktestand()">🏆 Punktestand</button>
+      <button class="btn rot" onclick="spielStoppen()">✕ Exit</button>
+    </div>
   </div>
   <div class="mod-body">
-
-    <!-- Punktestand -->
     <div class="mod-punkte" id="mod-punkte"></div>
-
-    <!-- Warteschlange -->
     <div class="wq-box">
       <div class="wq-kopf">
         <span>Buzzer-Warteschlange</span>
-        <button class="btn" onclick="buzzersFreigeben()" style="padding:4px 10px;font-size:12px">Freigeben</button>
+        <button class="btn" onclick="buzzersFreigeben()" style="padding:4px 10px;font-size:12px;background:#1c1c28;color:#fff;border-color:#2a2a38">Freigeben</button>
       </div>
       <div id="wq-inhalt"><div class="wq-leer">Noch kein Buzzer gedrückt</div></div>
     </div>
-
-    <!-- Aktuelle Frage -->
     <div class="frage-card" id="mod-frage-card">
       <div class="meta">
         <span id="mod-frage-nr">FRAGE 1</span>
@@ -417,24 +450,23 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
         <div class="a-label">Richtige Antwort</div>
         <div class="a-text" id="mod-antwort-text">—</div>
       </div>
-      <div class="mc-grid" id="mod-mc-grid" style="display:none"></div>
+      <!-- MC Auswahl Buttons für Moderator -->
+      <div class="mc-auswahl" id="mod-mc-auswahl" style="display:none"></div>
     </div>
-
-    <!-- Aktionen -->
     <div class="mod-aktionen">
-      <div class="mod-btn-reihe">
+      <!-- Freie Antwort Buttons -->
+      <div class="mod-btn-reihe" id="mod-frei-buttons">
         <button class="mod-btn gruen" id="mod-btn-richtig" onclick="modBewerteAntwort(true)" disabled>✓ Richtig</button>
         <button class="mod-btn rot"   id="mod-btn-falsch"  onclick="modBewerteAntwort(false)" disabled>✗ Falsch</button>
       </div>
+      <!-- MC Auflösen Button -->
+      <button class="mod-btn lila" id="mod-btn-aufloesen" onclick="modMCAufloesen()" style="display:none">🔍 Auflösen</button>
       <button class="mod-btn grau" onclick="modNaechsteFrage()">Nächste Frage →</button>
     </div>
-
-    <!-- Fragennavigation -->
     <div class="fragen-nav">
       <div class="fragen-nav-kopf">Fragenreihenfolge</div>
       <div id="fragen-nav-liste"></div>
     </div>
-
   </div>
 </div>
 
@@ -442,22 +474,21 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 <div class="overlay" id="frage-overlay">
   <div class="modal">
     <h2 id="modal-titel">Frage hinzufügen</h2>
-    <div class="feld"><label>Frage</label><textarea id="m-frage" rows="3" placeholder="Wie lautet die Frage?"></textarea></div>
-    <div class="feld"><label>Richtige Antwort</label><input id="m-antwort" type="text" placeholder="Richtige Antwort"></div>
+    <div class="feld"><label>Frage</label><textarea id="m-frage" rows="3"></textarea></div>
+    <div class="feld"><label>Richtige Antwort</label><input id="m-antwort" type="text"></div>
     <div class="zeile3">
-      <div class="feld"><label>Kategorie</label><input id="m-kat" type="text" placeholder="z.B. Geografie"></div>
+      <div class="feld"><label>Kategorie</label><input id="m-kat" type="text"></div>
       <div class="feld"><label>Schwierigkeit</label>
         <select id="m-schw"><option value="leicht">Leicht</option><option value="mittel">Mittel</option><option value="schwer">Schwer</option></select>
       </div>
       <div class="feld"><label>Modus</label>
         <div class="modus-toggle">
-          <div class="mt-btn aktiv" id="mt-auto" onclick="setzeFragenModus('auto')">Auto</div>
-          <div class="mt-btn" id="mt-frei" onclick="setzeFragenModus('frei')">Frei</div>
+          <div class="mt-btn aktiv" id="mt-frei" onclick="setzeFragenModus('frei')">Frei</div>
           <div class="mt-btn" id="mt-mc" onclick="setzeFragenModus('mc')">MC</div>
         </div>
       </div>
     </div>
-    <div class="mc-bereich" id="mc-bereich">
+    <div class="mc-bereich" id="mc-bereich" style="display:none">
       <h4>Multiple-Choice <span style="color:#888;font-weight:400">(✓ = richtig)</span></h4>
       <div class="mc-zeile"><div class="mc-label" style="background:#4361ee">A</div><input class="mc-input" id="mc-a" type="text" placeholder="Antwort A"><div class="mc-richtig" id="mcr-0" onclick="setzeRichtigeAntwort(0)"></div></div>
       <div class="mc-zeile"><div class="mc-label" style="background:#f72585">B</div><input class="mc-input" id="mc-b" type="text" placeholder="Antwort B"><div class="mc-richtig" id="mcr-1" onclick="setzeRichtigeAntwort(1)"></div></div>
@@ -502,11 +533,12 @@ const SOUND_SLOTS = [
   {id:'timeout',label:'Zeit abgelaufen',icon:'⏱️'},
 ];
 const MC_BG = ['#4361ee','#f72585','#f4a261','#2ec4b6'];
+const MC_KLASSE = ['mc-a','mc-b','mc-c','mc-d'];
 const MC_BUCHST = ['A','B','C','D'];
 const RANG = ['🥇','🥈','🥉','4.'];
 
 let config = {
-  einstellungen:{punkte_richtig:10,punkte_falsch:5,buzzer_sperrzeit:50,antwort_timeout:30,fragen_mischen:true,buzzer_sperrung:true,reaktionszeit_anzeigen:true,negativpunkte_verhindern:true,sound_aktiv:false,warteschlange_aktiv:true,zweite_chance:true,spielmodus:'frei',sounds:{}},
+  einstellungen:{punkte_richtig:10,punkte_falsch:5,buzzer_sperrzeit:50,antwort_timeout:0,fragen_mischen:true,buzzer_sperrung:true,reaktionszeit_anzeigen:true,negativpunkte_verhindern:true,sound_aktiv:false,warteschlange_aktiv:true,zweite_chance:true,spielmodus:'frei',sounds:{}},
   spieler:[
     {nr:1,name:'Spieler 1',gpio:17,farbe:'#DC3232',foto:''},
     {nr:2,name:'Spieler 2',gpio:18,farbe:'#3278DC',foto:''},
@@ -517,37 +549,36 @@ let config = {
 };
 
 let punkte = {};
-let gewaehlteFragen = new Set(); // Indizes der gewählten Fragen
+let gewaehlteFragen = new Set();
 let bearbeitenIndex = -1;
-let aktuellerFragenModus = 'auto';
+let aktuellerFragenModus = 'frei';
 let richtigeAntwortIdx = 0;
 let camStream = null;
 let camSpielerIdx = -1;
 let fotoDataUrl = null;
+
+// Filter State
+let filterAktiv = {leicht:true, mittel:true, schwer:true, 'frei-f':true, 'mc-f':true};
 
 // Moderator State
 let modFragenListe = [];
 let modAktuellIdx = 0;
 let modPunkte = {};
 let modWarteschlange = [];
-let modPollInterval = null;
+let modGewaehlteAntwort = null; // für MC
+let modAufgeloest = false;
 
-// ── WEBSOCKET ──
+// WebSocket
 let socket = null;
 
 function verbindeSocket() {
   socket = io();
-  socket.on('connect', () => {
-    console.log('WebSocket verbunden!');
-  });
+  socket.on('connect', () => console.log('WebSocket verbunden!'));
   socket.on('state_update', (data) => {
     modWarteschlange = data.warteschlange || [];
-    modPunkte = data.punkte || modPunkte;
+    if(data.punkte) modPunkte = data.punkte;
     rendereWarteschlange();
     rendereModPunkte();
-  });
-  socket.on('disconnect', () => {
-    console.log('WebSocket getrennt!');
   });
 }
 
@@ -555,7 +586,7 @@ function verbindeSocket() {
 async function init() {
   await ladeVomPi();
   config.spieler.forEach(s => { if(punkte[s.nr]===undefined) punkte[s.nr]=0; });
-  config.fragen.forEach((_,i) => gewaehlteFragen.add(i));
+  gewaehlteFragen = new Set(config.fragen.map((_,i)=>i));
   rendereSpielmodus();
   rendereSpieler();
   rendereFragen();
@@ -581,8 +612,13 @@ async function ladeVomPi() {
       config.einstellungen = d.einstellungen || config.einstellungen;
       config.spieler = d.spieler || config.spieler;
       config.fragen = d.fragen || config.fragen;
-      if(d.punkte_aktuell) punkte = d.punkte_aktuell;
-      // Alle Fragen vorauswählen
+      if(d.punkte_aktuell) {
+        punkte = d.punkte_aktuell;
+        // Konvertiere String-Keys zu Zahlen
+        const neuerPunkte = {};
+        Object.keys(punkte).forEach(k => neuerPunkte[parseInt(k)] = punkte[k]);
+        punkte = neuerPunkte;
+      }
       gewaehlteFragen = new Set(config.fragen.map((_,i)=>i));
     }
   } catch(e) { console.log('Offline'); }
@@ -590,12 +626,12 @@ async function ladeVomPi() {
 
 async function speichereAufPi() {
   saveEinstell();
-  // Gewählte Fragen markieren
-  config.fragen.forEach((f,i) => f._gewaehlt = gewaehlteFragen.has(i));
+  // Aktuelle Moderator-Punkte auch speichern
+  const punkteZuSpeichern = Object.keys(modPunkte).length > 0 ? modPunkte : punkte;
   try {
     const r = await fetch('/api/config', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({...config, punkte_aktuell: punkte})
+      body: JSON.stringify({...config, punkte_aktuell: punkteZuSpeichern})
     });
     const d = await r.json();
     if(d.status==='ok') zeigToast('✅ Gespeichert!','gruen');
@@ -614,31 +650,34 @@ async function spielStarten() {
       if(config.einstellungen.fragen_mischen) modFragenListe = modFragenListe.sort(()=>Math.random()-.5);
       modAktuellIdx = 0;
       modPunkte = {};
-      config.spieler.forEach(s => modPunkte[s.nr] = 0);
+      config.spieler.forEach(s => modPunkte[s.nr] = punkte[s.nr] || 0);
       modWarteschlange = [];
       zeigeAnsicht('moderator');
       rendereModPunkte();
       rendereModFrage();
       rendereModNav();
       rendereWarteschlange();
-      // WebSocket: Spiel starten
       socket.emit('mod_starten', {
         frage: modFragenListe[0],
         punkte: modPunkte,
-        gesamt: modFragenListe.length
+        gesamt: modFragenListe.length,
+        spielmodus: config.einstellungen.spielmodus
       });
     } else zeigToast('❌ '+d.error,'rot');
   } catch(e) { zeigToast('❌ Keine Verbindung','rot'); }
 }
 
 async function spielStoppen() {
-  if(modPollInterval) { clearInterval(modPollInterval); modPollInterval = null; }
+  // Punkte in Editor übernehmen
+  config.spieler.forEach(s => {
+    punkte[s.nr] = modPunkte[s.nr] || punkte[s.nr] || 0;
+  });
+  await speichereAufPi();
   zeigeAnsicht('editor');
   zeigToast('■ Gestoppt','');
   if(socket) socket.emit('mod_stoppen');
-  try {
-    await fetch('/api/spiel/stoppen', {method:'POST'});
-  } catch(e) {}
+  try { await fetch('/api/spiel/stoppen', {method:'POST'}); } catch(e) {}
+  renderePunkte();
   pruefeSpielStatus();
 }
 
@@ -661,7 +700,7 @@ async function pruefeSpielStatus() {
   } catch(e) { document.getElementById('status-text').textContent='Offline'; }
 }
 
-// ── MODERATOR FUNKTIONEN ──
+// ── MODERATOR ──
 function rendereModPunkte() {
   const aktuellerSpieler = modWarteschlange.length > 0 ? modWarteschlange[0].nr : null;
   document.getElementById('mod-punkte').innerHTML = config.spieler.map(s => `
@@ -674,23 +713,99 @@ function rendereModPunkte() {
 
 function rendereModFrage() {
   const f = modFragenListe[modAktuellIdx];
+  modGewaehlteAntwort = null;
+  modAufgeloest = false;
+  const istMC = config.einstellungen.spielmodus === 'mc' || f?.modus === 'mc';
+
   if(!f) {
     document.getElementById('mod-frage-text').textContent = 'Alle Fragen gespielt!';
+    // Sieger anzeigen
+    socket.emit('mod_sieger', {punkte: modPunkte, spieler: config.spieler});
     return;
   }
   document.getElementById('mod-frage-nr').textContent = `FRAGE ${modAktuellIdx+1} / ${modFragenListe.length}`;
   document.getElementById('mod-frage-kat').textContent = f.kategorie;
   document.getElementById('mod-frage-text').textContent = f.frage;
   document.getElementById('mod-antwort-text').textContent = f.antwort;
-  const mcGrid = document.getElementById('mod-mc-grid');
-  if(f.antworten_mc && f.antworten_mc.length===4) {
-    mcGrid.style.display='grid';
-    mcGrid.innerHTML = f.antworten_mc.map((a,i)=>`
-      <div class="mc-item ${i===f.richtige_antwort_index?'richtig-item':''}" style="background:${MC_BG[i]}${i===f.richtige_antwort_index?'':'aa'}">
-        <div class="mc-lbl">${MC_BUCHST[i]}</div>
-        <span style="font-size:12px">${a}</span>
-      </div>`).join('');
-  } else { mcGrid.style.display='none'; }
+
+  // MC oder Frei Buttons zeigen
+  const mcAuswahl = document.getElementById('mod-mc-auswahl');
+  const freiButtons = document.getElementById('mod-frei-buttons');
+  const aufloesen = document.getElementById('mod-btn-aufloesen');
+
+  if(istMC && f.antworten_mc && f.antworten_mc.length===4) {
+    mcAuswahl.style.display='grid';
+    freiButtons.style.display='none';
+    aufloesen.style.display='block';
+    aufloesen.disabled = true;
+    mcAuswahl.innerHTML = f.antworten_mc.map((a,i)=>`
+      <button class="mc-auswahl-btn ${MC_KLASSE[i]}" onclick="modWaehleAntwort(${i})">
+        ${MC_BUCHST[i]}: ${a}
+      </button>`).join('');
+  } else {
+    mcAuswahl.style.display='none';
+    freiButtons.style.display='flex';
+    aufloesen.style.display='none';
+    document.getElementById('mod-btn-richtig').disabled = true;
+    document.getElementById('mod-btn-falsch').disabled = true;
+  }
+}
+
+function modWaehleAntwort(idx) {
+  if(modAufgeloest) return;
+  modGewaehlteAntwort = idx;
+  // Visuell markieren
+  document.querySelectorAll('.mc-auswahl-btn').forEach((btn,i) => {
+    btn.classList.remove('gewaehlt');
+    if(i===idx) btn.classList.add('gewaehlt');
+  });
+  document.getElementById('mod-btn-aufloesen').disabled = false;
+  // An Beamer senden
+  const f = modFragenListe[modAktuellIdx];
+  socket.emit('mod_mc_auswahl', {idx: idx, antwort: f.antworten_mc[idx]});
+}
+
+function modMCAufloesen() {
+  if(modGewaehlteAntwort === null) return;
+  modAufgeloest = true;
+  const f = modFragenListe[modAktuellIdx];
+  const richtigIdx = f.richtige_antwort_index;
+  const richtig = modGewaehlteAntwort === richtigIdx;
+  const pr = config.einstellungen.punkte_richtig || 10;
+  const pf = config.einstellungen.punkte_falsch || 5;
+
+  // Buttons einfärben
+  document.querySelectorAll('.mc-auswahl-btn').forEach((btn,i) => {
+    btn.classList.remove('gewaehlt');
+    if(i === richtigIdx) btn.classList.add('richtig-btn');
+    else if(i === modGewaehlteAntwort && !richtig) btn.classList.add('falsch-btn');
+  });
+
+  // Punkte vergeben
+  if(modWarteschlange.length > 0) {
+    const erster = modWarteschlange[0];
+    if(richtig) {
+      modPunkte[erster.nr] = (modPunkte[erster.nr]||0) + pr;
+      zeigToast(`+${pr} für ${config.spieler.find(s=>s.nr===erster.nr)?.name}!`,'gruen');
+    } else {
+      modPunkte[erster.nr] = Math.max(0,(modPunkte[erster.nr]||0) - pf);
+      zeigToast(`-${pf} für ${config.spieler.find(s=>s.nr===erster.nr)?.name}`,'rot');
+    }
+    modWarteschlange = [];
+  }
+
+  // An Beamer senden
+  socket.emit('mod_mc_aufloesen', {
+    gewaehlt: modGewaehlteAntwort,
+    richtig_idx: richtigIdx,
+    richtig: richtig,
+    punkte: modPunkte,
+    delta: richtig ? pr : pf
+  });
+
+  document.getElementById('mod-btn-aufloesen').disabled = true;
+  rendereModPunkte();
+  rendereWarteschlange();
 }
 
 function rendereModNav() {
@@ -707,13 +822,15 @@ function rendereWarteschlange() {
   const inhalt = document.getElementById('wq-inhalt');
   const btnR = document.getElementById('mod-btn-richtig');
   const btnF = document.getElementById('mod-btn-falsch');
+  const istMC = config.einstellungen.spielmodus === 'mc';
+
   if(modWarteschlange.length===0) {
     inhalt.innerHTML = '<div class="wq-leer">Noch kein Buzzer gedrückt</div>';
-    btnR.disabled = true; btnF.disabled = true;
+    if(!istMC) { btnR.disabled = true; btnF.disabled = true; }
     rendereModPunkte();
     return;
   }
-  btnR.disabled = false; btnF.disabled = false;
+  if(!istMC) { btnR.disabled = false; btnF.disabled = false; }
   inhalt.innerHTML = modWarteschlange.map((e,i)=>{
     const s = config.spieler.find(sp=>sp.nr===e.nr);
     if(!s) return '';
@@ -757,10 +874,12 @@ function modNaechsteFrage() {
     socket.emit('mod_naechste_frage', {
       frage: modFragenListe[modAktuellIdx],
       idx: modAktuellIdx,
-      gesamt: modFragenListe.length
+      gesamt: modFragenListe.length,
+      spielmodus: config.einstellungen.spielmodus
     });
   } else {
     zeigToast('Alle Fragen gespielt!','');
+    socket.emit('mod_sieger', {punkte: modPunkte, spieler: config.spieler});
   }
 }
 
@@ -773,7 +892,8 @@ function modSpringe(idx) {
   socket.emit('mod_naechste_frage', {
     frage: modFragenListe[idx],
     idx: idx,
-    gesamt: modFragenListe.length
+    gesamt: modFragenListe.length,
+    spielmodus: config.einstellungen.spielmodus
   });
 }
 
@@ -781,6 +901,14 @@ function buzzersFreigeben() {
   modWarteschlange = [];
   rendereWarteschlange();
   socket.emit('mod_freigeben');
+}
+
+function togglePunktestand() {
+  socket.emit('mod_toggle_punktestand', {
+    punkte: modPunkte,
+    spieler: config.spieler
+  });
+  zeigToast('Punktestand umgeschaltet','');
 }
 
 // ── TABS ──
@@ -795,12 +923,17 @@ function wechsleTab(id) {
 // ── SPIELMODUS ──
 function rendereSpielmodus() {
   const m=config.einstellungen.spielmodus||'frei';
-  ['frei','mc','flex'].forEach(id=>document.getElementById('mk-'+id).classList.toggle('aktiv',id===m));
+  ['frei','mc'].forEach(id=>document.getElementById('mk-'+id).classList.toggle('aktiv',id===m));
   document.getElementById('opt-warteschlange').checked=config.einstellungen.warteschlange_aktiv!==false;
   document.getElementById('opt-zweite-chance').checked=config.einstellungen.zweite_chance!==false;
   document.getElementById('opt-reaktion').checked=config.einstellungen.reaktionszeit_anzeigen!==false;
+  // Zweite Chance nur bei freier Antwort
+  document.getElementById('zeile-zweite-chance').style.opacity = m==='mc'?'0.4':'1';
 }
-function setzeSpielmodus(m){config.einstellungen.spielmodus=m;rendereSpielmodus();}
+function setzeSpielmodus(m){
+  config.einstellungen.spielmodus=m;
+  rendereSpielmodus();
+}
 
 // ── AVATAR ──
 function avatarHTML(s,g=70){
@@ -842,6 +975,19 @@ function uploadFoto(idx,input){
   reader.onload=e=>zuschneiden(e.target.result,idx);
   reader.readAsDataURL(file);
 }
+function zuschneiden(dataUrl,idx){
+  const img=new Image();
+  img.onload=()=>{
+    const canvas=document.createElement('canvas');
+    const size=300;canvas.width=size;canvas.height=size;
+    const ctx=canvas.getContext('2d');
+    ctx.beginPath();ctx.arc(size/2,size/2,size/2,0,Math.PI*2);ctx.closePath();ctx.clip();
+    const src=Math.min(img.width,img.height);
+    ctx.drawImage(img,(img.width-src)/2,(img.height-src)/2,src,src,0,0,size,size);
+    config.spieler[idx].foto=canvas.toDataURL('image/jpeg',.8);
+    rendereSpieler();
+  };img.src=dataUrl;
+}
 async function oeffneKamera(idx){
   camSpielerIdx=idx;fotoDataUrl=null;
   document.getElementById('cam-titel').textContent='Foto für '+config.spieler[idx].name;
@@ -877,56 +1023,64 @@ function nochmalFoto(){
   oeffneKamera(camSpielerIdx);
 }
 function cropUndSpeichern(){if(fotoDataUrl){zuschneiden(fotoDataUrl,camSpielerIdx);schliesseCam();}}
-function zuschneiden(dataUrl,idx){
-  const img=new Image();
-  img.onload=()=>{
-    const canvas=document.createElement('canvas');
-    const size=300;canvas.width=size;canvas.height=size;
-    const ctx=canvas.getContext('2d');
-    ctx.beginPath();ctx.arc(size/2,size/2,size/2,0,Math.PI*2);ctx.closePath();ctx.clip();
-    const src=Math.min(img.width,img.height);
-    ctx.drawImage(img,(img.width-src)/2,(img.height-src)/2,src,src,0,0,size,size);
-    config.spieler[idx].foto=canvas.toDataURL('image/jpeg',.8);
-    rendereSpieler();
-  };img.src=dataUrl;
-}
 function schliesseCam(){
   if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
   document.getElementById('cam-overlay').classList.remove('offen');
 }
 
-// ── FRAGEN WÄHLEN ──
+// ── FRAGEN ──
+function toggleFilter(typ) {
+  filterAktiv[typ] = !filterAktiv[typ];
+  const el = document.getElementById('fcheck-'+typ);
+  el.classList.toggle('aktiv', filterAktiv[typ]);
+  el.textContent = (filterAktiv[typ]?'✓ ':'') + el.textContent.replace('✓ ','');
+  rendereFragen();
+}
+
 function rendereFragen(){
   const suche=document.getElementById('suche').value.toLowerCase();
   const fk=document.getElementById('filter-kat').value;
-  const gef=config.fragen.filter(f=>
-    (!suche||f.frage.toLowerCase().includes(suche)||f.antwort.toLowerCase().includes(suche))
-    &&(!fk||f.kategorie===fk));
+
+  const gef=config.fragen.filter(f=>{
+    if(!filterAktiv[f.schwierigkeit]) return false;
+    const istMC = f.modus==='mc' || (f.antworten_mc && f.antworten_mc.some(a=>a));
+    if(istMC && !filterAktiv['mc-f']) return false;
+    if(!istMC && !filterAktiv['frei-f']) return false;
+    if(fk && f.kategorie!==fk) return false;
+    if(suche && !f.frage.toLowerCase().includes(suche) && !f.antwort.toLowerCase().includes(suche)) return false;
+    return true;
+  });
+
   const kats=[...new Set(config.fragen.map(f=>f.kategorie))].sort();
   const sel=document.getElementById('filter-kat');
   const ak=sel.value;
   sel.innerHTML='<option value="">Alle Kategorien</option>'+kats.map(k=>`<option value="${k}" ${k===ak?'selected':''}>${k}</option>`).join('');
-  const anzahlGewaehlt = gewaehlteFragen.size;
+
+  const anzahlGewaehlt = [...gewaehlteFragen].filter(i => config.fragen[i]).length;
   document.getElementById('auswahl-info').textContent=`${anzahlGewaehlt} von ${config.fragen.length} ausgewählt`;
-  document.getElementById('fragen-liste').innerHTML=gef.map(f=>{
-    const i=config.fragen.indexOf(f);
-    const gew=gewaehlteFragen.has(i);
-    return`<div class="frage-item ${gew?'gewaehlt':''}" onclick="toggleFrage(${i})">
-      <div class="frage-checkbox">${gew?'✓':''}</div>
-      <div class="frage-inhalt">
-        <div class="frage-text">${f.frage}</div>
-        <div class="frage-meta">
-          <span class="badge badge-${f.schwierigkeit}">${f.schwierigkeit.charAt(0).toUpperCase()+f.schwierigkeit.slice(1)}</span>
-          <span style="font-size:11px;color:#888">${f.kategorie}</span>
-          ${f.antworten_mc?'<span class="badge badge-mc">MC</span>':''}
-        </div>
-      </div>
-      <div style="display:flex;gap:4px;flex-shrink:0">
-        <button class="icon-btn" onclick="event.stopPropagation();frageModal(${i})">✏️</button>
-        <button class="icon-btn" onclick="event.stopPropagation();loescheFrage(${i})">🗑️</button>
-      </div>
-    </div>`;
-  }).join('');
+
+  document.getElementById('fragen-liste').innerHTML = gef.length === 0
+    ? '<div style="padding:20px;text-align:center;color:#888;font-size:13px">Keine Fragen gefunden</div>'
+    : gef.map(f=>{
+        const i=config.fragen.indexOf(f);
+        const gew=gewaehlteFragen.has(i);
+        const istMC = f.modus==='mc' || (f.antworten_mc && f.antworten_mc.some(a=>a));
+        return`<div class="frage-item ${gew?'gewaehlt':''}" onclick="toggleFrage(${i})">
+          <div class="frage-checkbox">${gew?'✓':''}</div>
+          <div class="frage-inhalt">
+            <div class="frage-text">${f.frage}</div>
+            <div class="frage-meta">
+              <span class="badge badge-${f.schwierigkeit}">${f.schwierigkeit.charAt(0).toUpperCase()+f.schwierigkeit.slice(1)}</span>
+              <span style="font-size:11px;color:#888">${f.kategorie}</span>
+              ${istMC?'<span class="badge badge-mc">MC</span>':''}
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;flex-shrink:0">
+            <button class="icon-btn" onclick="event.stopPropagation();frageModal(${i})">✏️</button>
+            <button class="icon-btn" onclick="event.stopPropagation();loescheFrage(${i})">🗑️</button>
+          </div>
+        </div>`;
+      }).join('');
 }
 
 function toggleFrage(idx){
@@ -936,11 +1090,26 @@ function toggleFrage(idx){
 }
 function alleWaehlen(){config.fragen.forEach((_,i)=>gewaehlteFragen.add(i));rendereFragen();}
 function keineWaehlen(){gewaehlteFragen.clear();rendereFragen();}
+function zufaelligWaehlen(n){
+  // Nur aus gefilterten Fragen auswählen
+  const gefiltertIndizes = config.fragen.map((_,i)=>i).filter(i=>{
+    const f=config.fragen[i];
+    if(!filterAktiv[f.schwierigkeit]) return false;
+    const istMC = f.modus==='mc' || (f.antworten_mc && f.antworten_mc.some(a=>a));
+    if(istMC && !filterAktiv['mc-f']) return false;
+    if(!istMC && !filterAktiv['frei-f']) return false;
+    return true;
+  });
+  const gemischt = gefiltertIndizes.sort(()=>Math.random()-.5);
+  gewaehlteFragen = new Set(gemischt.slice(0, Math.min(n, gemischt.length)));
+  rendereFragen();
+  zeigToast(`${gewaehlteFragen.size} zufällige Fragen gewählt`,'gruen');
+}
 
 function frageModal(idx=-1){
   bearbeitenIndex=idx;
   document.getElementById('modal-titel').textContent=idx===-1?'Frage hinzufügen':'Frage bearbeiten';
-  const f=idx>=0?config.fragen[idx]:{frage:'',antwort:'',antworten_mc:['','','',''],richtige_antwort_index:0,kategorie:'',schwierigkeit:'leicht',modus:'auto'};
+  const f=idx>=0?config.fragen[idx]:{frage:'',antwort:'',antworten_mc:['','','',''],richtige_antwort_index:0,kategorie:'',schwierigkeit:'leicht',modus:'frei'};
   document.getElementById('m-frage').value=f.frage;
   document.getElementById('m-antwort').value=f.antwort;
   document.getElementById('m-kat').value=f.kategorie;
@@ -949,13 +1118,13 @@ function frageModal(idx=-1){
   ['a','b','c','d'].forEach((l,i)=>document.getElementById('mc-'+l).value=mc[i]||'');
   richtigeAntwortIdx=f.richtige_antwort_index||0;
   aktualisiereRichtigeAntwortUI();
-  setzeFragenModus(f.modus||'auto');
+  setzeFragenModus(f.modus||'frei');
   document.getElementById('frage-overlay').classList.add('offen');
 }
 function setzeFragenModus(m){
   aktuellerFragenModus=m;
-  ['auto','frei','mc'].forEach(id=>document.getElementById('mt-'+id).classList.toggle('aktiv',id===m));
-  document.getElementById('mc-bereich').style.display=(m==='frei')?'none':'block';
+  ['frei','mc'].forEach(id=>document.getElementById('mt-'+id).classList.toggle('aktiv',id===m));
+  document.getElementById('mc-bereich').style.display=(m==='mc')?'block':'none';
 }
 function setzeRichtigeAntwort(idx){richtigeAntwortIdx=idx;aktualisiereRichtigeAntwortUI();}
 function aktualisiereRichtigeAntwortUI(){
@@ -1029,7 +1198,7 @@ function rendereEinstellungen(){
   document.getElementById('opt-p-richtig').value=e.punkte_richtig??10;
   document.getElementById('opt-p-falsch').value=e.punkte_falsch??5;
   document.getElementById('opt-sperrzeit').value=e.buzzer_sperrzeit??50;
-  document.getElementById('opt-timeout').value=e.antwort_timeout??30;
+  document.getElementById('opt-timeout').value=e.antwort_timeout??0;
   const sounds=e.sounds||{};
   document.getElementById('sound-slots').innerHTML=SOUND_SLOTS.map(sl=>`
     <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f0f0f0">
@@ -1051,22 +1220,24 @@ function saveEinstell(){
   e.punkte_richtig=parseInt(document.getElementById('opt-p-richtig').value)||10;
   e.punkte_falsch=parseInt(document.getElementById('opt-p-falsch').value)||5;
   e.buzzer_sperrzeit=parseInt(document.getElementById('opt-sperrzeit').value)||50;
-  e.antwort_timeout=parseInt(document.getElementById('opt-timeout').value)||30;
+  e.antwort_timeout=parseInt(document.getElementById('opt-timeout').value)||0;
 }
 function setSoundDatei(id,v){if(!config.einstellungen.sounds)config.einstellungen.sounds={};config.einstellungen.sounds[id]=v;}
 
 // ── CSV ──
 async function ladeCSV(input){
   const file=input.files[0];if(!file)return;
-  const formData=new FormData();formData.append('file',file);
+  const formData=new FormData();
+  formData.append('file',file);
   try{
     const r=await fetch('/api/csv-upload',{method:'POST',body:formData});
     const d=await r.json();
     if(d.status==='ok'){
       zeigToast(`✅ ${d.anzahl} Fragen importiert!`,'gruen');
-      await ladeVomPi();rendereFragen();
-    }else zeigToast('❌ '+d.error,'rot');
-  }catch(e){zeigToast('❌ Fehler','rot');}
+      await ladeVomPi();
+      rendereFragen();
+    }else zeigToast('❌ '+(d.error||'Fehler'),'rot');
+  }catch(e){zeigToast('❌ Verbindungsfehler','rot');}
   input.value='';
 }
 function ladeCSVVorlage(){window.open('/api/csv-vorlage','_blank');}
