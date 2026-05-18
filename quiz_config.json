@@ -16,7 +16,7 @@
       "sieger": "",
       "timeout": ""
     },
-    "spielmodus": "frei",
+    "spielmodus": "test",
     "warteschlange_aktiv": true,
     "zweite_chance": true
   },
