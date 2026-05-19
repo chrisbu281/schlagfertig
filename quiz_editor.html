@@ -585,7 +585,10 @@ function verbindeSocket() {
   socket = io();
   socket.on('connect', () => console.log('WebSocket verbunden!'));
   socket.on('state_update', (data) => {
-    modWarteschlange = data.warteschlange || [];
+    // Warteschlange nur vom Server übernehmen wenn lokal leer
+    if(modWarteschlange.length === 0) {
+      modWarteschlange = data.warteschlange || [];
+    }
     if(data.punkte) modPunkte = data.punkte;
     rendereWarteschlange();
     rendereModPunkte();
@@ -860,16 +863,24 @@ function modBewerteAntwort(richtig) {
   const erster = modWarteschlange[0];
   const pr = config.einstellungen.punkte_richtig || 10;
   const pf = config.einstellungen.punkte_falsch || 5;
+  const spielerName = config.spieler.find(s=>s.nr===erster.nr)?.name || '';
+
   if(richtig) {
     modPunkte[erster.nr] = (modPunkte[erster.nr]||0) + pr;
-    zeigToast(`+${pr} für ${config.spieler.find(s=>s.nr===erster.nr)?.name}!`,'gruen');
+    zeigToast(`+${pr} für ${spielerName}!`,'gruen');
     modWarteschlange = [];
     socket.emit('mod_richtig', {punkte: modPunkte, delta: pr});
   } else {
     modPunkte[erster.nr] = Math.max(0,(modPunkte[erster.nr]||0) - pf);
-    zeigToast(`-${pf} für ${config.spieler.find(s=>s.nr===erster.nr)?.name}`,'rot');
-    modWarteschlange.shift();
+    zeigToast(`-${pf} für ${spielerName}`,'rot');
+    modWarteschlange.shift(); // Nur ersten entfernen
     socket.emit('mod_falsch', {punkte: modPunkte, delta: pf});
+
+    // Zweite Chance – nächster in Warteschlange
+    if(modWarteschlange.length > 0) {
+      const naechster = config.spieler.find(s=>s.nr===modWarteschlange[0].nr);
+      if(naechster) zeigToast(`🥈 ${naechster.name} ist jetzt dran!`, '');
+    }
   }
   rendereWarteschlange();
 }
