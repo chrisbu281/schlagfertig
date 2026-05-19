@@ -102,7 +102,17 @@ def csv_upload():
         if "file" not in request.files:
             return jsonify({"error": "Keine Datei"}), 400
         file = request.files["file"]
-        content = file.read().decode("utf-8-sig")
+        # Verschiedene Encodings versuchen
+        raw = file.read()
+        content = None
+        for encoding in ['utf-8-sig', 'utf-8', 'cp1252', 'latin-1', 'iso-8859-1']:
+            try:
+                content = raw.decode(encoding)
+                break
+            except:
+                continue
+        if content is None:
+            return jsonify({"error": "Datei konnte nicht gelesen werden – bitte als UTF-8 speichern"}), 400
         reader = csv.DictReader(io.StringIO(content))
         fragen, fehler = [], []
         for i, row in enumerate(reader, start=2):
