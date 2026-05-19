@@ -378,22 +378,39 @@ def zeige_sieger_screen(spieler_liste, punkte):
 buzzer_aktiv = True
 buzzer_gesperrt = False
 buzzer_start_zeit = None
+buzzer_warteschlange_lokal = []  # Lokale Kopie der Warteschlange
 
 def buzzer_thread(spieler):
-    global buzzer_gesperrt, buzzer_start_zeit
+    global buzzer_gesperrt, buzzer_start_zeit, buzzer_warteschlange_lokal
     letzter = {s["nr"]: GPIO.HIGH for s in spieler}
+    erster_buzz_zeit = None
+
     while buzzer_aktiv:
-        if not buzzer_gesperrt:
-            for s in spieler:
-                jetzt = GPIO.input(s["gpio"])
-                if jetzt == GPIO.LOW and letzter[s["nr"]] == GPIO.HIGH:
-                    ms = int((time.time() - buzzer_start_zeit) * 1000) if buzzer_start_zeit else 0
+        for s in spieler:
+            jetzt = GPIO.input(s["gpio"])
+            if jetzt == GPIO.LOW and letzter[s["nr"]] == GPIO.HIGH:
+                nr = s["nr"]
+                # Schon in Warteschlange? Ignorieren
+                if any(e['nr'] == nr for e in buzzer_warteschlange_lokal):
+                    letzter[s["nr"]] = jetzt
+                    continue
+
+                ms = int((time.time() - buzzer_start_zeit) * 1000) if buzzer_start_zeit else 0
+
+                # Erster Buzzer
+                if len(buzzer_warteschlange_lokal) == 0:
+                    erster_buzz_zeit = time.time()
                     buzzer_gesperrt = True
+
+                # Nur innerhalb von 2 Sekunden nach erstem Buzzer erlauben
+                if erster_buzz_zeit is None or (time.time() - erster_buzz_zeit) < 2.0:
+                    buzzer_warteschlange_lokal.append({'nr': nr, 'ms': ms})
                     try:
-                        sio.emit('buzzer_gedrueckt', {'nr': s["nr"], 'ms': ms})
+                        sio.emit('buzzer_gedrueckt', {'nr': nr, 'ms': ms})
                     except: pass
-                    befehle.put(('buzzer_local', {'nr': s["nr"], 'ms': ms}))
-                letzter[s["nr"]] = jetzt
+                    befehle.put(('buzzer_local', {'nr': nr, 'ms': ms}))
+
+            letzter[s["nr"]] = jetzt
         time.sleep(0.001)
 
 # ─────────────────────────────────────────────
@@ -464,6 +481,7 @@ def main():
                 frage_gesamt = data.get('gesamt', 1)
                 spielmodus = data.get('spielmodus', 'frei')
                 warteschlange = []
+                buzzer_warteschlange_lokal.clear()
                 mc_gewaehlt = None
                 mc_aufgeloest = False
                 buzzer_gesperrt = False
@@ -485,8 +503,8 @@ def main():
                 for nr in punkte:
                     punkte[nr] = p_raw.get(str(nr), p_raw.get(nr, punkte[nr]))
                 zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, True)
-                # Nach 2 Sek Punktestand zeigen
-                time.sleep(2)
+                # Nach 5 Sek Punktestand zeigen
+                time.sleep(5)
                 modus = "punktestand"
 
             elif befehl == 'zeige_ergebnis':
@@ -522,6 +540,7 @@ def main():
             elif befehl == 'buzzer_freigeben':
                 buzzer_gesperrt = False
                 warteschlange = []
+                buzzer_warteschlange_lokal.clear()
                 buzzer_start_zeit = time.time()
                 if modus == "punktestand":
                     modus = "frage"
