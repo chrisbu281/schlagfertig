@@ -331,7 +331,16 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
       <div class="csv-box" onclick="document.getElementById('csv-input').click()">
         <div class="csv-icon">📊</div>
         <p style="font-size:13px;color:#666"><strong>CSV hochladen</strong> – klicken oder ziehen</p>
-        <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="ladeCSV(this)">
+        <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="zeigeCSVOptionen(this)">
+      </div>
+      <!-- CSV Upload Optionen -->
+      <div id="csv-optionen" style="display:none;background:#f8f8f8;border:1px solid #ddd;border-radius:10px;padding:14px;margin-bottom:12px;">
+        <p style="font-size:13px;font-weight:600;margin-bottom:10px">📋 <span id="csv-dateiname"></span> – Was soll passieren?</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn rot" onclick="uploadCSV('ersetzen')">🗑️ Bestehende ersetzen</button>
+          <button class="btn gruen" onclick="uploadCSV('hinzufuegen')">➕ Zu bestehenden hinzufügen</button>
+          <button class="btn" onclick="abbrechenCSV()">Abbrechen</button>
+        </div>
       </div>
     </div>
     <div class="karte">
@@ -1258,6 +1267,45 @@ function saveEinstell(){
 function setSoundDatei(id,v){if(!config.einstellungen.sounds)config.einstellungen.sounds={};config.einstellungen.sounds[id]=v;}
 
 // ── CSV ──
+let csvDateiInput = null;
+
+function zeigeCSVOptionen(input) {
+  if(!input.files[0]) return;
+  csvDateiInput = input;
+  document.getElementById('csv-dateiname').textContent = input.files[0].name;
+  document.getElementById('csv-optionen').style.display = 'block';
+}
+
+function abbrechenCSV() {
+  csvDateiInput = null;
+  document.getElementById('csv-optionen').style.display = 'none';
+  document.getElementById('csv-input').value = '';
+}
+
+async function uploadCSV(modus) {
+  if(!csvDateiInput || !csvDateiInput.files[0]) return;
+  const file = csvDateiInput.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+  document.getElementById('csv-optionen').style.display = 'none';
+  try {
+    const r = await fetch(`/api/csv-upload?modus=${modus}`, {method:'POST', body:formData});
+    const d = await r.json();
+    if(d.status==='ok') {
+      zeigToast(`✅ ${d.anzahl} Fragen ${modus==='hinzufuegen'?'hinzugefügt':'importiert'}!`, 'gruen');
+      await ladeVomPi();
+      gewaehlteFragen = new Set(config.fragen.map((_,i)=>i));
+      rendereFragen();
+    } else {
+      zeigToast('❌ '+(d.error||'Fehler'), 'rot');
+    }
+  } catch(e) {
+    zeigToast('❌ Verbindungsfehler', 'rot');
+  }
+  csvDateiInput = null;
+  document.getElementById('csv-input').value = '';
+}
+
 async function ladeCSV(input){
   const file=input.files[0];if(!file)return;
   const formData=new FormData();
