@@ -359,6 +359,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
         <button class="btn" onclick="alleWaehlen()">Alle wählen</button>
         <button class="btn" onclick="keineWaehlen()">Keine</button>
         <button class="btn primaer" onclick="frageModal()">+ Hinzufügen</button>
+        <button class="btn" onclick="filterZuruecksetzen()">🔄 Filter zurücksetzen</button>
         <span style="font-size:12px;color:#888;margin-left:4px;align-self:center">Zufällig:</span>
         <button class="btn lila" onclick="zufaelligWaehlen(5)">5</button>
         <button class="btn lila" onclick="zufaelligWaehlen(10)">10</button>
@@ -1033,8 +1034,29 @@ function toggleFilter(typ) {
   filterAktiv[typ] = !filterAktiv[typ];
   const el = document.getElementById('fcheck-'+typ);
   el.classList.toggle('aktiv', filterAktiv[typ]);
-  el.textContent = (filterAktiv[typ]?'✓ ':'') + el.textContent.replace('✓ ','');
+  // Text korrekt setzen
+  const labels = {
+    'leicht': 'Leicht', 'mittel': 'Mittel', 'schwer': 'Schwer',
+    'frei-f': 'Freie Antwort', 'mc-f': 'Multiple Choice'
+  };
+  el.textContent = (filterAktiv[typ] ? '✓ ' : '') + labels[typ];
   rendereFragen();
+}
+
+function filterZuruecksetzen() {
+  Object.keys(filterAktiv).forEach(k => filterAktiv[k] = true);
+  const labels = {
+    'leicht': 'Leicht', 'mittel': 'Mittel', 'schwer': 'Schwer',
+    'frei-f': 'Freie Antwort', 'mc-f': 'Multiple Choice'
+  };
+  Object.keys(filterAktiv).forEach(k => {
+    const el = document.getElementById('fcheck-'+k);
+    if(el) { el.classList.add('aktiv'); el.textContent = '✓ ' + labels[k]; }
+  });
+  document.getElementById('suche').value = '';
+  document.getElementById('filter-kat').value = '';
+  rendereFragen();
+  zeigToast('Filter zurückgesetzt','gruen');
 }
 
 function rendereFragen(){
@@ -1043,7 +1065,9 @@ function rendereFragen(){
 
   const gef=config.fragen.filter(f=>{
     if(!filterAktiv[f.schwierigkeit]) return false;
-    const istMC = f.modus==='mc' || (f.antworten_mc && f.antworten_mc.some(a=>a));
+    // MC erkennen: modus ist 'mc' ODER hat ausgefüllte MC Antworten
+    const hatMCAntworten = f.antworten_mc && f.antworten_mc.filter(a=>a && a.trim()).length === 4;
+    const istMC = f.modus === 'mc' || hatMCAntworten;
     if(istMC && !filterAktiv['mc-f']) return false;
     if(!istMC && !filterAktiv['frei-f']) return false;
     if(fk && f.kategorie!==fk) return false;
@@ -1064,7 +1088,8 @@ function rendereFragen(){
     : gef.map(f=>{
         const i=config.fragen.indexOf(f);
         const gew=gewaehlteFragen.has(i);
-        const istMC = f.modus==='mc' || (f.antworten_mc && f.antworten_mc.some(a=>a));
+        const hatMCAntworten = f.antworten_mc && f.antworten_mc.filter(a=>a && a.trim()).length === 4;
+        const istMC = f.modus === 'mc' || hatMCAntworten;
         return`<div class="frage-item ${gew?'gewaehlt':''}" onclick="toggleFrage(${i})">
           <div class="frage-checkbox">${gew?'✓':''}</div>
           <div class="frage-inhalt">
@@ -1072,7 +1097,7 @@ function rendereFragen(){
             <div class="frage-meta">
               <span class="badge badge-${f.schwierigkeit}">${f.schwierigkeit.charAt(0).toUpperCase()+f.schwierigkeit.slice(1)}</span>
               <span style="font-size:11px;color:#888">${f.kategorie}</span>
-              ${istMC?'<span class="badge badge-mc">MC</span>':''}
+              ${istMC?'<span class="badge badge-mc">MC</span>':'<span class="badge badge-frei">Frei</span>'}
             </div>
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
@@ -1091,19 +1116,27 @@ function toggleFrage(idx){
 function alleWaehlen(){config.fragen.forEach((_,i)=>gewaehlteFragen.add(i));rendereFragen();}
 function keineWaehlen(){gewaehlteFragen.clear();rendereFragen();}
 function zufaelligWaehlen(n){
-  // Nur aus gefilterten Fragen auswählen
+  // Nur aus aktuell gefilterten Fragen auswählen
   const gefiltertIndizes = config.fragen.map((_,i)=>i).filter(i=>{
     const f=config.fragen[i];
     if(!filterAktiv[f.schwierigkeit]) return false;
-    const istMC = f.modus==='mc' || (f.antworten_mc && f.antworten_mc.some(a=>a));
+    const hatMCAntworten = f.antworten_mc && f.antworten_mc.filter(a=>a && a.trim()).length === 4;
+    const istMC = f.modus === 'mc' || hatMCAntworten;
     if(istMC && !filterAktiv['mc-f']) return false;
     if(!istMC && !filterAktiv['frei-f']) return false;
     return true;
   });
-  const gemischt = gefiltertIndizes.sort(()=>Math.random()-.5);
-  gewaehlteFragen = new Set(gemischt.slice(0, Math.min(n, gemischt.length)));
+  if(gefiltertIndizes.length === 0) {
+    zeigToast('Keine Fragen mit diesen Filtern!','rot');
+    return;
+  }
+  // Zufällig mischen und auswählen
+  const gemischt = [...gefiltertIndizes].sort(()=>Math.random()-.5);
+  const ausgewaehlt = gemischt.slice(0, Math.min(n, gemischt.length));
+  // Bestehende Auswahl behalten und neue hinzufügen
+  gewaehlteFragen = new Set(ausgewaehlt);
   rendereFragen();
-  zeigToast(`${gewaehlteFragen.size} zufällige Fragen gewählt`,'gruen');
+  zeigToast(`${ausgewaehlt.length} zufällige Fragen gewählt`,'gruen');
 }
 
 function frageModal(idx=-1){
