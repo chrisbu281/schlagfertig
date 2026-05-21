@@ -107,8 +107,27 @@ def lade_foto(spieler, groesse=96):
 _foto_cache = {}
 
 # ─────────────────────────────────────────────
-#  GPIO
+#  SOUND
 # ─────────────────────────────────────────────
+sounds_cache = {}
+
+def init_sound():
+    try:
+        pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
+        print("Sound initialisiert!")
+    except Exception as e:
+        print(f"Sound Fehler: {e}")
+
+def spiele_sound(dateiname):
+    if not dateiname: return
+    try:
+        pfad = os.path.join(os.path.dirname(__file__), dateiname)
+        if not os.path.exists(pfad): return
+        if dateiname not in sounds_cache:
+            sounds_cache[dateiname] = pygame.mixer.Sound(pfad)
+        sounds_cache[dateiname].play()
+    except Exception as e:
+        print(f"Sound Wiedergabe Fehler: {e}")
 def gpio_setup(spieler):
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
@@ -452,7 +471,9 @@ def main():
 
     gpio_setup(spieler)
     display_setup()
+    init_sound()
     _foto_cache.clear()
+    sounds_config = konfig.get("einstellungen", {}).get("sounds", {})
 
     # Sofort Wartebildschirm zeigen – kein schwarzer Bildschirm
     screen.fill(DUNKEL)
@@ -552,10 +573,12 @@ def main():
                     punkte[nr] = p_raw.get(str(nr), p_raw.get(nr, punkte[nr]))
 
                 if richtig:
+                    spiele_sound(sounds_config.get('richtig'))
                     zeige_richtig_screen(delta)
                     time.sleep(3)
                     modus = "punktestand"
                 else:
+                    spiele_sound(sounds_config.get('falsch'))
                     zeige_falsch_screen(delta)
                     time.sleep(3)
                     # Nächsten Spieler in Warteschlange anzeigen
@@ -605,6 +628,7 @@ def main():
                 spieler_liste = data.get('spieler', spieler)
                 for nr in punkte:
                     punkte[nr] = p_raw.get(str(nr), p_raw.get(nr, punkte[nr]))
+                spiele_sound(sounds_config.get('sieger'))
                 zeige_sieger_screen(spieler_liste, punkte)
                 modus = "sieger"
 
@@ -615,6 +639,7 @@ def main():
                     warteschlange.append({'nr': nr, 'ms': ms})
                 if len(warteschlange) == 1:
                     letzter_gewinner_nr = nr
+                    spiele_sound(sounds_config.get('buzzer'))
                     s = spieler_map.get(nr)
                     if s:
                         zeige_spieler_dran_screen(s, "Du darfst antworten!")
