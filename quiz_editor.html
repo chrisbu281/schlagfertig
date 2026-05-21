@@ -6,60 +6,111 @@
 <title>Schlagfertig App</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: system-ui, sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 15px; }
+body { font-family: system-ui, sans-serif; background: #f0f0ec; color: #1a1a1a; font-size: 15px; min-height: 100vh; }
 
-header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.logo { font-size: 19px; font-weight: 800; letter-spacing: -0.5px; }
+/* HEADER */
+header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+.logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
 .logo span { color: #E24B4A; }
-.header-rechts { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.status-dot { width: 9px; height: 9px; border-radius: 50%; background: #555; display: inline-block; margin-right: 5px; }
+.header-rechts { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.status-dot { width: 9px; height: 9px; border-radius: 50%; background: #555; display: inline-block; margin-right: 5px; transition: background .3s; }
 .status-dot.aktiv { background: #2d8a4e; animation: puls 1.5s ease infinite; }
 @keyframes puls { 0%,100%{opacity:1}50%{opacity:.4} }
 
+/* ANSICHTEN */
 .ansicht { display: none; }
 .ansicht.aktiv { display: block; }
 
-.tabs { display: flex; border-bottom: 2px solid #ddd; background: #fff; padding: 0 24px; overflow-x: auto; }
-.tab { padding: 12px 18px; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
-.tab.aktiv { color: #1a1a2e; border-bottom-color: #1a1a2e; }
-.tab:hover:not(.aktiv) { color: #333; }
-.seite { display: none; padding: 22px 24px; max-width: 1100px; margin: 0 auto; }
-.seite.aktiv { display: block; }
-
-.karte { background: #fff; border-radius: 12px; border: 1px solid #e0e0e0; padding: 20px; margin-bottom: 16px; }
-.karte-kopf { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-.karte-kopf h2 { font-size: 15px; font-weight: 600; }
-
-.btn { padding: 8px 14px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s; display: inline-flex; align-items: center; gap: 5px; }
-.btn:hover { background: #f5f5f5; }
+/* BUTTONS */
+.btn { padding: 10px 18px; border-radius: 10px; border: 1.5px solid #ddd; background: #fff; cursor: pointer; font-size: 14px; font-weight: 500; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { background: #f5f5f5; transform: translateY(-1px); }
 .btn.primaer { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+.btn.primaer:hover { background: #2a2a4e; }
 .btn.gruen { background: #2d8a4e; color: #fff; border-color: #2d8a4e; }
+.btn.gruen:hover { background: #237a40; }
 .btn.rot { background: #c0392b; color: #fff; border-color: #c0392b; }
 .btn.orange { background: #e67e22; color: #fff; border-color: #e67e22; }
-.btn.gold { background: #f39c12; color: #fff; border-color: #f39c12; }
 .btn.lila { background: #8e44ad; color: #fff; border-color: #8e44ad; }
-.btn:disabled { opacity: .4; cursor: not-allowed; }
-.spiel-btn { padding: 9px 18px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
-.spiel-btn.starten { background: #2d8a4e; color: #fff; }
-.spiel-btn.stoppen { background: #c0392b; color: #fff; display: none; }
+.btn.grau { background: #888; color: #fff; border-color: #888; }
+.btn.gross { padding: 16px 28px; font-size: 17px; border-radius: 14px; }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
 
-/* FRAGEN */
-.fragen-toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
-.suche { flex: 1; min-width: 120px; padding: 7px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; outline: none; }
-.filter-sel { padding: 7px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; background: #fff; outline: none; }
-.filter-check-gruppe { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.filter-check { display: flex; align-items: center; gap: 4px; padding: 5px 10px; border: 1px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 500; background: #fff; transition: all .15s; }
-.filter-check.aktiv { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
-.filter-check.leicht.aktiv { background: #2d8a4e; border-color: #2d8a4e; }
-.filter-check.mittel.aktiv { background: #e67e22; border-color: #e67e22; }
-.filter-check.schwer.aktiv { background: #c0392b; border-color: #c0392b; }
-.filter-check.mc-f.aktiv { background: #8e44ad; border-color: #8e44ad; }
-.filter-check.frei-f.aktiv { background: #2980b9; border-color: #2980b9; }
-.zufall-gruppe { display: flex; gap: 6px; flex-wrap: wrap; }
-.frage-item { display: flex; align-items: flex-start; gap: 12px; padding: 11px 14px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background .1s; }
-.frage-item:hover { background: #fafafa; }
+/* KARTE */
+.karte { background: #fff; border-radius: 14px; border: 1px solid #e0e0e0; padding: 22px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+
+/* ═══ STARTSEITE ═══ */
+#ansicht-start { min-height: calc(100vh - 56px); }
+.start-hero { background: linear-gradient(135deg, #1a1a2e 0%, #2a1a3e 100%); color: #fff; padding: 60px 24px; text-align: center; }
+.start-hero h1 { font-size: 48px; font-weight: 900; margin-bottom: 8px; }
+.start-hero h1 span { color: #E24B4A; }
+.start-hero p { font-size: 18px; color: #aaa; margin-bottom: 40px; }
+.start-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.start-btn { padding: 20px 36px; border-radius: 16px; border: none; font-size: 18px; font-weight: 700; cursor: pointer; transition: all .2s; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 180px; }
+.start-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+.start-btn .icon { font-size: 36px; }
+.start-btn.spielen { background: #E24B4A; color: #fff; }
+.start-btn.einstellungen { background: rgba(255,255,255,.1); color: #fff; border: 2px solid rgba(255,255,255,.2); }
+.start-btn.fragen { background: #2d8a4e; color: #fff; }
+.status-bar { background: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #eee; }
+
+/* ═══ WIZARD ═══ */
+.wizard-container { max-width: 700px; margin: 0 auto; padding: 24px; }
+.wizard-progress { display: flex; align-items: center; gap: 0; margin-bottom: 32px; }
+.wp-schritt { display: flex; align-items: center; gap: 8px; }
+.wp-kreis { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; border: 2px solid #ddd; background: #fff; color: #999; transition: all .3s; flex-shrink: 0; }
+.wp-kreis.aktiv { background: #1a1a2e; border-color: #1a1a2e; color: #fff; }
+.wp-kreis.fertig { background: #2d8a4e; border-color: #2d8a4e; color: #fff; }
+.wp-label { font-size: 13px; font-weight: 500; color: #999; white-space: nowrap; }
+.wp-label.aktiv { color: #1a1a2e; font-weight: 700; }
+.wp-linie { flex: 1; height: 2px; background: #ddd; margin: 0 8px; min-width: 20px; }
+.wp-linie.fertig { background: #2d8a4e; }
+
+.wizard-inhalt { background: #fff; border-radius: 16px; border: 1px solid #e0e0e0; padding: 28px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.wizard-titel { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.wizard-untertitel { font-size: 14px; color: #888; margin-bottom: 24px; }
+.wizard-buttons { display: flex; justify-content: space-between; margin-top: 28px; gap: 12px; }
+
+/* SPIELER WIZARD */
+.spieler-wizard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.spieler-wizard-karte { border: 2px solid #e0e0e0; border-radius: 14px; padding: 16px; text-align: center; transition: all .2s; position: relative; }
+.spieler-wizard-karte.aktiv { border-color: #1a1a2e; background: #f8f8ff; }
+.spieler-wizard-karte.inaktiv { opacity: 0.5; }
+.sw-toggle { position: absolute; top: 10px; right: 10px; }
+.sw-avatar { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #fff; overflow: hidden; }
+.sw-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.sw-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.sw-gpio { font-size: 11px; color: #888; }
+
+/* TOGGLE */
+.toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: #ccc; border-radius: 12px; cursor: pointer; transition: background .2s; }
+.toggle-slider:before { content:''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s; }
+.toggle input:checked + .toggle-slider { background: #2d8a4e; }
+.toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+/* SPIELMODUS WIZARD */
+.modus-wizard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.modus-wizard-karte { border: 2px solid #e0e0e0; border-radius: 14px; padding: 22px; cursor: pointer; transition: all .2s; text-align: center; }
+.modus-wizard-karte:hover { border-color: #1a1a2e; background: #f8f8ff; transform: translateY(-2px); }
+.modus-wizard-karte.aktiv { border-color: #1a1a2e; background: #f0f0ff; }
+.mw-icon { font-size: 40px; margin-bottom: 10px; }
+.mw-titel { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.mw-desc { font-size: 13px; color: #888; line-height: 1.4; }
+
+/* FRAGEN WIZARD */
+.fragen-toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+.suche { flex: 1; min-width: 120px; padding: 8px 12px; border: 1.5px solid #ddd; border-radius: 9px; font-size: 13px; outline: none; }
+.filter-sel { padding: 8px 10px; border: 1.5px solid #ddd; border-radius: 9px; font-size: 13px; background: #fff; outline: none; }
+.filter-chip { padding: 5px 12px; border: 1.5px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 500; background: #fff; transition: all .15s; }
+.filter-chip.aktiv { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+.filter-chip.leicht.aktiv { background: #2d8a4e; border-color: #2d8a4e; }
+.filter-chip.mittel.aktiv { background: #e67e22; border-color: #e67e22; }
+.filter-chip.schwer.aktiv { background: #c0392b; border-color: #c0392b; }
+
+.frage-item { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
 .frage-item:last-child { border-bottom: none; }
-.frage-checkbox { width: 20px; height: 20px; border-radius: 5px; border: 2px solid #ddd; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.frage-checkbox { width: 22px; height: 22px; border-radius: 6px; border: 2px solid #ddd; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all .15s; }
 .frage-item.gewaehlt .frage-checkbox { background: #1a1a2e; border-color: #1a1a2e; color: #fff; }
 .frage-inhalt { flex: 1; }
 .frage-text { font-size: 14px; line-height: 1.4; }
@@ -70,85 +121,74 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .badge-schwer { background: #f8d7da; color: #721c24; }
 .badge-mc { background: #fef3c7; color: #92400e; }
 .badge-frei { background: #e8f0fe; color: #1a56db; }
-.badge-auto { background: #f0fdf4; color: #166534; }
-.icon-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 3px 5px; border-radius: 5px; }
-.icon-btn:hover { background: #eee; }
-.auswahl-info { font-size: 13px; color: #888; }
+.auswahl-info { font-size: 13px; color: #888; font-weight: 500; }
 
-/* SPIELER */
-.spieler-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(210px,1fr)); gap: 12px; }
-.spieler-karte { background: #fff; border-radius: 12px; border: 2px solid #e0e0e0; padding: 14px; }
+/* ═══ EINSTELLUNGEN ═══ */
+.einst-container { max-width: 900px; margin: 0 auto; padding: 24px; }
+.tabs { display: flex; border-bottom: 2px solid #e0e0e0; background: #fff; padding: 0 24px; overflow-x: auto; }
+.tab { padding: 12px 18px; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+.tab.aktiv { color: #1a1a2e; border-bottom-color: #1a1a2e; }
+.seite { display: none; padding: 22px 0; }
+.seite.aktiv { display: block; }
+
+/* Spieler Einstellungen */
+.spieler-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.spieler-karte { background: #fff; border-radius: 12px; border: 2px solid #e0e0e0; padding: 16px; }
+.spieler-karte.inaktiv { opacity: 0.6; border-style: dashed; }
 .avatar-ring { width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 3px solid #eee; background: #f5f5f5; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; cursor: pointer; margin: 0 auto 8px; }
 .avatar-ring img { width: 100%; height: 100%; object-fit: cover; }
-.avatar-aktionen { display: flex; gap: 5px; justify-content: center; margin-bottom: 8px; }
-.av-btn { flex: 1; padding: 5px 3px; border-radius: 7px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 11px; font-weight: 500; color: #444; display: flex; align-items: center; justify-content: center; gap: 3px; }
-.av-btn.primaer { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
 .spieler-karte label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; margin-top: 8px; font-weight: 500; }
-.spieler-karte input[type=text] { width: 100%; border: 1px solid #ddd; border-radius: 7px; padding: 6px 9px; font-size: 13px; outline: none; }
+.spieler-karte input[type=text] { width: 100%; border: 1.5px solid #ddd; border-radius: 8px; padding: 7px 10px; font-size: 13px; outline: none; }
 .farb-zeile { display: flex; gap: 7px; align-items: center; margin-top: 3px; }
-.farb-zeile input[type=color] { width: 32px; height: 28px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; padding: 2px; }
+.farb-zeile input[type=color] { width: 34px; height: 30px; border: 1.5px solid #ddd; border-radius: 6px; cursor: pointer; padding: 2px; }
 .gpio-badge { font-size: 11px; background: #f0f0f0; border-radius: 5px; padding: 2px 8px; color: #555; }
+.av-btn { width: 100%; padding: 6px; border-radius: 8px; border: 1.5px solid #ddd; background: #fff; cursor: pointer; font-size: 12px; font-weight: 500; color: #444; display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 6px; }
+.av-btn.primaer { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
 
-/* PUNKTE */
-.punkte-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 12px; margin-bottom: 20px; }
+/* Punkte */
+.punkte-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
 .punkte-karte { border-radius: 12px; padding: 16px; text-align: center; color: #fff; }
-.p-avatar { width: 54px; height: 54px; border-radius: 50%; margin: 0 auto 7px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; border: 3px solid rgba(255,255,255,.3); }
+.p-avatar { width: 50px; height: 50px; border-radius: 50%; margin: 0 auto 7px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; border: 3px solid rgba(255,255,255,.3); }
 .p-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .p-name { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
-.p-zahl { font-size: 38px; font-weight: 700; line-height: 1; }
+.p-zahl { font-size: 36px; font-weight: 700; line-height: 1; }
 .p-label { font-size: 11px; opacity: .8; margin-top: 2px; }
 .rangzeile { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 9px; background: #fafafa; border: 1px solid #eee; margin-bottom: 7px; }
 .rang-nr { font-size: 15px; font-weight: 700; width: 24px; color: #bbb; }
-.rang-nr.gold{color:#f0a500;}.rang-nr.silber{color:#999;}.rang-nr.bronze{color:#cd7f32;}
-.rang-avatar { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+.rang-avatar { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
 .rang-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .rang-name { font-weight: 600; font-size: 13px; flex: 1; }
 .rang-punkte { font-size: 16px; font-weight: 700; }
 .rang-balken-wrap { flex: 2; height: 7px; background: #eee; border-radius: 4px; overflow: hidden; }
 .rang-balken { height: 100%; border-radius: 4px; }
-.trennlinie { height: 1px; background: #eee; margin: 18px 0; }
+.trennlinie { height: 1px; background: #eee; margin: 16px 0; }
 
-/* EINSTELLUNGEN */
+/* Einstellungen */
 .einstell-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media(max-width:700px){.einstell-grid{grid-template-columns:1fr;}}
 .toggle-zeile { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid #f0f0f0; }
 .toggle-zeile:last-child { border-bottom: none; }
 .toggle-info strong { display: block; font-size: 13px; font-weight: 500; margin-bottom: 1px; }
 .toggle-info span { font-size: 11px; color: #888; }
-.toggle { position: relative; width: 42px; height: 22px; flex-shrink: 0; }
-.toggle input { opacity: 0; width: 0; height: 0; }
-.toggle-slider { position: absolute; inset: 0; background: #ccc; border-radius: 11px; cursor: pointer; transition: background .2s; }
-.toggle-slider:before { content:''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s; }
-.toggle input:checked + .toggle-slider { background: #2d8a4e; }
-.toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
-.num-input { width: 72px; padding: 6px 9px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; outline: none; text-align: center; }
+.num-input { width: 72px; padding: 7px 10px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 13px; outline: none; text-align: center; }
 
-/* SPIELMODUS */
-.modus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.modus-karte { border: 2px solid #e0e0e0; border-radius: 10px; padding: 16px; cursor: pointer; }
-.modus-karte.aktiv { border-color: #1a1a2e; background: #f8f8ff; }
-.modus-karte .m-icon { font-size: 24px; margin-bottom: 6px; }
-.modus-karte .m-titel { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
-.modus-karte .m-desc { font-size: 11px; color: #888; line-height: 1.4; }
+/* CSV */
+.csv-box { border: 2px dashed #ddd; border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: all .2s; margin-bottom: 12px; }
+.csv-box:hover { border-color: #1a1a2e; background: #f8f8ff; }
+.csv-box .csv-icon { font-size: 36px; margin-bottom: 8px; }
 
 /* MODERATOR */
 #ansicht-moderator { background: #0a0a0f; min-height: 100vh; color: #fff; }
 .mod-header { background: #12121a; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1c1c28; flex-wrap: wrap; gap: 8px; }
-.mod-header .logo { font-size: 18px; }
-.mod-header-buttons { display: flex; gap: 8px; }
 .mod-body { padding: 14px 20px; max-width: 700px; margin: 0 auto; }
-
-/* Punkte Chips */
 .mod-punkte { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
 .mod-punkte::-webkit-scrollbar { display: none; }
-.mod-p-chip { flex-shrink: 0; border-radius: 10px; padding: 10px 14px; text-align: center; min-width: 90px; }
-.mod-p-chip .chip-avatar { width: 36px; height: 36px; border-radius: 50%; margin: 0 auto 5px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; }
+.mod-p-chip { flex-shrink: 0; border-radius: 10px; padding: 10px 14px; text-align: center; min-width: 85px; }
+.mod-p-chip .chip-avatar { width: 34px; height: 34px; border-radius: 50%; margin: 0 auto 5px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #fff; }
 .mod-p-chip .chip-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .mod-p-chip .chip-name { font-size: 11px; color: rgba(255,255,255,.7); margin-bottom: 2px; }
-.mod-p-chip .chip-punkte { font-size: 22px; font-weight: 700; color: #fff; }
+.mod-p-chip .chip-punkte { font-size: 20px; font-weight: 700; color: #fff; }
 .mod-p-chip.aktiv-chip { outline: 2px solid #E24B4A; }
-
-/* Warteschlange */
 .wq-box { background: #12121a; border: 1px solid #1c1c28; border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
 .wq-kopf { padding: 10px 14px; font-size: 11px; color: #555; letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid #1c1c28; display: flex; justify-content: space-between; align-items: center; }
 .wq-eintrag { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #1c1c28; }
@@ -162,8 +202,6 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .wq-badge.dran { background: #E24B4A; color: #fff; }
 .wq-badge.warte { background: #1c1c28; color: #555; }
 .wq-leer { padding: 16px 14px; text-align: center; font-size: 13px; color: #333; }
-
-/* Frage Card */
 .frage-card { background: #12121a; border: 1px solid #1c1c28; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
 .frage-card .meta { display: flex; justify-content: space-between; margin-bottom: 10px; }
 .frage-card .meta span { font-size: 11px; color: #555; letter-spacing: 1px; text-transform: uppercase; }
@@ -171,11 +209,8 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .antwort-box { background: rgba(42,157,92,.1); border: 1px solid rgba(42,157,92,.3); border-radius: 8px; padding: 10px 14px; }
 .antwort-box .a-label { font-size: 11px; color: #3d9; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
 .antwort-box .a-text { font-size: 15px; font-weight: 600; color: #3dbd74; }
-
-/* MC Buttons im Moderator */
 .mc-auswahl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
 .mc-auswahl-btn { padding: 12px; border-radius: 10px; border: 3px solid transparent; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer; transition: all .15s; text-align: center; }
-.mc-auswahl-btn:active { transform: scale(.96); }
 .mc-auswahl-btn.mc-a { background: #4361ee; }
 .mc-auswahl-btn.mc-b { background: #f72585; }
 .mc-auswahl-btn.mc-c { background: #f4a261; color: #1a1a1a; }
@@ -183,8 +218,6 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .mc-auswahl-btn.gewaehlt { border-color: #fff; transform: scale(1.03); }
 .mc-auswahl-btn.richtig-btn { border-color: #3dbd74; box-shadow: 0 0 12px rgba(61,189,116,.5); }
 .mc-auswahl-btn.falsch-btn { opacity: .4; }
-
-/* Aktionen */
 .mod-aktionen { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
 .mod-btn-reihe { display: flex; gap: 8px; }
 .mod-btn { flex: 1; padding: 14px 10px; border-radius: 12px; border: none; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform .1s; }
@@ -192,11 +225,8 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .mod-btn.gruen { background: #2d8a4e; color: #fff; }
 .mod-btn.rot { background: #c0392b; color: #fff; }
 .mod-btn.grau { background: #1c1c28; color: #fff; border: 1px solid #2a2a38; }
-.mod-btn.gold { background: #f39c12; color: #fff; }
 .mod-btn.lila { background: #8e44ad; color: #fff; }
 .mod-btn:disabled { opacity: .3; cursor: not-allowed; }
-
-/* Fragen Nav */
 .fragen-nav { background: #12121a; border: 1px solid #1c1c28; border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
 .fragen-nav-kopf { padding: 10px 14px; font-size: 11px; color: #555; letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid #1c1c28; }
 .frage-nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #1c1c28; cursor: pointer; transition: background .1s; }
@@ -208,236 +238,330 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .frage-nav-text { font-size: 13px; flex: 1; line-height: 1.3; }
 .frage-nav-kat { font-size: 11px; color: #555; }
 
-/* CSV */
-.csv-box { border: 2px dashed #ddd; border-radius: 10px; padding: 22px; text-align: center; cursor: pointer; transition: all .2s; margin-bottom: 12px; }
-.csv-box:hover { border-color: #1a1a2e; background: #f8f8ff; }
-.csv-box .csv-icon { font-size: 36px; margin-bottom: 8px; }
-
-/* Modal */
+/* MODAL */
 .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
 .overlay.offen { display: flex; }
-.modal { background: #fff; border-radius: 14px; padding: 24px; width: 540px; max-width: 100%; max-height: 90vh; overflow-y: auto; }
-.modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
-.feld { margin-bottom: 13px; }
-.feld label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; font-weight: 500; }
-.feld input,.feld textarea,.feld select { width: 100%; border: 1px solid #ddd; border-radius: 7px; padding: 8px 11px; font-size: 13px; outline: none; font-family: inherit; resize: vertical; }
-.modal-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+.modal { background: #fff; border-radius: 16px; padding: 26px; width: 560px; max-width: 100%; max-height: 90vh; overflow-y: auto; }
+.modal h2 { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+.feld { margin-bottom: 14px; }
+.feld label { font-size: 12px; color: #666; display: block; margin-bottom: 5px; font-weight: 500; }
+.feld input,.feld textarea,.feld select { width: 100%; border: 1.5px solid #ddd; border-radius: 8px; padding: 9px 12px; font-size: 13px; outline: none; font-family: inherit; resize: vertical; }
+.modal-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
 .zeile2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .zeile3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-.mc-bereich { background: #f8f8f8; border-radius: 9px; padding: 12px; margin-top: 7px; border: 1px solid #e8e8e8; }
-.mc-bereich h4 { font-size: 12px; font-weight: 600; margin-bottom: 9px; color: #555; }
-.mc-zeile { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
-.mc-label { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #fff; flex-shrink: 0; }
-.mc-input { flex: 1; border: 1px solid #ddd; border-radius: 7px; padding: 6px 9px; font-size: 13px; outline: none; }
-.mc-richtig { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ddd; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.mc-bereich { background: #f8f8f8; border-radius: 10px; padding: 14px; margin-top: 8px; border: 1.5px solid #e8e8e8; }
+.mc-bereich h4 { font-size: 12px; font-weight: 600; margin-bottom: 10px; color: #555; }
+.mc-zeile { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.mc-label { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #fff; flex-shrink: 0; }
+.mc-input { flex: 1; border: 1.5px solid #ddd; border-radius: 8px; padding: 7px 10px; font-size: 13px; outline: none; }
+.mc-richtig { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #ddd; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
 .mc-richtig.aktiv { background: #2d8a4e; border-color: #2d8a4e; color: #fff; }
-.modus-toggle { display: flex; gap: 5px; margin-top: 5px; }
-.mt-btn { flex: 1; padding: 6px; border-radius: 7px; border: 1.5px solid #ddd; background: #fff; cursor: pointer; font-size: 12px; font-weight: 500; color: #666; text-align: center; }
+.modus-toggle { display: flex; gap: 6px; margin-top: 5px; }
+.mt-btn { flex: 1; padding: 7px; border-radius: 8px; border: 1.5px solid #ddd; background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; color: #666; text-align: center; }
 .mt-btn.aktiv { border-color: #1a1a2e; background: #1a1a2e; color: #fff; }
 
-/* Kamera */
-.cam-modal { background: #fff; border-radius: 18px; padding: 20px; width: 400px; max-width: 95vw; }
-.cam-modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
-.cam-vorschau { width: 100%; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #111; position: relative; }
+/* KAMERA */
+.cam-modal { background: #fff; border-radius: 18px; padding: 22px; width: 420px; max-width: 95vw; }
+.cam-modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+.cam-vorschau { width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #111; position: relative; }
 .cam-vorschau video,.cam-vorschau canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cam-vorschau canvas { display: none; }
 .cam-rahmen { position: absolute; inset: 10px; border-radius: 50%; border: 3px dashed rgba(255,255,255,.4); pointer-events: none; }
 .cam-buttons { display: flex; gap: 8px; margin-top: 10px; }
 
-/* Toast */
-.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(70px); background: #1a1a2e; color: #fff; border-radius: 28px; padding: 10px 22px; font-size: 13px; font-weight: 500; z-index: 999; transition: transform .3s, opacity .3s; opacity: 0; white-space: nowrap; }
+/* TOAST */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(70px); background: #1a1a2e; color: #fff; border-radius: 28px; padding: 11px 24px; font-size: 14px; font-weight: 500; z-index: 999; transition: transform .3s, opacity .3s; opacity: 0; white-space: nowrap; }
 .toast.zeig { transform: translateX(-50%) translateY(0); opacity: 1; }
 .toast.gruen { background: #2d8a4e; }
 .toast.rot { background: #c0392b; }
 
-.info-box { background: #e8f4fd; border: 1px solid #b3d7f5; border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #1a4a6e; margin-bottom: 16px; }
+.icon-btn { background: none; border: none; cursor: pointer; font-size: 15px; padding: 4px 6px; border-radius: 6px; }
+.icon-btn:hover { background: #eee; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
 
-<!-- EDITOR -->
-<div class="ansicht aktiv" id="ansicht-editor">
+<!-- ═══ STARTSEITE ═══ -->
+<div class="ansicht aktiv" id="ansicht-start">
   <header>
-    <div class="logo">Schlag<span>fertig</span> <span style="font-size:12px;color:#aaa;font-weight:400">App</span></div>
+    <div class="logo">Schlag<span>fertig</span></div>
     <div class="header-rechts">
       <span style="font-size:12px;color:#aaa">
         <span class="status-dot" id="status-dot"></span>
         <span id="status-text">Prüfe...</span>
       </span>
-      <button class="spiel-btn starten" id="btn-starten" onclick="spielStarten()">▶ Spiel starten</button>
-      <button class="spiel-btn stoppen" id="btn-stoppen" onclick="spielStoppen()">■ Stoppen</button>
-      <button class="btn gruen" onclick="speichereAufPi()">💾 Speichern</button>
     </div>
   </header>
-
-  <div class="tabs">
-    <div class="tab aktiv" onclick="wechsleTab('spielmodus')">Spielmodus</div>
-    <div class="tab" onclick="wechsleTab('spieler')">Spieler</div>
-    <div class="tab" onclick="wechsleTab('fragen')">Fragen wählen</div>
-    <div class="tab" onclick="wechsleTab('punkte')">Punktestand</div>
-    <div class="tab" onclick="wechsleTab('einstellungen')">Einstellungen</div>
-  </div>
-
-  <!-- SPIELMODUS -->
-  <div class="seite aktiv" id="seite-spielmodus">
-    <div class="karte">
-      <div class="karte-kopf"><span style="font-size:18px">🎮</span><h2>Spielmodus</h2></div>
-      <div class="modus-grid">
-        <div class="modus-karte" id="mk-frei" onclick="setzeSpielmodus('frei')">
-          <div class="m-icon">🎤</div>
-          <div class="m-titel">Freie Antwort</div>
-          <div class="m-desc">Wer buzzert antwortet frei. Moderator entscheidet richtig/falsch.</div>
-        </div>
-        <div class="modus-karte" id="mk-mc" onclick="setzeSpielmodus('mc')">
-          <div class="m-icon">🅰️</div>
-          <div class="m-titel">Multiple Choice</div>
-          <div class="m-desc">4 Antworten auf dem Beamer. Moderator wählt A/B/C/D nach dem Buzzer.</div>
-        </div>
-      </div>
-    </div>
-    <div class="karte">
-      <div class="karte-kopf"><span style="font-size:18px">📋</span><h2>Optionen</h2></div>
-      <div class="toggle-zeile">
-        <div class="toggle-info"><strong>Buzzer-Warteschlange</strong><span>Moderator sieht 1./2./3. Platz</span></div>
-        <label class="toggle"><input type="checkbox" id="opt-warteschlange" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
-      </div>
-      <div class="toggle-zeile" id="zeile-zweite-chance">
-        <div class="toggle-info"><strong>Zweite Chance</strong><span>Bei falscher Antwort kommt der Nächste dran (nur Freie Antwort)</span></div>
-        <label class="toggle"><input type="checkbox" id="opt-zweite-chance" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
-      </div>
-      <div class="toggle-zeile">
-        <div class="toggle-info"><strong>Reaktionszeiten anzeigen</strong><span>Millisekunden in Warteschlange</span></div>
-        <label class="toggle"><input type="checkbox" id="opt-reaktion" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
-      </div>
+  <div class="start-hero">
+    <h1>Schlag<span>fertig</span></h1>
+    <p>Das interaktive Quiz & Entertainment System</p>
+    <div class="start-buttons">
+      <button class="start-btn spielen" onclick="starteWizard()">
+        <span class="icon">🎮</span>
+        Spiel starten
+      </button>
+      <button class="start-btn fragen" onclick="zeigeAnsicht('einstellungen');wechsleTab('fragen')">
+        <span class="icon">📋</span>
+        Fragen & CSV
+      </button>
+      <button class="start-btn einstellungen" onclick="zeigeAnsicht('einstellungen');wechsleTab('spieler')">
+        <span class="icon">⚙️</span>
+        Einstellungen
+      </button>
     </div>
   </div>
-
-  <!-- SPIELER -->
-  <div class="seite" id="seite-spieler">
-    <div class="karte">
-      <div class="karte-kopf"><span style="font-size:18px">👥</span><h2>Spieler & Fotos</h2></div>
-      <div class="spieler-grid" id="spieler-grid"></div>
+  <div style="max-width:700px;margin:24px auto;padding:0 24px;">
+    <div class="karte" style="display:flex;align-items:center;gap:16px;">
+      <span style="font-size:32px">🏆</span>
+      <div style="flex:1">
+        <div style="font-size:13px;color:#888;margin-bottom:4px">Letzter Spielstand</div>
+        <div id="start-punkte" style="font-size:14px;color:#555">Noch kein Spiel gespielt</div>
+      </div>
+      <button class="btn rot" onclick="resetPunkte()" style="font-size:12px;padding:6px 12px">Zurücksetzen</button>
     </div>
   </div>
+</div>
 
-  <!-- FRAGEN -->
-  <div class="seite" id="seite-fragen">
-    <div class="karte">
-      <div class="karte-kopf">
-        <span style="font-size:18px">📂</span><h2>CSV Import</h2>
-        <button class="btn orange" onclick="ladeCSVVorlage()" style="margin-left:auto">📥 Vorlage</button>
+<!-- ═══ WIZARD ═══ -->
+<div class="ansicht" id="ansicht-wizard">
+  <header>
+    <div class="logo">Schlag<span>fertig</span></div>
+    <div class="header-rechts">
+      <button class="btn" onclick="zeigeAnsicht('start')">✕ Abbrechen</button>
+    </div>
+  </header>
+  <div class="wizard-container">
+    <!-- Progress -->
+    <div class="wizard-progress">
+      <div class="wp-schritt">
+        <div class="wp-kreis aktiv" id="wp1">1</div>
+        <span class="wp-label aktiv" id="wl1">Spieler</span>
       </div>
-      <div class="csv-box" onclick="document.getElementById('csv-input').click()">
-        <div class="csv-icon">📊</div>
-        <p style="font-size:13px;color:#666"><strong>CSV hochladen</strong> – klicken oder ziehen</p>
-        <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="zeigeCSVOptionen(this)">
+      <div class="wp-linie" id="wline1"></div>
+      <div class="wp-schritt">
+        <div class="wp-kreis" id="wp2">2</div>
+        <span class="wp-label" id="wl2">Spielmodus</span>
       </div>
-      <!-- CSV Upload Optionen -->
-      <div id="csv-optionen" style="display:none;background:#f8f8f8;border:1px solid #ddd;border-radius:10px;padding:14px;margin-bottom:12px;">
-        <p style="font-size:13px;font-weight:600;margin-bottom:10px">📋 <span id="csv-dateiname"></span> – Was soll passieren?</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn rot" onclick="uploadCSV('ersetzen')">🗑️ Bestehende ersetzen</button>
-          <button class="btn gruen" onclick="uploadCSV('hinzufuegen')">➕ Zu bestehenden hinzufügen</button>
-          <button class="btn" onclick="abbrechenCSV()">Abbrechen</button>
-        </div>
+      <div class="wp-linie" id="wline2"></div>
+      <div class="wp-schritt">
+        <div class="wp-kreis" id="wp3">3</div>
+        <span class="wp-label" id="wl3">Fragen</span>
       </div>
     </div>
-    <div class="karte">
-      <div class="karte-kopf">
-        <span style="font-size:18px">✅</span><h2>Fragen wählen</h2>
-        <span class="auswahl-info" id="auswahl-info" style="margin-left:auto"></span>
+
+    <!-- Schritt 1: Spieler -->
+    <div class="wizard-inhalt" id="wizard-schritt-1">
+      <div class="wizard-titel">👥 Wer spielt mit?</div>
+      <div class="wizard-untertitel">Wähle die aktiven Spieler für diese Runde</div>
+      <div class="spieler-wizard-grid" id="spieler-wizard-grid"></div>
+      <div class="wizard-buttons">
+        <button class="btn grau" onclick="zeigeAnsicht('start')">← Zurück</button>
+        <button class="btn gruen gross" onclick="wizardWeiter(2)">Weiter →</button>
       </div>
+    </div>
+
+    <!-- Schritt 2: Spielmodus -->
+    <div class="wizard-inhalt" id="wizard-schritt-2" style="display:none">
+      <div class="wizard-titel">🎮 Was möchtet ihr spielen?</div>
+      <div class="wizard-untertitel">Wähle den Spielmodus für diese Runde</div>
+      <div class="modus-wizard-grid">
+        <div class="modus-wizard-karte aktiv" id="mwk-frei" onclick="setzeWizardModus('frei')">
+          <div class="mw-icon">🎤</div>
+          <div class="mw-titel">Freie Antwort</div>
+          <div class="mw-desc">Buzzer drücken und frei antworten. Der Moderator entscheidet ob die Antwort richtig ist.</div>
+        </div>
+        <div class="modus-wizard-karte" id="mwk-mc" onclick="setzeWizardModus('mc')">
+          <div class="mw-icon">🅰️</div>
+          <div class="mw-titel">Multiple Choice</div>
+          <div class="mw-desc">4 Antworten erscheinen auf dem Bildschirm. Buzzer drücken und A, B, C oder D wählen.</div>
+        </div>
+      </div>
+      <div class="wizard-buttons">
+        <button class="btn grau" onclick="wizardZurueck(1)">← Zurück</button>
+        <button class="btn gruen gross" onclick="wizardWeiter(3)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- Schritt 3: Fragen -->
+    <div class="wizard-inhalt" id="wizard-schritt-3" style="display:none">
+      <div class="wizard-titel">📋 Welche Fragen?</div>
+      <div class="wizard-untertitel">Wähle die Fragen für das Spiel aus</div>
+
       <!-- Filter -->
       <div class="fragen-toolbar">
-        <input class="suche" type="text" placeholder="Suchen..." oninput="rendereFragen()" id="suche">
-        <select class="filter-sel" id="filter-kat" onchange="rendereFragen()"><option value="">Alle Kategorien</option></select>
+        <input class="suche" type="text" placeholder="🔍 Suchen..." oninput="rendereFragenWizard()" id="wiz-suche">
+        <select class="filter-sel" id="wiz-filter-kat" onchange="rendereFragenWizard()">
+          <option value="">Alle Kategorien</option>
+        </select>
+        <button class="btn" onclick="filterWizardZuruecksetzen()" style="font-size:12px;padding:6px 10px">🔄 Reset</button>
       </div>
-      <!-- Schwierigkeit Filter -->
-      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
         <span style="font-size:12px;color:#888;font-weight:500">Schwierigkeit:</span>
-        <div class="filter-check leicht aktiv" id="fcheck-leicht" onclick="toggleFilter('leicht')">✓ Leicht</div>
-        <div class="filter-check mittel aktiv" id="fcheck-mittel" onclick="toggleFilter('mittel')">✓ Mittel</div>
-        <div class="filter-check schwer aktiv" id="fcheck-schwer" onclick="toggleFilter('schwer')">✓ Schwer</div>
-        <span style="font-size:12px;color:#888;font-weight:500;margin-left:8px">Modus:</span>
-        <div class="filter-check frei-f aktiv" id="fcheck-frei" onclick="toggleFilter('frei-f')">✓ Freie Antwort</div>
-        <div class="filter-check mc-f aktiv" id="fcheck-mc" onclick="toggleFilter('mc-f')">✓ Multiple Choice</div>
+        <div class="filter-chip leicht aktiv" id="wfc-leicht" onclick="toggleWizardFilter('leicht')">✓ Leicht</div>
+        <div class="filter-chip mittel aktiv" id="wfc-mittel" onclick="toggleWizardFilter('mittel')">✓ Mittel</div>
+        <div class="filter-chip schwer aktiv" id="wfc-schwer" onclick="toggleWizardFilter('schwer')">✓ Schwer</div>
       </div>
-      <!-- Aktionen -->
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-        <button class="btn" onclick="alleWaehlen()">Alle wählen</button>
-        <button class="btn" onclick="keineWaehlen()">Keine</button>
-        <button class="btn primaer" onclick="frageModal()">+ Hinzufügen</button>
-        <button class="btn" onclick="filterZuruecksetzen()">🔄 Filter zurücksetzen</button>
-        <span style="font-size:12px;color:#888;margin-left:4px;align-self:center">Zufällig:</span>
-        <button class="btn lila" onclick="zufaelligWaehlen(5)">5</button>
-        <button class="btn lila" onclick="zufaelligWaehlen(10)">10</button>
-        <button class="btn lila" onclick="zufaelligWaehlen(15)">15</button>
-        <button class="btn lila" onclick="zufaelligWaehlen(20)">20</button>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn" onclick="alleWaehlenWizard()" style="font-size:12px;padding:6px 12px">Alle</button>
+        <button class="btn" onclick="keineWaehlenWizard()" style="font-size:12px;padding:6px 12px">Keine</button>
+        <span style="font-size:12px;color:#888">Zufällig:</span>
+        <button class="btn lila" onclick="zufaelligWaehlenWizard(5)" style="font-size:12px;padding:6px 12px">5</button>
+        <button class="btn lila" onclick="zufaelligWaehlenWizard(10)" style="font-size:12px;padding:6px 12px">10</button>
+        <button class="btn lila" onclick="zufaelligWaehlenWizard(15)" style="font-size:12px;padding:6px 12px">15</button>
+        <button class="btn lila" onclick="zufaelligWaehlenWizard(20)" style="font-size:12px;padding:6px 12px">20</button>
+        <span class="auswahl-info" id="wiz-auswahl-info" style="margin-left:auto"></span>
       </div>
-      <div id="fragen-liste"></div>
-    </div>
-  </div>
+      <div id="wiz-fragen-liste" style="max-height:320px;overflow-y:auto;border:1px solid #eee;border-radius:10px;padding:4px 12px;"></div>
 
-  <!-- PUNKTE -->
-  <div class="seite" id="seite-punkte">
-    <div class="karte">
-      <div class="karte-kopf">
-        <span style="font-size:18px">🏆</span><h2>Punktestand</h2>
-        <button class="btn rot" onclick="resetPunkte()" style="margin-left:auto">Zurücksetzen</button>
-      </div>
-      <div class="punkte-grid" id="punkte-grid"></div>
-      <div class="trennlinie"></div>
-      <h3 style="font-size:14px;font-weight:600;margin-bottom:10px">Rangliste</h3>
-      <div id="rangliste"></div>
-      <div class="trennlinie"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap" id="punkte-buttons"></div>
-    </div>
-  </div>
-
-  <!-- EINSTELLUNGEN -->
-  <div class="seite" id="seite-einstellungen">
-    <div class="einstell-grid">
-      <div class="karte">
-        <div class="karte-kopf"><span style="font-size:18px">⚙️</span><h2>Spieloptionen</h2></div>
-        <div class="toggle-zeile">
-          <div class="toggle-info"><strong>Buzzer-Sperrung</strong><span>Nach erstem Buzzer alle sperren</span></div>
-          <label class="toggle"><input type="checkbox" id="opt-sperrung" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
-        </div>
-        <div class="toggle-zeile">
-          <div class="toggle-info"><strong>Fragen mischen</strong></div>
-          <label class="toggle"><input type="checkbox" id="opt-mischen" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
-        </div>
-        <div class="toggle-zeile">
-          <div class="toggle-info"><strong>Negativpunkte verhindern</strong></div>
-          <label class="toggle"><input type="checkbox" id="opt-noneg" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
-        </div>
-        <div class="trennlinie"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Punkte: richtig</label><input class="num-input" type="number" id="opt-p-richtig" min="0" max="100" oninput="saveEinstell()"></div>
-          <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Punkte: falsch</label><input class="num-input" type="number" id="opt-p-falsch" min="0" max="100" oninput="saveEinstell()"></div>
-          <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Sperrzeit (ms)</label><input class="num-input" type="number" id="opt-sperrzeit" min="10" max="500" oninput="saveEinstell()"></div>
-          <div>
-            <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Timeout (Sek. / 0=aus)</label>
-            <input class="num-input" type="number" id="opt-timeout" min="0" max="120" oninput="saveEinstell()">
-          </div>
-        </div>
-      </div>
-      <div class="karte">
-        <div class="karte-kopf"><span style="font-size:18px">🔊</span><h2>Sound-Dateien</h2></div>
-        <p style="font-size:12px;color:#888;margin-bottom:12px">Dateinamen eintragen – Dateien neben quiz_buzzer.py legen.</p>
-        <div id="sound-slots"></div>
+      <div class="wizard-buttons">
+        <button class="btn grau" onclick="wizardZurueck(2)">← Zurück</button>
+        <button class="btn gruen gross" id="wiz-start-btn" onclick="spielStarten()">🎮 Los geht's!</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- MODERATOR -->
+<!-- ═══ EINSTELLUNGEN ═══ -->
+<div class="ansicht" id="ansicht-einstellungen">
+  <header>
+    <div class="logo">Schlag<span>fertig</span></div>
+    <div class="header-rechts">
+      <button class="btn gruen" onclick="speichereAufPi()">💾 Speichern</button>
+      <button class="btn" onclick="zeigeAnsicht('start')">← Zurück</button>
+    </div>
+  </header>
+  <div class="tabs">
+    <div class="tab aktiv" onclick="wechsleTab('spieler')">👥 Spieler</div>
+    <div class="tab" onclick="wechsleTab('fragen')">📋 Fragen</div>
+    <div class="tab" onclick="wechsleTab('punkte')">🏆 Punktestand</div>
+    <div class="tab" onclick="wechsleTab('optionen')">⚙️ Optionen</div>
+    <div class="tab" onclick="wechsleTab('sounds')">🔊 Sounds</div>
+  </div>
+  <div class="einst-container">
+
+    <!-- SPIELER -->
+    <div class="seite aktiv" id="seite-spieler">
+      <div class="karte">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <span style="font-size:18px">👥</span>
+          <h2 style="font-size:15px;font-weight:600">Spieler konfigurieren</h2>
+          <span style="font-size:12px;color:#888;margin-left:auto">Bis zu 6 Spieler möglich</span>
+        </div>
+        <div class="spieler-grid" id="spieler-grid"></div>
+      </div>
+    </div>
+
+    <!-- FRAGEN -->
+    <div class="seite" id="seite-fragen">
+      <div class="karte">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <span style="font-size:18px">📂</span>
+          <h2 style="font-size:15px;font-weight:600">CSV Import</h2>
+          <button class="btn orange" onclick="ladeCSVVorlage()" style="margin-left:auto">📥 Vorlage</button>
+        </div>
+        <div class="csv-box" onclick="document.getElementById('csv-input').click()">
+          <div class="csv-icon">📊</div>
+          <p style="font-size:13px;color:#666"><strong>CSV hochladen</strong> – klicken oder ziehen</p>
+          <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="zeigeCSVOptionen(this)">
+        </div>
+        <div id="csv-optionen" style="display:none;background:#f8f8f8;border:1px solid #ddd;border-radius:10px;padding:14px;margin-bottom:12px;">
+          <p style="font-size:13px;font-weight:600;margin-bottom:10px">📋 <span id="csv-dateiname"></span> – Was soll passieren?</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn rot" onclick="uploadCSV('ersetzen')">🗑️ Bestehende ersetzen</button>
+            <button class="btn gruen" onclick="uploadCSV('hinzufuegen')">➕ Zu bestehenden hinzufügen</button>
+            <button class="btn" onclick="abbrechenCSV()">Abbrechen</button>
+          </div>
+        </div>
+      </div>
+      <div class="karte">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+          <span style="font-size:18px">📝</span>
+          <h2 style="font-size:15px;font-weight:600">Alle Fragen</h2>
+          <button class="btn primaer" onclick="frageModal()" style="margin-left:auto">+ Hinzufügen</button>
+        </div>
+        <div class="fragen-toolbar">
+          <input class="suche" type="text" placeholder="🔍 Suchen..." oninput="rendereFragen()" id="suche">
+          <select class="filter-sel" id="filter-kat" onchange="rendereFragen()"><option value="">Alle Kategorien</option></select>
+          <button class="btn" onclick="filterZuruecksetzen()" style="font-size:12px;padding:6px 10px">🔄 Reset</button>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+          <div class="filter-chip leicht aktiv" id="fcheck-leicht" onclick="toggleFilter('leicht')">✓ Leicht</div>
+          <div class="filter-chip mittel aktiv" id="fcheck-mittel" onclick="toggleFilter('mittel')">✓ Mittel</div>
+          <div class="filter-chip schwer aktiv" id="fcheck-schwer" onclick="toggleFilter('schwer')">✓ Schwer</div>
+          <div class="filter-chip frei-f aktiv" id="fcheck-frei" onclick="toggleFilter('frei-f')">✓ Freie Antwort</div>
+          <div class="filter-chip mc-f aktiv" id="fcheck-mc" onclick="toggleFilter('mc-f')">✓ Multiple Choice</div>
+        </div>
+        <div id="fragen-liste"></div>
+      </div>
+    </div>
+
+    <!-- PUNKTE -->
+    <div class="seite" id="seite-punkte">
+      <div class="karte">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span style="font-size:18px">🏆</span>
+          <h2 style="font-size:15px;font-weight:600">Punktestand</h2>
+          <button class="btn rot" onclick="resetPunkte()" style="margin-left:auto">Zurücksetzen</button>
+        </div>
+        <div class="punkte-grid" id="punkte-grid"></div>
+        <div class="trennlinie"></div>
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:10px">Rangliste</h3>
+        <div id="rangliste"></div>
+        <div class="trennlinie"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="punkte-buttons"></div>
+      </div>
+    </div>
+
+    <!-- OPTIONEN -->
+    <div class="seite" id="seite-optionen">
+      <div class="einstell-grid">
+        <div class="karte">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="font-size:18px">⚙️</span><h2 style="font-size:15px;font-weight:600">Spieloptionen</h2></div>
+          <div class="toggle-zeile">
+            <div class="toggle-info"><strong>Buzzer-Warteschlange</strong><span>Moderator sieht 1./2./3. Platz</span></div>
+            <label class="toggle"><input type="checkbox" id="opt-warteschlange" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-zeile">
+            <div class="toggle-info"><strong>Zweite Chance</strong><span>Nach falscher Antwort kommt der Nächste dran</span></div>
+            <label class="toggle"><input type="checkbox" id="opt-zweite-chance" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-zeile">
+            <div class="toggle-info"><strong>Reaktionszeiten anzeigen</strong><span>Millisekunden in Warteschlange</span></div>
+            <label class="toggle"><input type="checkbox" id="opt-reaktion" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-zeile">
+            <div class="toggle-info"><strong>Fragen mischen</strong></div>
+            <label class="toggle"><input type="checkbox" id="opt-mischen" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="trennlinie"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Punkte: Richtig</label><input class="num-input" type="number" id="opt-p-richtig" min="0" max="100" oninput="saveEinstell()"></div>
+            <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Punkte: Falsch</label><input class="num-input" type="number" id="opt-p-falsch" min="0" max="100" oninput="saveEinstell()"></div>
+            <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Timeout (Sek. / 0=aus)</label><input class="num-input" type="number" id="opt-timeout" min="0" max="120" oninput="saveEinstell()"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOUNDS -->
+    <div class="seite" id="seite-sounds">
+      <div class="karte">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="font-size:18px">🔊</span><h2 style="font-size:15px;font-weight:600">Sound-Dateien</h2></div>
+        <p style="font-size:12px;color:#888;margin-bottom:14px">MP3, WAV oder OGG hochladen</p>
+        <div id="sound-slots"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ MODERATOR ═══ -->
 <div class="ansicht" id="ansicht-moderator">
   <div class="mod-header">
-    <div class="logo">Schlag<span>fertig</span> <span style="font-size:13px;color:#555;font-weight:400">Moderator</span></div>
-    <div class="mod-header-buttons">
-      <button class="btn gold" onclick="togglePunktestand()">🏆 Punktestand</button>
+    <div class="logo" style="font-size:18px">Schlag<span style="color:#E24B4A">fertig</span> <span style="font-size:13px;color:#555;font-weight:400">Moderator</span></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" onclick="togglePunktestand()" style="background:#f39c12;color:#fff;border-color:#f39c12">🏆 Punktestand</button>
       <button class="btn rot" onclick="spielStoppen()">✕ Exit</button>
     </div>
   </div>
@@ -450,7 +574,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
       </div>
       <div id="wq-inhalt"><div class="wq-leer">Noch kein Buzzer gedrückt</div></div>
     </div>
-    <div class="frage-card" id="mod-frage-card">
+    <div class="frage-card">
       <div class="meta">
         <span id="mod-frage-nr">FRAGE 1</span>
         <span id="mod-frage-kat">—</span>
@@ -460,16 +584,13 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
         <div class="a-label">Richtige Antwort</div>
         <div class="a-text" id="mod-antwort-text">—</div>
       </div>
-      <!-- MC Auswahl Buttons für Moderator -->
       <div class="mc-auswahl" id="mod-mc-auswahl" style="display:none"></div>
     </div>
     <div class="mod-aktionen">
-      <!-- Freie Antwort Buttons -->
       <div class="mod-btn-reihe" id="mod-frei-buttons">
         <button class="mod-btn gruen" id="mod-btn-richtig" onclick="modBewerteAntwort(true)" disabled>✓ Richtig</button>
-        <button class="mod-btn rot"   id="mod-btn-falsch"  onclick="modBewerteAntwort(false)" disabled>✗ Falsch</button>
+        <button class="mod-btn rot" id="mod-btn-falsch" onclick="modBewerteAntwort(false)" disabled>✗ Falsch</button>
       </div>
-      <!-- MC Auflösen Button -->
       <button class="mod-btn lila" id="mod-btn-aufloesen" onclick="modMCAufloesen()" style="display:none">🔍 Auflösen</button>
       <button class="mod-btn grau" onclick="modNaechsteFrage()">Nächste Frage →</button>
     </div>
@@ -523,11 +644,11 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
     </div>
     <div class="cam-buttons" id="cam-buttons">
       <button class="btn" onclick="schliesseCam()" style="flex:1">Abbrechen</button>
-      <button class="btn primaer" onclick="machFoto()" style="flex:1">Foto aufnehmen</button>
+      <button class="btn primaer" onclick="machFoto()" style="flex:1">📷 Foto aufnehmen</button>
     </div>
     <div class="cam-buttons" id="crop-buttons" style="display:none">
       <button class="btn" onclick="nochmalFoto()" style="flex:1">Nochmal</button>
-      <button class="btn gruen" onclick="cropUndSpeichern()" style="flex:1">Speichern</button>
+      <button class="btn gruen" onclick="cropUndSpeichern()" style="flex:1">✓ Speichern</button>
     </div>
   </div>
 </div>
@@ -535,6 +656,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 <div class="toast" id="toast"></div>
 
 <script>
+// ── KONSTANTEN ──
 const SOUND_SLOTS = [
   {id:'buzzer',label:'Buzzer gedrückt',icon:'🔔'},
   {id:'richtig',label:'Richtige Antwort',icon:'✅'},
@@ -543,44 +665,55 @@ const SOUND_SLOTS = [
   {id:'timeout',label:'Zeit abgelaufen',icon:'⏱️'},
 ];
 const MC_BG = ['#4361ee','#f72585','#f4a261','#2ec4b6'];
-const MC_KLASSE = ['mc-a','mc-b','mc-c','mc-d'];
 const MC_BUCHST = ['A','B','C','D'];
-const RANG = ['🥇','🥈','🥉','4.'];
+const RANG = ['🥇','🥈','🥉','4.','5.','6.'];
+
+// Standard 6 Spieler
+const STANDARD_SPIELER = [
+  {nr:1,name:'Spieler 1',gpio:17,farbe:'#DC3232',foto:'',aktiv:true},
+  {nr:2,name:'Spieler 2',gpio:18,farbe:'#3278DC',foto:'',aktiv:true},
+  {nr:3,name:'Spieler 3',gpio:27,farbe:'#32B450',foto:'',aktiv:true},
+  {nr:4,name:'Spieler 4',gpio:22,farbe:'#DCA032',foto:'',aktiv:true},
+  {nr:5,name:'Spieler 5',gpio:23,farbe:'#9B59B6',foto:'',aktiv:false},
+  {nr:6,name:'Spieler 6',gpio:24,farbe:'#E91E8C',foto:'',aktiv:false},
+];
 
 let config = {
-  einstellungen:{punkte_richtig:10,punkte_falsch:5,buzzer_sperrzeit:50,antwort_timeout:0,fragen_mischen:true,buzzer_sperrung:true,reaktionszeit_anzeigen:true,negativpunkte_verhindern:true,sound_aktiv:false,warteschlange_aktiv:true,zweite_chance:true,spielmodus:'frei',sounds:{}},
-  spieler:[
-    {nr:1,name:'Spieler 1',gpio:17,farbe:'#DC3232',foto:''},
-    {nr:2,name:'Spieler 2',gpio:18,farbe:'#3278DC',foto:''},
-    {nr:3,name:'Spieler 3',gpio:27,farbe:'#32B450',foto:''},
-    {nr:4,name:'Spieler 4',gpio:22,farbe:'#DCA032',foto:''},
-  ],
+  einstellungen:{
+    punkte_richtig:10, punkte_falsch:5, antwort_timeout:0,
+    fragen_mischen:true, reaktionszeit_anzeigen:true,
+    warteschlange_aktiv:true, zweite_chance:true,
+    spielmodus:'frei', sounds:{}
+  },
+  spieler: JSON.parse(JSON.stringify(STANDARD_SPIELER)),
   fragen:[]
 };
 
 let punkte = {};
 let gewaehlteFragen = new Set();
+let wizardModus = 'frei';
+let wizardFilterAktiv = {leicht:true, mittel:true, schwer:true};
+let filterAktiv = {leicht:true, mittel:true, schwer:true, 'frei-f':true, 'mc-f':true};
 let bearbeitenIndex = -1;
 let aktuellerFragenModus = 'frei';
 let richtigeAntwortIdx = 0;
 let camStream = null;
 let camSpielerIdx = -1;
 let fotoDataUrl = null;
-
-// Filter State
-let filterAktiv = {leicht:true, mittel:true, schwer:true, 'frei-f':true, 'mc-f':true};
+let csvDateiInput = null;
 
 // Moderator State
 let modFragenListe = [];
 let modAktuellIdx = 0;
 let modPunkte = {};
 let modWarteschlange = [];
-let modGewaehlteAntwort = null; // für MC
+let modGewaehlteAntwort = null;
 let modAufgeloest = false;
 
 // WebSocket
 let socket = null;
 
+// ── WEBSOCKET ──
 function verbindeSocket() {
   socket = io();
   socket.on('connect', () => console.log('WebSocket verbunden!'));
@@ -596,14 +729,10 @@ function verbindeSocket() {
 async function init() {
   await ladeVomPi();
   config.spieler.forEach(s => { if(punkte[s.nr]===undefined) punkte[s.nr]=0; });
-  gewaehlteFragen = new Set(config.fragen.map((_,i)=>i));
-  rendereSpielmodus();
-  rendereSpieler();
-  rendereFragen();
-  renderePunkte();
-  rendereEinstellungen();
+  if(config.fragen.length > 0) gewaehlteFragen = new Set(config.fragen.map((_,i)=>i));
+  zeigeStartPunkte();
   pruefeSpielStatus();
-  setInterval(pruefeSpielStatus, 3000);
+  setInterval(pruefeSpielStatus, 5000);
   verbindeSocket();
 }
 
@@ -611,6 +740,35 @@ async function init() {
 function zeigeAnsicht(id) {
   document.querySelectorAll('.ansicht').forEach(a => a.classList.remove('aktiv'));
   document.getElementById('ansicht-'+id).classList.add('aktiv');
+  if(id === 'einstellungen') {
+    rendereSpieler();
+    rendereFragen();
+    renderePunkte();
+    rendereEinstellungen();
+  }
+}
+
+// ── STARTSEITE ──
+function zeigeStartPunkte() {
+  const aktive = config.spieler.filter(s => s.aktiv !== false);
+  if(aktive.length === 0 || Object.keys(punkte).length === 0) {
+    document.getElementById('start-punkte').textContent = 'Noch kein Spiel gespielt';
+    return;
+  }
+  const sortiert = [...aktive].sort((a,b) => (punkte[b.nr]||0) - (punkte[a.nr]||0));
+  document.getElementById('start-punkte').innerHTML = sortiert.map((s,i) =>
+    `<span style="margin-right:12px">${RANG[i]||''} <strong>${s.name}</strong>: ${punkte[s.nr]||0} Punkte</span>`
+  ).join('');
+}
+
+// ── TABS ──
+function wechsleTab(id) {
+  const tabs=['spieler','fragen','punkte','optionen','sounds'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('aktiv',tabs[i]===id));
+  document.querySelectorAll('.seite').forEach(s=>s.classList.remove('aktiv'));
+  document.getElementById('seite-'+id).classList.add('aktiv');
+  if(id==='punkte') renderePunkte();
+  if(id==='sounds') rendereEinstellungen();
 }
 
 // ── FLASK API ──
@@ -619,24 +777,24 @@ async function ladeVomPi() {
     const r = await fetch('/api/config');
     if(r.ok) {
       const d = await r.json();
-      config.einstellungen = d.einstellungen || config.einstellungen;
-      config.spieler = d.spieler || config.spieler;
+      if(d.einstellungen) config.einstellungen = {...config.einstellungen, ...d.einstellungen};
+      if(d.spieler && d.spieler.length > 0) config.spieler = d.spieler;
+      // Fehlende Spieler mit Standard auffüllen
+      while(config.spieler.length < 6) {
+        const idx = config.spieler.length;
+        config.spieler.push({...STANDARD_SPIELER[idx], aktiv:false});
+      }
       config.fragen = d.fragen || config.fragen;
       if(d.punkte_aktuell) {
-        punkte = d.punkte_aktuell;
-        // Konvertiere String-Keys zu Zahlen
-        const neuerPunkte = {};
-        Object.keys(punkte).forEach(k => neuerPunkte[parseInt(k)] = punkte[k]);
-        punkte = neuerPunkte;
+        punkte = {};
+        Object.keys(d.punkte_aktuell).forEach(k => punkte[parseInt(k)] = d.punkte_aktuell[k]);
       }
-      gewaehlteFragen = new Set(config.fragen.map((_,i)=>i));
     }
   } catch(e) { console.log('Offline'); }
 }
 
 async function speichereAufPi() {
   saveEinstell();
-  // Aktuelle Moderator-Punkte auch speichern
   const punkteZuSpeichern = Object.keys(modPunkte).length > 0 ? modPunkte : punkte;
   try {
     const r = await fetch('/api/config', {
@@ -649,6 +807,199 @@ async function speichereAufPi() {
   } catch(e) { zeigToast('❌ Keine Verbindung','rot'); }
 }
 
+async function pruefeSpielStatus() {
+  try {
+    const r = await fetch('/api/spiel/status');
+    const d = await r.json();
+    const dot = document.getElementById('status-dot');
+    const txt = document.getElementById('status-text');
+    if(d.laeuft) {
+      dot.className='status-dot aktiv';
+      txt.textContent = d.state==='spiel' ? 'Spiel läuft' : 'Bereit';
+    } else {
+      dot.className='status-dot';
+      txt.textContent='Offline';
+    }
+  } catch(e) {
+    document.getElementById('status-dot').className='status-dot';
+    document.getElementById('status-text').textContent='Offline';
+  }
+}
+
+// ── WIZARD ──
+function starteWizard() {
+  wizardSchritt(1);
+  rendereSpielerwizard();
+  zeigeAnsicht('wizard');
+}
+
+function wizardSchritt(n) {
+  for(let i=1;i<=3;i++) {
+    const inhalt = document.getElementById('wizard-schritt-'+i);
+    if(inhalt) inhalt.style.display = i===n ? 'block' : 'none';
+    const kreis = document.getElementById('wp'+i);
+    const label = document.getElementById('wl'+i);
+    if(kreis) {
+      kreis.className = 'wp-kreis' + (i<n?' fertig':i===n?' aktiv':'');
+      kreis.textContent = i<n ? '✓' : i;
+    }
+    if(label) label.className = 'wp-label' + (i===n?' aktiv':'');
+    const linie = document.getElementById('wline'+i);
+    if(linie) linie.className = 'wp-linie' + (i<n?' fertig':'');
+  }
+}
+
+function wizardWeiter(schritt) {
+  if(schritt === 3) {
+    // Fragen nach Modus filtern
+    config.einstellungen.spielmodus = wizardModus;
+    rendereFragenWizard();
+  }
+  wizardSchritt(schritt);
+}
+
+function wizardZurueck(schritt) {
+  wizardSchritt(schritt);
+}
+
+function rendereSpielerwizard() {
+  const grid = document.getElementById('spieler-wizard-grid');
+  grid.innerHTML = config.spieler.map((s,i) => `
+    <div class="spieler-wizard-karte ${s.aktiv!==false?'aktiv':'inaktiv'}" id="swk-${i}">
+      <div class="sw-toggle">
+        <label class="toggle">
+          <input type="checkbox" ${s.aktiv!==false?'checked':''} onchange="toggleSpielerAktiv(${i},this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="sw-avatar" style="background:${s.farbe}">${avatarHTML(s,60)}</div>
+      <div class="sw-name">${s.name}</div>
+      <div class="sw-gpio">GPIO ${s.gpio}</div>
+    </div>`).join('');
+}
+
+function toggleSpielerAktiv(idx, aktiv) {
+  config.spieler[idx].aktiv = aktiv;
+  const karte = document.getElementById('swk-'+idx);
+  karte.classList.toggle('aktiv', aktiv);
+  karte.classList.toggle('inaktiv', !aktiv);
+}
+
+function setzeWizardModus(modus) {
+  wizardModus = modus;
+  ['frei','mc'].forEach(m => document.getElementById('mwk-'+m).classList.toggle('aktiv', m===modus));
+}
+
+// Wizard Fragen
+function rendereFragenWizard() {
+  const suche = document.getElementById('wiz-suche').value.toLowerCase();
+  const fk = document.getElementById('wiz-filter-kat').value;
+
+  // Nur Fragen die zum gewählten Modus passen
+  const gef = config.fragen.filter(f => {
+    const hatMC = f.antworten_mc && f.antworten_mc.filter(a=>a&&a.trim()).length===4;
+    const istMC = f.modus==='mc' || hatMC;
+    // Modus Filter
+    if(wizardModus==='mc' && !istMC) return false;
+    if(wizardModus==='frei' && istMC) return false;
+    if(!wizardFilterAktiv[f.schwierigkeit]) return false;
+    if(fk && f.kategorie!==fk) return false;
+    if(suche && !f.frage.toLowerCase().includes(suche)) return false;
+    return true;
+  });
+
+  // Kategorien aktualisieren
+  const kats = [...new Set(config.fragen.filter(f=>{
+    const hatMC = f.antworten_mc && f.antworten_mc.filter(a=>a&&a.trim()).length===4;
+    const istMC = f.modus==='mc' || hatMC;
+    if(wizardModus==='mc' && !istMC) return false;
+    if(wizardModus==='frei' && istMC) return false;
+    return true;
+  }).map(f=>f.kategorie))].sort();
+  const sel = document.getElementById('wiz-filter-kat');
+  const ak = sel.value;
+  sel.innerHTML = '<option value="">Alle Kategorien</option>' + kats.map(k=>`<option value="${k}" ${k===ak?'selected':''}>${k}</option>`).join('');
+
+  const anzahl = [...gewaehlteFragen].filter(i=>config.fragen[i]).length;
+  document.getElementById('wiz-auswahl-info').textContent = `${anzahl} von ${config.fragen.length} gewählt`;
+
+  document.getElementById('wiz-fragen-liste').innerHTML = gef.length === 0
+    ? '<div style="padding:16px;text-align:center;color:#888;font-size:13px">Keine passenden Fragen gefunden</div>'
+    : gef.map(f => {
+        const i = config.fragen.indexOf(f);
+        const gew = gewaehlteFragen.has(i);
+        return `<div class="frage-item ${gew?'gewaehlt':''}" onclick="toggleFrageWizard(${i})">
+          <div class="frage-checkbox">${gew?'✓':''}</div>
+          <div class="frage-inhalt">
+            <div class="frage-text">${f.frage}</div>
+            <div class="frage-meta">
+              <span class="badge badge-${f.schwierigkeit}">${f.schwierigkeit.charAt(0).toUpperCase()+f.schwierigkeit.slice(1)}</span>
+              <span style="font-size:11px;color:#888">${f.kategorie}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+  // Start Button aktualisieren
+  const btn = document.getElementById('wiz-start-btn');
+  if(btn) btn.disabled = anzahl === 0;
+}
+
+function toggleFrageWizard(idx) {
+  if(gewaehlteFragen.has(idx)) gewaehlteFragen.delete(idx);
+  else gewaehlteFragen.add(idx);
+  rendereFragenWizard();
+}
+
+function alleWaehlenWizard() {
+  config.fragen.forEach((_,i) => gewaehlteFragen.add(i));
+  rendereFragenWizard();
+}
+
+function keineWaehlenWizard() {
+  gewaehlteFragen.clear();
+  rendereFragenWizard();
+}
+
+function zufaelligWaehlenWizard(n) {
+  const verfuegbar = config.fragen.map((_,i)=>i).filter(i=>{
+    const f = config.fragen[i];
+    const hatMC = f.antworten_mc && f.antworten_mc.filter(a=>a&&a.trim()).length===4;
+    const istMC = f.modus==='mc' || hatMC;
+    if(wizardModus==='mc' && !istMC) return false;
+    if(wizardModus==='frei' && istMC) return false;
+    if(!wizardFilterAktiv[f.schwierigkeit]) return false;
+    return true;
+  });
+  if(verfuegbar.length === 0) { zeigToast('Keine passenden Fragen!','rot'); return; }
+  const gemischt = [...verfuegbar].sort(()=>Math.random()-.5);
+  gewaehlteFragen = new Set(gemischt.slice(0, Math.min(n, gemischt.length)));
+  rendereFragenWizard();
+  zeigToast(`${gewaehlteFragen.size} Fragen gewählt`,'gruen');
+}
+
+function toggleWizardFilter(typ) {
+  wizardFilterAktiv[typ] = !wizardFilterAktiv[typ];
+  const el = document.getElementById('wfc-'+typ);
+  const labels = {leicht:'Leicht',mittel:'Mittel',schwer:'Schwer'};
+  el.classList.toggle('aktiv', wizardFilterAktiv[typ]);
+  el.textContent = (wizardFilterAktiv[typ]?'✓ ':'') + labels[typ];
+  rendereFragenWizard();
+}
+
+function filterWizardZuruecksetzen() {
+  Object.keys(wizardFilterAktiv).forEach(k => wizardFilterAktiv[k] = true);
+  const labels = {leicht:'Leicht',mittel:'Mittel',schwer:'Schwer'};
+  Object.keys(wizardFilterAktiv).forEach(k => {
+    const el = document.getElementById('wfc-'+k);
+    if(el) { el.classList.add('aktiv'); el.textContent = '✓ '+labels[k]; }
+  });
+  document.getElementById('wiz-suche').value = '';
+  document.getElementById('wiz-filter-kat').value = '';
+  rendereFragenWizard();
+}
+
+// ── SPIEL STARTEN ──
 async function spielStarten() {
   await speichereAufPi();
   try {
@@ -656,11 +1007,13 @@ async function spielStarten() {
     const d = await r.json();
     if(d.status==='ok') {
       zeigToast('▶ Spiel gestartet!','gruen');
+      // Nur aktive Spieler
+      const aktiveSpieler = config.spieler.filter(s => s.aktiv !== false);
       modFragenListe = config.fragen.filter((_,i) => gewaehlteFragen.has(i));
       if(config.einstellungen.fragen_mischen) modFragenListe = modFragenListe.sort(()=>Math.random()-.5);
       modAktuellIdx = 0;
       modPunkte = {};
-      config.spieler.forEach(s => modPunkte[s.nr] = punkte[s.nr] || 0);
+      aktiveSpieler.forEach(s => modPunkte[s.nr] = punkte[s.nr] || 0);
       modWarteschlange = [];
       zeigeAnsicht('moderator');
       rendereModPunkte();
@@ -671,7 +1024,8 @@ async function spielStarten() {
         frage: modFragenListe[0],
         punkte: modPunkte,
         gesamt: modFragenListe.length,
-        spielmodus: config.einstellungen.spielmodus
+        spielmodus: wizardModus,
+        aktive_spieler: aktiveSpieler
       });
     } else zeigToast('❌ '+d.error,'rot');
   } catch(e) { zeigToast('❌ Keine Verbindung','rot'); }
@@ -683,39 +1037,21 @@ async function spielStoppen() {
     punkte[s.nr] = modPunkte[s.nr] || punkte[s.nr] || 0;
   });
   await speichereAufPi();
-  zeigeAnsicht('editor');
+  zeigeAnsicht('start');
   zeigToast('■ Gestoppt','');
+  zeigeStartPunkte();
   if(socket) socket.emit('mod_stoppen');
   try { await fetch('/api/spiel/stoppen', {method:'POST'}); } catch(e) {}
-  renderePunkte();
   pruefeSpielStatus();
-}
-
-async function pruefeSpielStatus() {
-  try {
-    const r = await fetch('/api/spiel/status');
-    const d = await r.json();
-    const dot = document.getElementById('status-dot');
-    const txt = document.getElementById('status-text');
-    const btnS = document.getElementById('btn-starten');
-    const btnSt = document.getElementById('btn-stoppen');
-    if(d.laeuft && d.state==='spiel') {
-      dot.className='status-dot aktiv'; txt.textContent='Spiel läuft';
-      btnS.style.display='none'; btnSt.style.display='inline-block';
-    } else {
-      dot.className='status-dot';
-      txt.textContent = d.laeuft ? 'Wartebildschirm' : 'Bereit';
-      btnS.style.display='inline-block'; btnSt.style.display='none';
-    }
-  } catch(e) { document.getElementById('status-text').textContent='Offline'; }
 }
 
 // ── MODERATOR ──
 function rendereModPunkte() {
+  const aktiveSpieler = config.spieler.filter(s => s.aktiv !== false);
   const aktuellerSpieler = modWarteschlange.length > 0 ? modWarteschlange[0].nr : null;
-  document.getElementById('mod-punkte').innerHTML = config.spieler.map(s => `
+  document.getElementById('mod-punkte').innerHTML = aktiveSpieler.map(s => `
     <div class="mod-p-chip ${s.nr===aktuellerSpieler?'aktiv-chip':''}" style="background:${s.farbe}">
-      <div class="chip-avatar">${avatarHTML(s,36)}</div>
+      <div class="chip-avatar">${avatarHTML(s,34)}</div>
       <div class="chip-name">${s.name}</div>
       <div class="chip-punkte">${modPunkte[s.nr]||0}</div>
     </div>`).join('');
@@ -725,95 +1061,79 @@ function rendereModFrage() {
   const f = modFragenListe[modAktuellIdx];
   modGewaehlteAntwort = null;
   modAufgeloest = false;
-  const istMC = config.einstellungen.spielmodus === 'mc' || f?.modus === 'mc';
-
+  const istMC = wizardModus === 'mc' || f?.modus === 'mc';
   if(!f) {
     document.getElementById('mod-frage-text').textContent = 'Alle Fragen gespielt!';
-    // Sieger anzeigen
-    socket.emit('mod_sieger', {punkte: modPunkte, spieler: config.spieler});
+    socket.emit('mod_sieger', {punkte: modPunkte, spieler: config.spieler.filter(s=>s.aktiv!==false)});
     return;
   }
   document.getElementById('mod-frage-nr').textContent = `FRAGE ${modAktuellIdx+1} / ${modFragenListe.length}`;
   document.getElementById('mod-frage-kat').textContent = f.kategorie;
   document.getElementById('mod-frage-text').textContent = f.frage;
   document.getElementById('mod-antwort-text').textContent = f.antwort;
-
-  // MC oder Frei Buttons zeigen
   const mcAuswahl = document.getElementById('mod-mc-auswahl');
   const freiButtons = document.getElementById('mod-frei-buttons');
   const aufloesen = document.getElementById('mod-btn-aufloesen');
-
   if(istMC && f.antworten_mc && f.antworten_mc.length===4) {
     mcAuswahl.style.display='grid';
     freiButtons.style.display='none';
     aufloesen.style.display='block';
-    aufloesen.disabled = true;
+    aufloesen.disabled=true;
     mcAuswahl.innerHTML = f.antworten_mc.map((a,i)=>`
-      <button class="mc-auswahl-btn ${MC_KLASSE[i]}" onclick="modWaehleAntwort(${i})">
+      <button class="mc-auswahl-btn mc-${['a','b','c','d'][i]}" onclick="modWaehleAntwort(${i})">
         ${MC_BUCHST[i]}: ${a}
       </button>`).join('');
   } else {
     mcAuswahl.style.display='none';
     freiButtons.style.display='flex';
     aufloesen.style.display='none';
-    document.getElementById('mod-btn-richtig').disabled = true;
-    document.getElementById('mod-btn-falsch').disabled = true;
+    document.getElementById('mod-btn-richtig').disabled=true;
+    document.getElementById('mod-btn-falsch').disabled=true;
   }
 }
 
 function modWaehleAntwort(idx) {
   if(modAufgeloest) return;
   modGewaehlteAntwort = idx;
-  // Visuell markieren
   document.querySelectorAll('.mc-auswahl-btn').forEach((btn,i) => {
     btn.classList.remove('gewaehlt');
     if(i===idx) btn.classList.add('gewaehlt');
   });
-  document.getElementById('mod-btn-aufloesen').disabled = false;
-  // An Beamer senden
+  document.getElementById('mod-btn-aufloesen').disabled=false;
   const f = modFragenListe[modAktuellIdx];
-  socket.emit('mod_mc_auswahl', {idx: idx, antwort: f.antworten_mc[idx]});
+  socket.emit('mod_mc_auswahl', {idx:idx, antwort:f.antworten_mc[idx]});
 }
 
 function modMCAufloesen() {
-  if(modGewaehlteAntwort === null) return;
+  if(modGewaehlteAntwort===null) return;
   modAufgeloest = true;
   const f = modFragenListe[modAktuellIdx];
   const richtigIdx = f.richtige_antwort_index;
-  const richtig = modGewaehlteAntwort === richtigIdx;
-  const pr = config.einstellungen.punkte_richtig || 10;
-  const pf = config.einstellungen.punkte_falsch || 5;
-
-  // Buttons einfärben
+  const richtig = modGewaehlteAntwort===richtigIdx;
+  const pr = config.einstellungen.punkte_richtig||10;
+  const pf = config.einstellungen.punkte_falsch||5;
   document.querySelectorAll('.mc-auswahl-btn').forEach((btn,i) => {
     btn.classList.remove('gewaehlt');
-    if(i === richtigIdx) btn.classList.add('richtig-btn');
-    else if(i === modGewaehlteAntwort && !richtig) btn.classList.add('falsch-btn');
+    if(i===richtigIdx) btn.classList.add('richtig-btn');
+    else if(i===modGewaehlteAntwort&&!richtig) btn.classList.add('falsch-btn');
   });
-
-  // Punkte vergeben
-  if(modWarteschlange.length > 0) {
+  if(modWarteschlange.length>0) {
     const erster = modWarteschlange[0];
     if(richtig) {
-      modPunkte[erster.nr] = (modPunkte[erster.nr]||0) + pr;
+      modPunkte[erster.nr]=(modPunkte[erster.nr]||0)+pr;
       zeigToast(`+${pr} für ${config.spieler.find(s=>s.nr===erster.nr)?.name}!`,'gruen');
     } else {
-      modPunkte[erster.nr] = Math.max(0,(modPunkte[erster.nr]||0) - pf);
+      modPunkte[erster.nr]=Math.max(0,(modPunkte[erster.nr]||0)-pf);
       zeigToast(`-${pf} für ${config.spieler.find(s=>s.nr===erster.nr)?.name}`,'rot');
     }
-    modWarteschlange = [];
+    modWarteschlange=[];
   }
-
-  // An Beamer senden
   socket.emit('mod_mc_aufloesen', {
-    gewaehlt: modGewaehlteAntwort,
-    richtig_idx: richtigIdx,
-    richtig: richtig,
-    punkte: modPunkte,
-    delta: richtig ? pr : pf
+    gewaehlt:modGewaehlteAntwort, richtig_idx:richtigIdx,
+    richtig:richtig, punkte:modPunkte,
+    delta:richtig?pr:pf
   });
-
-  document.getElementById('mod-btn-aufloesen').disabled = true;
+  document.getElementById('mod-btn-aufloesen').disabled=true;
   rendereModPunkte();
   rendereWarteschlange();
 }
@@ -832,23 +1152,22 @@ function rendereWarteschlange() {
   const inhalt = document.getElementById('wq-inhalt');
   const btnR = document.getElementById('mod-btn-richtig');
   const btnF = document.getElementById('mod-btn-falsch');
-  const istMC = config.einstellungen.spielmodus === 'mc';
-
+  const istMC = wizardModus==='mc';
   if(modWarteschlange.length===0) {
-    inhalt.innerHTML = '<div class="wq-leer">Noch kein Buzzer gedrückt</div>';
-    if(!istMC) { btnR.disabled = true; btnF.disabled = true; }
+    inhalt.innerHTML='<div class="wq-leer">Noch kein Buzzer gedrückt</div>';
+    if(!istMC){btnR.disabled=true;btnF.disabled=true;}
     rendereModPunkte();
     return;
   }
-  if(!istMC) { btnR.disabled = false; btnF.disabled = false; }
-  inhalt.innerHTML = modWarteschlange.map((e,i)=>{
-    const s = config.spieler.find(sp=>sp.nr===e.nr);
-    if(!s) return '';
-    return `<div class="wq-eintrag">
+  if(!istMC){btnR.disabled=false;btnF.disabled=false;}
+  inhalt.innerHTML=modWarteschlange.map((e,i)=>{
+    const s=config.spieler.find(sp=>sp.nr===e.nr);
+    if(!s)return'';
+    return`<div class="wq-eintrag">
       <div class="wq-rang">${RANG[i]||i+1+'.'}</div>
       <div class="wq-avatar" style="background:${s.farbe}">${avatarHTML(s,36)}</div>
       <div class="wq-name">${s.name}</div>
-      <div class="wq-zeit">${config.einstellungen.reaktionszeit_anzeigen && e.ms ? '+'+e.ms+' ms' : ''}</div>
+      <div class="wq-zeit">${config.einstellungen.reaktionszeit_anzeigen&&e.ms?'+'+e.ms+' ms':''}</div>
       <div class="wq-badge ${i===0?'dran':'warte'}">${i===0?'DRAN':'wartet'}</div>
     </div>`;
   }).join('');
@@ -856,107 +1175,76 @@ function rendereWarteschlange() {
 }
 
 function modBewerteAntwort(richtig) {
-  if(modWarteschlange.length===0) return;
-  const erster = modWarteschlange[0];
-  const pr = config.einstellungen.punkte_richtig || 10;
-  const pf = config.einstellungen.punkte_falsch || 5;
-  const spielerName = config.spieler.find(s=>s.nr===erster.nr)?.name || '';
-
-  if(richtig) {
-    modPunkte[erster.nr] = (modPunkte[erster.nr]||0) + pr;
-    zeigToast(`+${pr} für ${spielerName}!`,'gruen');
-    modWarteschlange = [];
-    socket.emit('mod_richtig', {punkte: modPunkte, delta: pr});
+  if(modWarteschlange.length===0)return;
+  const erster=modWarteschlange[0];
+  const pr=config.einstellungen.punkte_richtig||10;
+  const pf=config.einstellungen.punkte_falsch||5;
+  const name=config.spieler.find(s=>s.nr===erster.nr)?.name||'';
+  if(richtig){
+    modPunkte[erster.nr]=(modPunkte[erster.nr]||0)+pr;
+    zeigToast(`+${pr} für ${name}!`,'gruen');
+    modWarteschlange=[];
+    socket.emit('mod_richtig',{punkte:modPunkte,delta:pr});
   } else {
-    modPunkte[erster.nr] = Math.max(0,(modPunkte[erster.nr]||0) - pf);
-    zeigToast(`-${pf} für ${spielerName}`,'rot');
-    // Lokal ersten entfernen
+    modPunkte[erster.nr]=Math.max(0,(modPunkte[erster.nr]||0)-pf);
+    zeigToast(`-${pf} für ${name}`,'rot');
     modWarteschlange.shift();
-    socket.emit('mod_falsch', {punkte: modPunkte, delta: pf});
-    // Zweite Chance Toast
-    if(modWarteschlange.length > 0) {
-      const naechster = config.spieler.find(s=>s.nr===modWarteschlange[0].nr);
-      if(naechster) setTimeout(()=>zeigToast(`🥈 ${naechster.name} ist jetzt dran!`, ''), 500);
+    socket.emit('mod_falsch',{punkte:modPunkte,delta:pf});
+    if(modWarteschlange.length>0){
+      const naechster=config.spieler.find(s=>s.nr===modWarteschlange[0].nr);
+      if(naechster) setTimeout(()=>zeigToast(`🥈 ${naechster.name} ist jetzt dran!`,''),500);
     }
   }
   rendereWarteschlange();
 }
 
 function modNaechsteFrage() {
-  if(modAktuellIdx < modFragenListe.length-1) {
+  if(modAktuellIdx<modFragenListe.length-1){
     modAktuellIdx++;
-    modWarteschlange = [];
+    modWarteschlange=[];
     rendereModFrage();
     rendereModNav();
     rendereWarteschlange();
-    socket.emit('mod_naechste_frage', {
-      frage: modFragenListe[modAktuellIdx],
-      idx: modAktuellIdx,
-      gesamt: modFragenListe.length,
-      spielmodus: config.einstellungen.spielmodus
+    socket.emit('mod_naechste_frage',{
+      frage:modFragenListe[modAktuellIdx],
+      idx:modAktuellIdx,
+      gesamt:modFragenListe.length,
+      spielmodus:wizardModus
     });
   } else {
     zeigToast('Alle Fragen gespielt!','');
-    socket.emit('mod_sieger', {punkte: modPunkte, spieler: config.spieler});
+    socket.emit('mod_sieger',{punkte:modPunkte,spieler:config.spieler.filter(s=>s.aktiv!==false)});
   }
 }
 
 function modSpringe(idx) {
-  modAktuellIdx = idx;
-  modWarteschlange = [];
+  modAktuellIdx=idx;
+  modWarteschlange=[];
   rendereModFrage();
   rendereModNav();
   rendereWarteschlange();
-  socket.emit('mod_naechste_frage', {
-    frage: modFragenListe[idx],
-    idx: idx,
-    gesamt: modFragenListe.length,
-    spielmodus: config.einstellungen.spielmodus
+  socket.emit('mod_naechste_frage',{
+    frage:modFragenListe[idx],idx,
+    gesamt:modFragenListe.length,
+    spielmodus:wizardModus
   });
 }
 
 function buzzersFreigeben() {
-  modWarteschlange = [];
+  modWarteschlange=[];
   rendereWarteschlange();
   socket.emit('mod_freigeben');
 }
 
 function togglePunktestand() {
-  socket.emit('mod_toggle_punktestand', {
-    punkte: modPunkte,
-    spieler: config.spieler
-  });
+  socket.emit('mod_toggle_punktestand',{punkte:modPunkte,spieler:config.spieler.filter(s=>s.aktiv!==false)});
   zeigToast('Punktestand umgeschaltet','');
-}
-
-// ── TABS ──
-function wechsleTab(id) {
-  const tabs=['spielmodus','spieler','fragen','punkte','einstellungen'];
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('aktiv',tabs[i]===id));
-  document.querySelectorAll('.seite').forEach(s=>s.classList.remove('aktiv'));
-  document.getElementById('seite-'+id).classList.add('aktiv');
-  if(id==='punkte') renderePunkte();
-}
-
-// ── SPIELMODUS ──
-function rendereSpielmodus() {
-  const m=config.einstellungen.spielmodus||'frei';
-  ['frei','mc'].forEach(id=>document.getElementById('mk-'+id).classList.toggle('aktiv',id===m));
-  document.getElementById('opt-warteschlange').checked=config.einstellungen.warteschlange_aktiv!==false;
-  document.getElementById('opt-zweite-chance').checked=config.einstellungen.zweite_chance!==false;
-  document.getElementById('opt-reaktion').checked=config.einstellungen.reaktionszeit_anzeigen!==false;
-  // Zweite Chance nur bei freier Antwort
-  document.getElementById('zeile-zweite-chance').style.opacity = m==='mc'?'0.4':'1';
-}
-function setzeSpielmodus(m){
-  config.einstellungen.spielmodus=m;
-  rendereSpielmodus();
 }
 
 // ── AVATAR ──
 function avatarHTML(s,g=70){
-  if(s.foto) return `<img src="${s.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-  return `<div style="width:100%;height:100%;background:${s.farbe};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${Math.round(g*.38)}px;font-weight:700;color:white">${s.name.charAt(0).toUpperCase()}</div>`;
+  if(s.foto) return`<img src="${s.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  return`<div style="width:100%;height:100%;background:${s.farbe};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${Math.round(g*.38)}px;font-weight:700;color:white">${s.name.charAt(0).toUpperCase()}</div>`;
 }
 
 // ── SPIELER ──
@@ -965,16 +1253,18 @@ function rendereSpieler(){
   grid.innerHTML='';
   config.spieler.forEach((s,idx)=>{
     const div=document.createElement('div');
-    div.className='spieler-karte';
+    div.className='spieler-karte'+(s.aktiv===false?' inaktiv':'');
     div.innerHTML=`
-      <div class="avatar-ring" onclick="document.getElementById('upload-${idx}').click()">${avatarHTML(s,70)}</div>
-      <div class="avatar-aktionen">
-        <label class="av-btn primaer" style="cursor:pointer">
-          📷 Foto aufnehmen / hochladen
-          <input type="file" id="upload-${idx}" accept="image/*" style="display:none" onchange="uploadFoto(${idx},this)">
-        </label>
-        ${s.foto?`<button class="av-btn" onclick="loescheFoto(${idx})" style="color:#c0392b">✕ Entfernen</button>`:''}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:12px;color:#888;font-weight:500">Spieler ${s.nr}</span>
+        <label class="toggle"><input type="checkbox" ${s.aktiv!==false?'checked':''} onchange="config.spieler[${idx}].aktiv=this.checked;rendereSpieler()"><span class="toggle-slider"></span></label>
       </div>
+      <div class="avatar-ring" onclick="document.getElementById('upload-${idx}').click()">${avatarHTML(s,70)}</div>
+      <label class="av-btn primaer" style="cursor:pointer">
+        📷 Foto hochladen
+        <input type="file" id="upload-${idx}" accept="image/*" style="display:none" onchange="uploadFoto(${idx},this)">
+      </label>
+      ${s.foto?`<button class="av-btn" onclick="loescheFoto(${idx})" style="color:#c0392b;margin-top:4px">✕ Entfernen</button>`:''}
       <label>Name</label>
       <input type="text" value="${s.name}" oninput="updateSpieler(${idx},'name',this.value)">
       <label>Farbe</label>
@@ -985,6 +1275,7 @@ function rendereSpieler(){
     grid.appendChild(div);
   });
 }
+
 function updateSpieler(idx,f,v){config.spieler[idx][f]=v;}
 function loescheFoto(idx){config.spieler[idx].foto='';rendereSpieler();}
 function uploadFoto(idx,input){
@@ -1006,154 +1297,67 @@ function zuschneiden(dataUrl,idx){
     rendereSpieler();
   };img.src=dataUrl;
 }
-async function oeffneKamera(idx){
-  camSpielerIdx=idx;fotoDataUrl=null;
-  document.getElementById('cam-titel').textContent='Foto für '+config.spieler[idx].name;
-  document.getElementById('cam-overlay').classList.add('offen');
-  document.getElementById('cam-buttons').style.display='flex';
-  document.getElementById('crop-buttons').style.display='none';
-  const video=document.getElementById('cam-video');
-  document.getElementById('cam-canvas').style.display='none';
-  video.style.display='block';
-  try{
-    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
-    video.srcObject=camStream;
-  }catch(e){alert('Kamera nicht verfügbar');schliesseCam();}
-}
-function machFoto(){
-  const video=document.getElementById('cam-video');
-  const canvas=document.getElementById('cam-canvas');
-  const size=Math.min(video.videoWidth,video.videoHeight);
-  canvas.width=size;canvas.height=size;
-  canvas.getContext('2d').drawImage(video,(video.videoWidth-size)/2,(video.videoHeight-size)/2,size,size,0,0,size,size);
-  fotoDataUrl=canvas.toDataURL('image/jpeg',.85);
-  video.style.display='none';canvas.style.display='block';
-  document.getElementById('cam-buttons').style.display='none';
-  document.getElementById('crop-buttons').style.display='flex';
-  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
-}
-function nochmalFoto(){
-  fotoDataUrl=null;
-  document.getElementById('cam-video').style.display='block';
-  document.getElementById('cam-canvas').style.display='none';
-  document.getElementById('cam-buttons').style.display='flex';
-  document.getElementById('crop-buttons').style.display='none';
-  oeffneKamera(camSpielerIdx);
-}
-function cropUndSpeichern(){if(fotoDataUrl){zuschneiden(fotoDataUrl,camSpielerIdx);schliesseCam();}}
-function schliesseCam(){
-  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
-  document.getElementById('cam-overlay').classList.remove('offen');
-}
 
-// ── FRAGEN ──
-function toggleFilter(typ) {
-  filterAktiv[typ] = !filterAktiv[typ];
-  const el = document.getElementById('fcheck-'+typ);
-  el.classList.toggle('aktiv', filterAktiv[typ]);
-  // Text korrekt setzen
-  const labels = {
-    'leicht': 'Leicht', 'mittel': 'Mittel', 'schwer': 'Schwer',
-    'frei-f': 'Freie Antwort', 'mc-f': 'Multiple Choice'
-  };
-  el.textContent = (filterAktiv[typ] ? '✓ ' : '') + labels[typ];
+// ── FRAGEN (EINSTELLUNGEN) ──
+function toggleFilter(typ){
+  filterAktiv[typ]=!filterAktiv[typ];
+  const el=document.getElementById('fcheck-'+typ);
+  const labels={leicht:'Leicht',mittel:'Mittel',schwer:'Schwer','frei-f':'Freie Antwort','mc-f':'Multiple Choice'};
+  el.classList.toggle('aktiv',filterAktiv[typ]);
+  el.textContent=(filterAktiv[typ]?'✓ ':'')+labels[typ];
   rendereFragen();
 }
 
-function filterZuruecksetzen() {
-  Object.keys(filterAktiv).forEach(k => filterAktiv[k] = true);
-  const labels = {
-    'leicht': 'Leicht', 'mittel': 'Mittel', 'schwer': 'Schwer',
-    'frei-f': 'Freie Antwort', 'mc-f': 'Multiple Choice'
-  };
-  Object.keys(filterAktiv).forEach(k => {
-    const el = document.getElementById('fcheck-'+k);
-    if(el) { el.classList.add('aktiv'); el.textContent = '✓ ' + labels[k]; }
+function filterZuruecksetzen(){
+  Object.keys(filterAktiv).forEach(k=>filterAktiv[k]=true);
+  const labels={leicht:'Leicht',mittel:'Mittel',schwer:'Schwer','frei-f':'Freie Antwort','mc-f':'Multiple Choice'};
+  Object.keys(filterAktiv).forEach(k=>{
+    const el=document.getElementById('fcheck-'+k);
+    if(el){el.classList.add('aktiv');el.textContent='✓ '+labels[k];}
   });
-  document.getElementById('suche').value = '';
-  document.getElementById('filter-kat').value = '';
+  document.getElementById('suche').value='';
+  document.getElementById('filter-kat').value='';
   rendereFragen();
-  zeigToast('Filter zurückgesetzt','gruen');
 }
 
 function rendereFragen(){
   const suche=document.getElementById('suche').value.toLowerCase();
   const fk=document.getElementById('filter-kat').value;
-
   const gef=config.fragen.filter(f=>{
-    if(!filterAktiv[f.schwierigkeit]) return false;
-    // MC erkennen: modus ist 'mc' ODER hat ausgefüllte MC Antworten
-    const hatMCAntworten = f.antworten_mc && f.antworten_mc.filter(a=>a && a.trim()).length === 4;
-    const istMC = f.modus === 'mc' || hatMCAntworten;
-    if(istMC && !filterAktiv['mc-f']) return false;
-    if(!istMC && !filterAktiv['frei-f']) return false;
-    if(fk && f.kategorie!==fk) return false;
-    if(suche && !f.frage.toLowerCase().includes(suche) && !f.antwort.toLowerCase().includes(suche)) return false;
+    if(!filterAktiv[f.schwierigkeit])return false;
+    const hatMC=f.antworten_mc&&f.antworten_mc.filter(a=>a&&a.trim()).length===4;
+    const istMC=f.modus==='mc'||hatMC;
+    if(istMC&&!filterAktiv['mc-f'])return false;
+    if(!istMC&&!filterAktiv['frei-f'])return false;
+    if(fk&&f.kategorie!==fk)return false;
+    if(suche&&!f.frage.toLowerCase().includes(suche)&&!f.antwort.toLowerCase().includes(suche))return false;
     return true;
   });
-
   const kats=[...new Set(config.fragen.map(f=>f.kategorie))].sort();
   const sel=document.getElementById('filter-kat');
   const ak=sel.value;
   sel.innerHTML='<option value="">Alle Kategorien</option>'+kats.map(k=>`<option value="${k}" ${k===ak?'selected':''}>${k}</option>`).join('');
-
-  const anzahlGewaehlt = [...gewaehlteFragen].filter(i => config.fragen[i]).length;
-  document.getElementById('auswahl-info').textContent=`${anzahlGewaehlt} von ${config.fragen.length} ausgewählt`;
-
-  document.getElementById('fragen-liste').innerHTML = gef.length === 0
-    ? '<div style="padding:20px;text-align:center;color:#888;font-size:13px">Keine Fragen gefunden</div>'
-    : gef.map(f=>{
-        const i=config.fragen.indexOf(f);
-        const gew=gewaehlteFragen.has(i);
-        const hatMCAntworten = f.antworten_mc && f.antworten_mc.filter(a=>a && a.trim()).length === 4;
-        const istMC = f.modus === 'mc' || hatMCAntworten;
-        return`<div class="frage-item ${gew?'gewaehlt':''}" onclick="toggleFrage(${i})">
-          <div class="frage-checkbox">${gew?'✓':''}</div>
-          <div class="frage-inhalt">
-            <div class="frage-text">${f.frage}</div>
-            <div class="frage-meta">
-              <span class="badge badge-${f.schwierigkeit}">${f.schwierigkeit.charAt(0).toUpperCase()+f.schwierigkeit.slice(1)}</span>
-              <span style="font-size:11px;color:#888">${f.kategorie}</span>
-              ${istMC?'<span class="badge badge-mc">MC</span>':'<span class="badge badge-frei">Frei</span>'}
-            </div>
+  document.getElementById('fragen-liste').innerHTML=gef.length===0
+    ?'<div style="padding:20px;text-align:center;color:#888;font-size:13px">Keine Fragen gefunden</div>'
+    :gef.map(f=>{
+      const i=config.fragen.indexOf(f);
+      const hatMC=f.antworten_mc&&f.antworten_mc.filter(a=>a&&a.trim()).length===4;
+      const istMC=f.modus==='mc'||hatMC;
+      return`<div class="frage-item">
+        <div class="frage-inhalt">
+          <div class="frage-text">${f.frage}</div>
+          <div class="frage-meta">
+            <span class="badge badge-${f.schwierigkeit}">${f.schwierigkeit.charAt(0).toUpperCase()+f.schwierigkeit.slice(1)}</span>
+            <span style="font-size:11px;color:#888">${f.kategorie}</span>
+            ${istMC?'<span class="badge badge-mc">MC</span>':'<span class="badge badge-frei">Frei</span>'}
           </div>
-          <div style="display:flex;gap:4px;flex-shrink:0">
-            <button class="icon-btn" onclick="event.stopPropagation();frageModal(${i})">✏️</button>
-            <button class="icon-btn" onclick="event.stopPropagation();loescheFrage(${i})">🗑️</button>
-          </div>
-        </div>`;
-      }).join('');
-}
-
-function toggleFrage(idx){
-  if(gewaehlteFragen.has(idx)) gewaehlteFragen.delete(idx);
-  else gewaehlteFragen.add(idx);
-  rendereFragen();
-}
-function alleWaehlen(){config.fragen.forEach((_,i)=>gewaehlteFragen.add(i));rendereFragen();}
-function keineWaehlen(){gewaehlteFragen.clear();rendereFragen();}
-function zufaelligWaehlen(n){
-  // Nur aus aktuell gefilterten Fragen auswählen
-  const gefiltertIndizes = config.fragen.map((_,i)=>i).filter(i=>{
-    const f=config.fragen[i];
-    if(!filterAktiv[f.schwierigkeit]) return false;
-    const hatMCAntworten = f.antworten_mc && f.antworten_mc.filter(a=>a && a.trim()).length === 4;
-    const istMC = f.modus === 'mc' || hatMCAntworten;
-    if(istMC && !filterAktiv['mc-f']) return false;
-    if(!istMC && !filterAktiv['frei-f']) return false;
-    return true;
-  });
-  if(gefiltertIndizes.length === 0) {
-    zeigToast('Keine Fragen mit diesen Filtern!','rot');
-    return;
-  }
-  // Zufällig mischen und auswählen
-  const gemischt = [...gefiltertIndizes].sort(()=>Math.random()-.5);
-  const ausgewaehlt = gemischt.slice(0, Math.min(n, gemischt.length));
-  // Bestehende Auswahl behalten und neue hinzufügen
-  gewaehlteFragen = new Set(ausgewaehlt);
-  rendereFragen();
-  zeigToast(`${ausgewaehlt.length} zufällige Fragen gewählt`,'gruen');
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="icon-btn" onclick="frageModal(${i})">✏️</button>
+          <button class="icon-btn" onclick="loescheFrage(${i})">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
 }
 
 function frageModal(idx=-1){
@@ -1192,8 +1396,8 @@ function speichereFrage(){
     modus:aktuellerFragenModus
   };
   if(!f.frage||!f.antwort){alert('Bitte Frage und Antwort ausfüllen.');return;}
-  if(bearbeitenIndex>=0) config.fragen[bearbeitenIndex]=f;
-  else { config.fragen.push(f); gewaehlteFragen.add(config.fragen.length-1); }
+  if(bearbeitenIndex>=0)config.fragen[bearbeitenIndex]=f;
+  else{config.fragen.push(f);gewaehlteFragen.add(config.fragen.length-1);}
   schliesseFrageModal();rendereFragen();
 }
 function loescheFrage(idx){
@@ -1207,164 +1411,142 @@ function loescheFrage(idx){
 
 // ── PUNKTE ──
 function renderePunkte(){
-  config.spieler.forEach(s=>{if(punkte[s.nr]===undefined)punkte[s.nr]=0;});
-  const maxP=Math.max(...config.spieler.map(s=>punkte[s.nr]),1);
-  document.getElementById('punkte-grid').innerHTML=config.spieler.map(s=>`
+  const aktive=config.spieler.filter(s=>s.aktiv!==false);
+  aktive.forEach(s=>{if(punkte[s.nr]===undefined)punkte[s.nr]=0;});
+  const maxP=Math.max(...aktive.map(s=>punkte[s.nr]),1);
+  document.getElementById('punkte-grid').innerHTML=aktive.map(s=>`
     <div class="punkte-karte" style="background:${s.farbe}">
-      <div class="p-avatar">${avatarHTML(s,54)}</div>
+      <div class="p-avatar">${avatarHTML(s,50)}</div>
       <div class="p-name">${s.name}</div>
-      <div class="p-zahl">${punkte[s.nr]}</div>
+      <div class="p-zahl">${punkte[s.nr]||0}</div>
       <div class="p-label">Punkte</div>
     </div>`).join('');
   const rang=['gold','silber','bronze'];
-  const sort=[...config.spieler].sort((a,b)=>punkte[b.nr]-punkte[a.nr]);
+  const sort=[...aktive].sort((a,b)=>(punkte[b.nr]||0)-(punkte[a.nr]||0));
   document.getElementById('rangliste').innerHTML=sort.map((s,i)=>`
     <div class="rangzeile">
-      <span class="rang-nr ${rang[i]||''}">${i+1}.</span>
+      <span class="rang-nr">${i+1}.</span>
       <div class="rang-avatar">${avatarHTML(s,30)}</div>
       <span class="rang-name">${s.name}</span>
-      <div class="rang-balken-wrap"><div class="rang-balken" style="width:${Math.round(punkte[s.nr]/maxP*100)}%;background:${s.farbe}"></div></div>
-      <span class="rang-punkte" style="color:${s.farbe}">${punkte[s.nr]}</span>
+      <div class="rang-balken-wrap"><div class="rang-balken" style="width:${Math.round((punkte[s.nr]||0)/maxP*100)}%;background:${s.farbe}"></div></div>
+      <span class="rang-punkte" style="color:${s.farbe}">${punkte[s.nr]||0}</span>
     </div>`).join('');
-  document.getElementById('punkte-buttons').innerHTML=config.spieler.map(s=>`
+  document.getElementById('punkte-buttons').innerHTML=aktive.map(s=>`
     <div style="display:flex;align-items:center;gap:6px;background:#f5f5f0;border-radius:9px;padding:7px 10px">
       <div style="width:26px;height:26px;flex-shrink:0">${avatarHTML(s,26)}</div>
-      <span style="font-size:12px;font-weight:500;min-width:70px">${s.name}</span>
+      <span style="font-size:12px;font-weight:500;min-width:60px">${s.name}</span>
       <button class="btn" onclick="aenderePunkte(${s.nr},-1)" style="padding:3px 9px">−1</button>
-      <button class="btn" onclick="aenderePunkte(${s.nr},1)"  style="padding:3px 9px">+1</button>
+      <button class="btn" onclick="aenderePunkte(${s.nr},1)" style="padding:3px 9px">+1</button>
       <button class="btn" onclick="aenderePunkte(${s.nr},10)" style="padding:3px 9px">+10</button>
       <button class="btn" onclick="aenderePunkte(${s.nr},-10)" style="padding:3px 9px">−10</button>
     </div>`).join('');
 }
 function aenderePunkte(nr,d){punkte[nr]=Math.max(0,(punkte[nr]||0)+d);renderePunkte();}
-function resetPunkte(){if(!confirm('Alle Punkte zurücksetzen?'))return;config.spieler.forEach(s=>punkte[s.nr]=0);renderePunkte();}
+function resetPunkte(){
+  if(Object.values(punkte).every(p=>p===0))return;
+  if(!confirm('Alle Punkte zurücksetzen?'))return;
+  config.spieler.forEach(s=>punkte[s.nr]=0);
+  renderePunkte();
+  zeigeStartPunkte();
+  zeigToast('Punkte zurückgesetzt','');
+}
 
 // ── EINSTELLUNGEN ──
 function rendereEinstellungen(){
   const e=config.einstellungen;
-  document.getElementById('opt-sperrung').checked=e.buzzer_sperrung!==false;
-  document.getElementById('opt-mischen').checked=e.fragen_mischen!==false;
-  document.getElementById('opt-noneg').checked=e.negativpunkte_verhindern!==false;
-  document.getElementById('opt-p-richtig').value=e.punkte_richtig??10;
-  document.getElementById('opt-p-falsch').value=e.punkte_falsch??5;
-  document.getElementById('opt-sperrzeit').value=e.buzzer_sperrzeit??50;
-  document.getElementById('opt-timeout').value=e.antwort_timeout??0;
+  const el=id=>document.getElementById(id);
+  if(el('opt-warteschlange'))el('opt-warteschlange').checked=e.warteschlange_aktiv!==false;
+  if(el('opt-zweite-chance'))el('opt-zweite-chance').checked=e.zweite_chance!==false;
+  if(el('opt-reaktion'))el('opt-reaktion').checked=e.reaktionszeit_anzeigen!==false;
+  if(el('opt-mischen'))el('opt-mischen').checked=e.fragen_mischen!==false;
+  if(el('opt-p-richtig'))el('opt-p-richtig').value=e.punkte_richtig??10;
+  if(el('opt-p-falsch'))el('opt-p-falsch').value=e.punkte_falsch??5;
+  if(el('opt-timeout'))el('opt-timeout').value=e.antwort_timeout??0;
   const sounds=e.sounds||{};
-  document.getElementById('sound-slots').innerHTML=SOUND_SLOTS.map(sl=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f0f0f0">
+  const slotsEl=document.getElementById('sound-slots');
+  if(slotsEl) slotsEl.innerHTML=SOUND_SLOTS.map(sl=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f0f0">
       <span style="font-size:18px;width:24px">${sl.icon}</span>
       <span style="font-size:13px;font-weight:500;flex:1">${sl.label}</span>
       <input type="text" id="sound-input-${sl.id}" placeholder="datei.mp3" value="${sounds[sl.id]||''}"
-        style="width:110px;border:1px solid #ddd;border-radius:7px;padding:5px 9px;font-size:12px;outline:none"
+        style="width:110px;border:1.5px solid #ddd;border-radius:8px;padding:6px 10px;font-size:12px;outline:none"
         oninput="setSoundDatei('${sl.id}',this.value)">
-      <label style="cursor:pointer;padding:5px 8px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;white-space:nowrap">
-        📁
-        <input type="file" accept=".mp3,.wav,.ogg" style="display:none" onchange="uploadSound('${sl.id}',this)">
+      <label style="cursor:pointer;padding:6px 10px;background:#1a1a2e;color:#fff;border-radius:8px;font-size:12px">
+        📁<input type="file" accept=".mp3,.wav,.ogg" style="display:none" onchange="uploadSound('${sl.id}',this)">
       </label>
-      ${sounds[sl.id] ? `<button onclick="testSound('${sl.id}')" style="padding:5px 8px;border:1px solid #ddd;border-radius:7px;font-size:12px;cursor:pointer;background:#fff">▶</button>` : ''}
+      ${sounds[sl.id]?`<button onclick="testSound('${sl.id}')" style="padding:6px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;cursor:pointer;background:#fff">▶</button>`:''}
     </div>`).join('');
 }
+
 function saveEinstell(){
   const e=config.einstellungen;
-  e.buzzer_sperrung=document.getElementById('opt-sperrung').checked;
-  e.fragen_mischen=document.getElementById('opt-mischen').checked;
-  e.negativpunkte_verhindern=document.getElementById('opt-noneg').checked;
-  e.warteschlange_aktiv=document.getElementById('opt-warteschlange').checked;
-  e.zweite_chance=document.getElementById('opt-zweite-chance').checked;
-  e.reaktionszeit_anzeigen=document.getElementById('opt-reaktion').checked;
-  e.punkte_richtig=parseInt(document.getElementById('opt-p-richtig').value)||10;
-  e.punkte_falsch=parseInt(document.getElementById('opt-p-falsch').value)||5;
-  e.buzzer_sperrzeit=parseInt(document.getElementById('opt-sperrzeit').value)||50;
-  e.antwort_timeout=parseInt(document.getElementById('opt-timeout').value)||0;
-}
-function setSoundDatei(id,v){
-  if(!config.einstellungen.sounds)config.einstellungen.sounds={};
-  config.einstellungen.sounds[id]=v;
+  const el=id=>document.getElementById(id);
+  if(el('opt-warteschlange'))e.warteschlange_aktiv=el('opt-warteschlange').checked;
+  if(el('opt-zweite-chance'))e.zweite_chance=el('opt-zweite-chance').checked;
+  if(el('opt-reaktion'))e.reaktionszeit_anzeigen=el('opt-reaktion').checked;
+  if(el('opt-mischen'))e.fragen_mischen=el('opt-mischen').checked;
+  if(el('opt-p-richtig'))e.punkte_richtig=parseInt(el('opt-p-richtig').value)||10;
+  if(el('opt-p-falsch'))e.punkte_falsch=parseInt(el('opt-p-falsch').value)||5;
+  if(el('opt-timeout'))e.antwort_timeout=parseInt(el('opt-timeout').value)||0;
 }
 
-async function uploadSound(id, input) {
-  const file = input.files[0];
-  if(!file) return;
-  const formData = new FormData();
-  formData.append('file', file);
-  try {
-    const r = await fetch('/api/sound-upload', {method:'POST', body:formData});
-    const d = await r.json();
-    if(d.status==='ok') {
-      setSoundDatei(id, d.dateiname);
-      document.getElementById('sound-input-'+id).value = d.dateiname;
-      zeigToast(`✅ Sound hochgeladen: ${d.dateiname}`,'gruen');
-      rendereEinstellungen();
-    } else {
-      zeigToast('❌ '+d.error,'rot');
-    }
-  } catch(e) {
-    zeigToast('❌ Fehler beim Upload','rot');
-  }
-  input.value='';
-}
+function setSoundDatei(id,v){if(!config.einstellungen.sounds)config.einstellungen.sounds={};config.einstellungen.sounds[id]=v;}
 
-function testSound(id) {
-  const dateiname = config.einstellungen.sounds?.[id];
-  if(!dateiname) return;
-  const audio = new Audio('/sounds/'+dateiname);
-  audio.play().catch(e => zeigToast('❌ Sound nicht abspielbar','rot'));
-}
-
-// ── CSV ──
-let csvDateiInput = null;
-
-function zeigeCSVOptionen(input) {
-  if(!input.files[0]) return;
-  csvDateiInput = input;
-  document.getElementById('csv-dateiname').textContent = input.files[0].name;
-  document.getElementById('csv-optionen').style.display = 'block';
-}
-
-function abbrechenCSV() {
-  csvDateiInput = null;
-  document.getElementById('csv-optionen').style.display = 'none';
-  document.getElementById('csv-input').value = '';
-}
-
-async function uploadCSV(modus) {
-  if(!csvDateiInput || !csvDateiInput.files[0]) return;
-  const file = csvDateiInput.files[0];
-  const formData = new FormData();
-  formData.append('file', file);
-  document.getElementById('csv-optionen').style.display = 'none';
-  try {
-    const r = await fetch(`/api/csv-upload?modus=${modus}`, {method:'POST', body:formData});
-    const d = await r.json();
-    if(d.status==='ok') {
-      zeigToast(`✅ ${d.anzahl} Fragen ${modus==='hinzufuegen'?'hinzugefügt':'importiert'}!`, 'gruen');
-      await ladeVomPi();
-      gewaehlteFragen = new Set(config.fragen.map((_,i)=>i));
-      rendereFragen();
-    } else {
-      zeigToast('❌ '+(d.error||'Fehler'), 'rot');
-    }
-  } catch(e) {
-    zeigToast('❌ Verbindungsfehler', 'rot');
-  }
-  csvDateiInput = null;
-  document.getElementById('csv-input').value = '';
-}
-
-async function ladeCSV(input){
+async function uploadSound(id,input){
   const file=input.files[0];if(!file)return;
   const formData=new FormData();
   formData.append('file',file);
   try{
-    const r=await fetch('/api/csv-upload',{method:'POST',body:formData});
+    const r=await fetch('/api/sound-upload',{method:'POST',body:formData});
     const d=await r.json();
     if(d.status==='ok'){
-      zeigToast(`✅ ${d.anzahl} Fragen importiert!`,'gruen');
-      await ladeVomPi();
-      rendereFragen();
-    }else zeigToast('❌ '+(d.error||'Fehler'),'rot');
-  }catch(e){zeigToast('❌ Verbindungsfehler','rot');}
+      setSoundDatei(id,d.dateiname);
+      const inp=document.getElementById('sound-input-'+id);
+      if(inp)inp.value=d.dateiname;
+      zeigToast(`✅ Sound hochgeladen: ${d.dateiname}`,'gruen');
+      rendereEinstellungen();
+    } else zeigToast('❌ '+d.error,'rot');
+  }catch(e){zeigToast('❌ Fehler beim Upload','rot');}
   input.value='';
+}
+
+function testSound(id){
+  const dateiname=config.einstellungen.sounds?.[id];
+  if(!dateiname)return;
+  const audio=new Audio('/sounds/'+dateiname);
+  audio.play().catch(()=>zeigToast('❌ Sound nicht abspielbar','rot'));
+}
+
+// ── CSV ──
+let csvDateiInput=null;
+function zeigeCSVOptionen(input){
+  if(!input.files[0])return;
+  csvDateiInput=input;
+  document.getElementById('csv-dateiname').textContent=input.files[0].name;
+  document.getElementById('csv-optionen').style.display='block';
+}
+function abbrechenCSV(){
+  csvDateiInput=null;
+  document.getElementById('csv-optionen').style.display='none';
+  document.getElementById('csv-input').value='';
+}
+async function uploadCSV(modus){
+  if(!csvDateiInput||!csvDateiInput.files[0])return;
+  const formData=new FormData();
+  formData.append('file',csvDateiInput.files[0]);
+  document.getElementById('csv-optionen').style.display='none';
+  try{
+    const r=await fetch(`/api/csv-upload?modus=${modus}`,{method:'POST',body:formData});
+    const d=await r.json();
+    if(d.status==='ok'){
+      zeigToast(`✅ ${d.anzahl} Fragen ${modus==='hinzufuegen'?'hinzugefügt':'importiert'}!`,'gruen');
+      await ladeVomPi();
+      gewaehlteFragen=new Set(config.fragen.map((_,i)=>i));
+      rendereFragen();
+    } else zeigToast('❌ '+(d.error||'Fehler'),'rot');
+  }catch(e){zeigToast('❌ Verbindungsfehler','rot');}
+  csvDateiInput=null;
+  document.getElementById('csv-input').value='';
 }
 function ladeCSVVorlage(){window.open('/api/csv-vorlage','_blank');}
 
@@ -1374,7 +1556,48 @@ function zeigToast(text,typ=''){
   const t=document.getElementById('toast');
   t.textContent=text;t.className='toast '+typ+' zeig';
   if(toastTimer)clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('zeig'),2500);
+  toastTimer=setTimeout(()=>t.classList.remove('zeig'),2800);
+}
+
+// ── KAMERA ──
+async function oeffneKamera(idx){
+  camSpielerIdx=idx;fotoDataUrl=null;
+  document.getElementById('cam-titel').textContent='Foto für '+config.spieler[idx].name;
+  document.getElementById('cam-overlay').classList.add('offen');
+  document.getElementById('cam-buttons').style.display='flex';
+  document.getElementById('crop-buttons').style.display='none';
+  const video=document.getElementById('cam-video');
+  document.getElementById('cam-canvas').style.display='none';
+  video.style.display='block';
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+    video.srcObject=camStream;
+  }catch(e){alert('Kamera nicht verfügbar');schliesseCam();}
+}
+function machFoto(){
+  const video=document.getElementById('cam-video');
+  const canvas=document.getElementById('cam-canvas');
+  const size=Math.min(video.videoWidth,video.videoHeight);
+  canvas.width=size;canvas.height=size;
+  canvas.getContext('2d').drawImage(video,(video.videoWidth-size)/2,(video.videoHeight-size)/2,size,size,0,0,size,size);
+  fotoDataUrl=canvas.toDataURL('image/jpeg',.85);
+  video.style.display='none';canvas.style.display='block';
+  document.getElementById('cam-buttons').style.display='none';
+  document.getElementById('crop-buttons').style.display='flex';
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+}
+function nochmalFoto(){
+  fotoDataUrl=null;
+  document.getElementById('cam-video').style.display='block';
+  document.getElementById('cam-canvas').style.display='none';
+  document.getElementById('cam-buttons').style.display='flex';
+  document.getElementById('crop-buttons').style.display='none';
+  oeffneKamera(camSpielerIdx);
+}
+function cropUndSpeichern(){if(fotoDataUrl){zuschneiden(fotoDataUrl,camSpielerIdx);schliesseCam();}}
+function schliesseCam(){
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+  document.getElementById('cam-overlay').classList.remove('offen');
 }
 
 document.getElementById('cam-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('cam-overlay'))schliesseCam();});
