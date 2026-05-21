@@ -205,7 +205,12 @@ def on_falsch(data):
     if spiel_state['warteschlange']:
         spiel_state['warteschlange'].pop(0)
     socketio.emit('state_update', spiel_state)
-    socketio.emit('zeige_ergebnis', {'richtig': False, 'delta': data.get('delta', 5)})
+    socketio.emit('zeige_ergebnis', {
+        'richtig': False,
+        'delta': data.get('delta', 5),
+        'punkte': spiel_state['punkte'],
+        'warteschlange': spiel_state['warteschlange']
+    })
 
 @socketio.on('mod_mc_auswahl')
 def on_mc_auswahl(data):

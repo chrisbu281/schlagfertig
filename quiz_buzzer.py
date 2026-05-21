@@ -278,52 +278,72 @@ def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=No
 
     pygame.display.flip()
 
-def zeige_gewinner_screen(spieler_obj, punkte_wert, ms, warteschlange, spieler_map):
+def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!"):
+    """Zeigt welcher Spieler jetzt antworten darf"""
     farbe = hex_zu_rgb(spieler_obj["farbe"])
-    screen.fill(dunkler(farbe,.28))
-    pw,ph = 580,340
-    px = BR//2-pw//2
-    py = HO//2-ph//2-60
-    pygame.draw.rect(screen, farbe, (px,py,pw,ph), border_radius=22)
-    kr = 72
+    screen.fill(dunkler(farbe, .3))
+
+    # Großer Kreis/Karte
+    pw, ph = 620, 380
+    px = BR//2 - pw//2
+    py = HO//2 - ph//2 - 40
+    pygame.draw.rect(screen, dunkler(farbe,.5), (px+6,py+6,pw,ph), border_radius=26)
+    pygame.draw.rect(screen, farbe, (px,py,pw,ph), border_radius=26)
+
+    # Foto oder Avatar
+    kr = 90
     foto_surf = _foto_cache.get(spieler_obj["nr"])
     if foto_surf is None and spieler_obj.get("foto"):
         foto_surf = lade_foto(spieler_obj, groesse=kr*2)
         _foto_cache[spieler_obj["nr"]] = foto_surf
     if foto_surf:
         fs = pygame.transform.smoothscale(foto_surf, (kr*2, kr*2))
-        screen.blit(fs, (BR//2 - kr, py+92 - kr))
+        screen.blit(fs, (BR//2 - kr, py+80 - kr))
     else:
-        pygame.draw.circle(screen, farbe, (BR//2, py+92), kr)
+        pygame.draw.circle(screen, dunkler(farbe,.6), (BR//2, py+80), kr+4)
+        pygame.draw.circle(screen, farbe, (BR//2, py+80), kr)
         ini = SF_GR.render(spieler_obj["name"][0].upper(), True, WEISS)
-        screen.blit(ini, (BR//2-ini.get_width()//2, py+92-ini.get_height()//2))
-    blit_mitte(SF_GR.render(spieler_obj["name"], True, WEISS), py+182)
-    blit_mitte(SF_KL.render("hat gebuzzert!", True, (220,220,220)), py+274)
-    info = f"Punktestand: {punkte_wert}"
-    if ms: info += f"  ·  Reaktion: {ms} ms"
-    blit_mitte(SF_KL.render(info, True, (160,160,160)), py+ph+26)
+        screen.blit(ini, (BR//2-ini.get_width()//2, py+80-ini.get_height()//2))
 
-    # Warteschlange anzeigen
-    rang_icons = ["🥇","🥈","🥉","4."]
-    if len(warteschlange) > 1:
-        wq_y = py+ph+60
-        for i, e in enumerate(warteschlange):
-            if i == 0: continue
-            s = spieler_map.get(e["nr"])
-            if s:
-                farbe_s = hex_zu_rgb(s["farbe"])
-                wq_txt = SF_KL.render(f"{rang_icons[i]} {s['name']}  +{e.get('ms',0)} ms", True, (150,150,150))
-                blit_mitte(wq_txt, wq_y)
-                wq_y += 36
+    # Name
+    name_surf = SF_GR.render(spieler_obj["name"], True, WEISS)
+    blit_mitte(name_surf, py+190)
+
+    # Text
+    txt_surf = SF_MI.render(text, True, (220,220,220))
+    blit_mitte(txt_surf, py+290)
 
     pygame.display.flip()
+
+def zeige_richtig_screen(delta):
+    """Grüner Richtig-Screen"""
+    screen.fill((8, 60, 20))
+    # Großes Häkchen
+    check = pygame.font.SysFont("DejaVu Sans", 160).render("✓", True, (60,220,100))
+    blit_mitte(check, HO//2 - 140)
+    blit_mitte(SF_GR.render("RICHTIG!", True, (60,220,100)), HO//2 + 40)
+    blit_mitte(SF_MI.render(f"+{delta} Punkte", True, (40,180,80)), HO//2 + 140)
+    pygame.display.flip()
+
+def zeige_falsch_screen(delta):
+    """Roter Falsch-Screen"""
+    screen.fill((60, 8, 8))
+    # Großes X
+    kreuz = pygame.font.SysFont("DejaVu Sans", 160).render("✗", True, (220,60,60))
+    blit_mitte(kreuz, HO//2 - 140)
+    blit_mitte(SF_GR.render("FALSCH!", True, (220,60,60)), HO//2 + 40)
+    blit_mitte(SF_MI.render(f"−{delta} Punkte", True, (180,40,40)), HO//2 + 140)
+    pygame.display.flip()
+
+def zeige_gewinner_screen(spieler_obj, punkte_wert, warteschlange, spieler_map):
+    """Zeigt wer zuerst gebuzzert hat"""
+    zeige_spieler_dran_screen(spieler_obj, "Du darfst antworten!")
 
 def zeige_ergebnis_screen(richtig, delta):
-    screen.fill((10,55,25) if richtig else (55,10,10))
-    msg   = f"+{delta} Punkte!" if richtig else f"−{delta} Punkte!"
-    farbe = (60,220,100) if richtig else (220,70,70)
-    blit_mitte(SF_GR.render(msg, True, farbe), HO//2-50)
-    pygame.display.flip()
+    if richtig:
+        zeige_richtig_screen(delta)
+    else:
+        zeige_falsch_screen(delta)
 
 def zeige_punktestand_screen(spieler_liste, punkte):
     screen.fill(DUNKEL)
@@ -510,11 +530,29 @@ def main():
             elif befehl == 'zeige_ergebnis':
                 richtig = data.get('richtig', False)
                 delta = data.get('delta', 10)
-                # Punkte aktualisieren
-                p_raw = data.get('punkte', {}) if 'punkte' in data else {}
-                zeige_ergebnis_screen(richtig, delta)
-                time.sleep(2)
-                modus = "punktestand"
+                p_raw = data.get('punkte', {})
+                for nr in punkte:
+                    punkte[nr] = p_raw.get(str(nr), p_raw.get(nr, punkte[nr]))
+
+                if richtig:
+                    zeige_richtig_screen(delta)
+                    time.sleep(3)
+                    modus = "punktestand"
+                else:
+                    zeige_falsch_screen(delta)
+                    time.sleep(3)
+                    # Nächsten Spieler in Warteschlange anzeigen
+                    warteschlange = data.get('warteschlange', warteschlange)
+                    if len(warteschlange) > 0:
+                        naechster_nr = warteschlange[0]['nr']
+                        naechster = spieler_map.get(naechster_nr)
+                        if naechster:
+                            zeige_spieler_dran_screen(naechster, "Du darfst antworten!")
+                            modus = "gewinner"
+                            letzter_gewinner_nr = naechster_nr
+                    else:
+                        # Niemand mehr → zurück zur Frage
+                        modus = "frage"
 
             elif befehl == 'zeige_punktestand':
                 sichtbar = data.get('sichtbar', True)
@@ -558,6 +596,12 @@ def main():
                 ms = data.get('ms', 0)
                 if not any(e['nr'] == nr for e in warteschlange):
                     warteschlange.append({'nr': nr, 'ms': ms})
+                if len(warteschlange) == 1:
+                    letzter_gewinner_nr = nr
+                    s = spieler_map.get(nr)
+                    if s:
+                        zeige_spieler_dran_screen(s, "Du darfst antworten!")
+                    modus = "gewinner"
                 if len(warteschlange) == 1:
                     letzter_gewinner_nr = nr
                     modus = "gewinner"
