@@ -516,7 +516,6 @@ def main():
                 buzzer_start_zeit = time.time()
                 punktestand_sichtbar = False
                 modus = "frage"
-
             elif befehl == 'zeige_mc_auswahl':
                 mc_gewaehlt = data.get('idx')
                 mc_aufgeloest = False
@@ -559,8 +558,8 @@ def main():
                             modus = "gewinner"
                             letzter_gewinner_nr = naechster_nr
                     else:
-                        # Niemand mehr → zurück zur Frage
-                        modus = "frage"
+                        # Niemand mehr → Screen bleibt stehen bis Moderator nächste Frage drückt
+                        modus = "warte_moderator"
 
             elif befehl == 'zeige_punktestand':
                 sichtbar = data.get('sichtbar', True)
@@ -623,6 +622,9 @@ def main():
 
         elif modus == "gewinner":
             pass  # Screen wird direkt beim Buzzer-Druck gezeichnet
+
+        elif modus == "warte_moderator":
+            pass  # Falsch-Screen bleibt stehen bis Moderator nächste Frage drückt
 
         elif modus == "punktestand":
             zeige_punktestand_screen(spieler, punkte)
