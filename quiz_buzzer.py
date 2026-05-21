@@ -127,12 +127,12 @@ DUNKEL = (18,  18,  28)
 ROT    = (230, 57,  70)
 SCHWARZ = (0, 0, 0)
 
-SF_GR = SF_MI = SF_KL = None
+SF_GR = SF_MI = SF_KL = SF_EMOJI = None
 BR = HO = 0
 screen = None
 
 def display_setup():
-    global SF_GR, SF_MI, SF_KL, BR, HO, screen
+    global SF_GR, SF_MI, SF_KL, SF_EMOJI, BR, HO, screen
     pygame.init()
     info = pygame.display.Info()
     BR, HO = info.current_w, info.current_h
@@ -141,6 +141,11 @@ def display_setup():
     SF_GR = pygame.font.SysFont("DejaVu Sans", 86, bold=True)
     SF_MI = pygame.font.SysFont("DejaVu Sans", 46)
     SF_KL = pygame.font.SysFont("DejaVu Sans", 28)
+    # Emoji Schriftart
+    try:
+        SF_EMOJI = pygame.font.Font("/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf", 48)
+    except:
+        SF_EMOJI = SF_MI
 
 def blit_mitte(surf, y):
     screen.blit(surf, (BR//2 - surf.get_width()//2, y))
@@ -189,7 +194,6 @@ def zeige_wartebildschirm(puls):
     blit_mitte(warte, HO//2)
     hint = SF_KL.render("http://schlagfertig.local:5000", True, (40, 40, 60))
     blit_mitte(hint, HO - 54)
-    pygame.display.flip()
 
 def zeige_startbildschirm(spieler, punkte, highlight_nr=None):
     screen.fill(DUNKEL)
@@ -316,23 +320,15 @@ def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!"):
     pygame.display.flip()
 
 def zeige_richtig_screen(delta):
-    """Grüner Richtig-Screen"""
     screen.fill((8, 60, 20))
-    # Großes Häkchen
-    check = pygame.font.SysFont("DejaVu Sans", 160).render("✓", True, (60,220,100))
-    blit_mitte(check, HO//2 - 140)
-    blit_mitte(SF_GR.render("RICHTIG!", True, (60,220,100)), HO//2 + 40)
-    blit_mitte(SF_MI.render(f"+{delta} Punkte", True, (40,180,80)), HO//2 + 140)
+    blit_mitte(SF_GR.render("RICHTIG!", True, (60,220,100)), HO//2 - 60)
+    blit_mitte(SF_MI.render(f"+{delta} Punkte", True, (40,180,80)), HO//2 + 60)
     pygame.display.flip()
 
 def zeige_falsch_screen(delta):
-    """Roter Falsch-Screen"""
     screen.fill((60, 8, 8))
-    # Großes X
-    kreuz = pygame.font.SysFont("DejaVu Sans", 160).render("✗", True, (220,60,60))
-    blit_mitte(kreuz, HO//2 - 140)
-    blit_mitte(SF_GR.render("FALSCH!", True, (220,60,60)), HO//2 + 40)
-    blit_mitte(SF_MI.render(f"−{delta} Punkte", True, (180,40,40)), HO//2 + 140)
+    blit_mitte(SF_GR.render("FALSCH!", True, (220,60,60)), HO//2 - 60)
+    blit_mitte(SF_MI.render(f"-{delta} Punkte", True, (180,40,40)), HO//2 + 60)
     pygame.display.flip()
 
 def zeige_gewinner_screen(spieler_obj, punkte_wert, warteschlange, spieler_map):
@@ -355,13 +351,16 @@ def zeige_punktestand_screen(spieler_liste, punkte):
     gy = HO//2 - bh//2 + 30
     # Nach Punkten sortiert anzeigen
     sortiert = sorted(spieler_liste, key=lambda s: punkte.get(s["nr"], punkte.get(str(s["nr"]), 0)), reverse=True)
+    rang_emojis = ["🥇", "🥈", "🥉", "4."]
     for i, s in enumerate(sortiert):
         pkt = punkte.get(s["nr"], punkte.get(str(s["nr"]), 0))
         zeichne_kachel(s, pkt, gx+i*(bw+14), gy, bw, bh)
-        # Rang anzeigen
-        rang = ["🥇","🥈","🥉","4."][i] if i < 4 else f"{i+1}."
-        rang_surf = SF_MI.render(rang, True, WEISS)
-        screen.blit(rang_surf, (gx+i*(bw+14) + bw//2 - rang_surf.get_width()//2, gy-50))
+        rang_text = rang_emojis[i] if i < 3 else f"{i+1}."
+        if i < 3 and SF_EMOJI:
+            rang_surf = SF_EMOJI.render(rang_text, True, WEISS)
+        else:
+            rang_surf = SF_MI.render(rang_text, True, WEISS)
+        screen.blit(rang_surf, (gx+i*(bw+14) + bw//2 - rang_surf.get_width()//2, gy-54))
     pygame.display.flip()
 
 def zeige_sieger_screen(spieler_liste, punkte):
@@ -384,7 +383,7 @@ def zeige_sieger_screen(spieler_liste, punkte):
             pygame.draw.circle(screen, farbe, (BR//2, HO//2-80), kr)
             ini = SF_GR.render(s["name"][0].upper(), True, WEISS)
             screen.blit(ini, (BR//2-ini.get_width()//2, HO//2-80-ini.get_height()//2))
-        blit_mitte(SF_GR.render("🏆 " + s["name"] + " gewinnt!", True, farbe), HO//2+50)
+        blit_mitte(SF_GR.render("*** " + s["name"] + " gewinnt! ***", True, farbe), HO//2+50)
         blit_mitte(SF_MI.render(f"{max_p} Punkte", True, WEISS), HO//2+140)
     else:
         namen = " & ".join(s["name"] for s in sieger)
