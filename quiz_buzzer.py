@@ -402,6 +402,14 @@ buzzer_warteschlange_lokal = []  # Lokale Kopie der Warteschlange
 
 def buzzer_thread(spieler):
     global buzzer_gesperrt, buzzer_start_zeit, buzzer_warteschlange_lokal
+    # Sicherstellen dass GPIO korrekt initialisiert ist
+    try:
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+        for s in spieler:
+            GPIO.setup(s["gpio"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    except: pass
+
     letzter = {s["nr"]: GPIO.HIGH for s in spieler}
     erster_buzz_zeit = None
 
@@ -601,8 +609,7 @@ def main():
                     s = spieler_map.get(nr)
                     if s:
                         zeige_spieler_dran_screen(s, "Du darfst antworten!")
-                    modus = "gewinner"
-                if len(warteschlange) == 1:
+                    modus = "gewinner"                if len(warteschlange) == 1:
                     letzter_gewinner_nr = nr
                     modus = "gewinner"
 
@@ -617,11 +624,7 @@ def main():
             zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, mc_aufgeloest)
 
         elif modus == "gewinner":
-            if letzter_gewinner_nr and letzter_gewinner_nr in spieler_map:
-                s = spieler_map[letzter_gewinner_nr]
-                pkt = punkte.get(letzter_gewinner_nr, 0)
-                ms = warteschlange[0]['ms'] if warteschlange else 0
-                zeige_gewinner_screen(s, pkt, ms, warteschlange, spieler_map)
+            pass  # Screen wird direkt beim Buzzer-Druck gezeichnet
 
         elif modus == "punktestand":
             zeige_punktestand_screen(spieler, punkte)
