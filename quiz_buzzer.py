@@ -454,11 +454,19 @@ def main():
     display_setup()
     _foto_cache.clear()
 
-    # Sofort schwarzen Bildschirm zeigen – BEVOR alles andere passiert
-    screen.fill(SCHWARZ)
+    # Sofort Wartebildschirm zeigen – kein schwarzer Bildschirm
+    screen.fill(DUNKEL)
+    logo1 = SF_GR.render("SCHLAG", True, WEISS)
+    logo2 = SF_GR.render("FERTIG", True, ROT)
+    x = BR//2 - (logo1.get_width() + logo2.get_width() + 10)//2
+    screen.blit(logo1, (x, HO//2 - 160))
+    screen.blit(logo2, (x + logo1.get_width() + 10, HO//2 - 160))
+    warte = SF_MI.render("Warten auf Moderator...", True, (100,100,120))
+    screen.blit(warte, (BR//2 - warte.get_width()//2, HO//2))
+    hint = SF_KL.render("http://schlagfertig.local:5000", True, (40,40,60))
+    screen.blit(hint, (BR//2 - hint.get_width()//2, HO-54))
     pygame.display.flip()
     pygame.event.pump()
-    time.sleep(0.1)
 
     # WebSocket Thread
     ws_thread = threading.Thread(target=verbinde_websocket, daemon=True)
