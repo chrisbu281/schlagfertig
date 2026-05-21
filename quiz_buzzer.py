@@ -609,8 +609,6 @@ def main():
                     s = spieler_map.get(nr)
                     if s:
                         zeige_spieler_dran_screen(s, "Du darfst antworten!")
-                    modus = "gewinner"                if len(warteschlange) == 1:
-                    letzter_gewinner_nr = nr
                     modus = "gewinner"
 
         # Bildschirm rendern
