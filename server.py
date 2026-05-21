@@ -270,6 +270,25 @@ def on_buzzer(data):
         spiel_state['warteschlange'].append(eintrag)
     socketio.emit('state_update', spiel_state)
 
+@app.route("/sounds/<dateiname>")
+def serve_sound(dateiname):
+    return send_from_directory(BASIS, dateiname)
+
+@app.route("/api/sound-upload", methods=["POST"])
+def sound_upload():
+    try:
+        if "file" not in request.files:
+            return jsonify({"error": "Keine Datei"}), 400
+        file = request.files["file"]
+        if not file.filename.endswith(('.mp3', '.wav', '.ogg')):
+            return jsonify({"error": "Nur MP3, WAV oder OGG erlaubt"}), 400
+        # Datei speichern
+        ziel = os.path.join(BASIS, file.filename)
+        file.save(ziel)
+        return jsonify({"status": "ok", "dateiname": file.filename})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     print("Schlagfertig Server startet...")
     print("Erreichbar unter: http://schlagfertig.local:5000")

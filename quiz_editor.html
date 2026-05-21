@@ -1254,9 +1254,14 @@ function rendereEinstellungen(){
     <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f0f0f0">
       <span style="font-size:18px;width:24px">${sl.icon}</span>
       <span style="font-size:13px;font-weight:500;flex:1">${sl.label}</span>
-      <input type="text" placeholder="datei.mp3" value="${sounds[sl.id]||''}"
-        style="width:120px;border:1px solid #ddd;border-radius:7px;padding:5px 9px;font-size:12px;outline:none"
+      <input type="text" id="sound-input-${sl.id}" placeholder="datei.mp3" value="${sounds[sl.id]||''}"
+        style="width:110px;border:1px solid #ddd;border-radius:7px;padding:5px 9px;font-size:12px;outline:none"
         oninput="setSoundDatei('${sl.id}',this.value)">
+      <label style="cursor:pointer;padding:5px 8px;background:#1a1a2e;color:#fff;border-radius:7px;font-size:12px;white-space:nowrap">
+        📁
+        <input type="file" accept=".mp3,.wav,.ogg" style="display:none" onchange="uploadSound('${sl.id}',this)">
+      </label>
+      ${sounds[sl.id] ? `<button onclick="testSound('${sl.id}')" style="padding:5px 8px;border:1px solid #ddd;border-radius:7px;font-size:12px;cursor:pointer;background:#fff">▶</button>` : ''}
     </div>`).join('');
 }
 function saveEinstell(){
@@ -1272,7 +1277,39 @@ function saveEinstell(){
   e.buzzer_sperrzeit=parseInt(document.getElementById('opt-sperrzeit').value)||50;
   e.antwort_timeout=parseInt(document.getElementById('opt-timeout').value)||0;
 }
-function setSoundDatei(id,v){if(!config.einstellungen.sounds)config.einstellungen.sounds={};config.einstellungen.sounds[id]=v;}
+function setSoundDatei(id,v){
+  if(!config.einstellungen.sounds)config.einstellungen.sounds={};
+  config.einstellungen.sounds[id]=v;
+}
+
+async function uploadSound(id, input) {
+  const file = input.files[0];
+  if(!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const r = await fetch('/api/sound-upload', {method:'POST', body:formData});
+    const d = await r.json();
+    if(d.status==='ok') {
+      setSoundDatei(id, d.dateiname);
+      document.getElementById('sound-input-'+id).value = d.dateiname;
+      zeigToast(`✅ Sound hochgeladen: ${d.dateiname}`,'gruen');
+      rendereEinstellungen();
+    } else {
+      zeigToast('❌ '+d.error,'rot');
+    }
+  } catch(e) {
+    zeigToast('❌ Fehler beim Upload','rot');
+  }
+  input.value='';
+}
+
+function testSound(id) {
+  const dateiname = config.einstellungen.sounds?.[id];
+  if(!dateiname) return;
+  const audio = new Audio('/sounds/'+dateiname);
+  audio.play().catch(e => zeigToast('❌ Sound nicht abspielbar','rot'));
+}
 
 // ── CSV ──
 let csvDateiInput = null;
