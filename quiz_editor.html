@@ -341,7 +341,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
       <div class="wp-linie" id="wline1"></div>
       <div class="wp-schritt">
         <div class="wp-kreis" id="wp2">2</div>
-        <span class="wp-label" id="wl2">Spielmodus</span>
+        <span class="wp-label" id="wl2">Modus & Optionen</span>
       </div>
       <div class="wp-linie" id="wline2"></div>
       <div class="wp-schritt">
@@ -353,30 +353,79 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
     <!-- Schritt 1: Spieler -->
     <div class="wizard-inhalt" id="wizard-schritt-1">
       <div class="wizard-titel">👥 Wer spielt mit?</div>
-      <div class="wizard-untertitel">Wähle die aktiven Spieler für diese Runde</div>
+      <div class="wizard-untertitel">Anzahl wählen, Namen und Fotos anpassen</div>
+
+      <!-- Anzahl Spieler -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:13px;font-weight:600;color:#555">Anzahl Spieler:</span>
+        <div style="display:flex;gap:6px">
+          ${[2,3,4,5,6].map(n=>`<button class="btn" id="anzahl-btn-${n}" onclick="setzeAnzahlSpieler(${n})" style="padding:8px 14px;font-size:15px;font-weight:700">${n}</button>`).join('')}
+        </div>
+        <button class="btn rot" onclick="resetSpieler()" style="margin-left:auto;font-size:12px;padding:6px 12px">🔄 Zurücksetzen</button>
+      </div>
+
+      <!-- Spieler Karten -->
       <div class="spieler-wizard-grid" id="spieler-wizard-grid"></div>
+
       <div class="wizard-buttons">
         <button class="btn grau" onclick="zeigeAnsicht('start')">← Zurück</button>
         <button class="btn gruen gross" onclick="wizardWeiter(2)">Weiter →</button>
       </div>
     </div>
 
-    <!-- Schritt 2: Spielmodus -->
+    <!-- Schritt 2: Spielmodus + Optionen -->
     <div class="wizard-inhalt" id="wizard-schritt-2" style="display:none">
-      <div class="wizard-titel">🎮 Was möchtet ihr spielen?</div>
-      <div class="wizard-untertitel">Wähle den Spielmodus für diese Runde</div>
-      <div class="modus-wizard-grid">
+      <div class="wizard-titel">🎮 Spielmodus & Optionen</div>
+      <div class="wizard-untertitel">Wähle den Modus und stelle das Spiel ein</div>
+
+      <!-- Modus -->
+      <div class="modus-wizard-grid" style="margin-bottom:20px">
         <div class="modus-wizard-karte aktiv" id="mwk-frei" onclick="setzeWizardModus('frei')">
           <div class="mw-icon">🎤</div>
           <div class="mw-titel">Freie Antwort</div>
-          <div class="mw-desc">Buzzer drücken und frei antworten. Der Moderator entscheidet ob die Antwort richtig ist.</div>
+          <div class="mw-desc">Buzzer drücken und frei antworten. Moderator entscheidet richtig/falsch.</div>
         </div>
         <div class="modus-wizard-karte" id="mwk-mc" onclick="setzeWizardModus('mc')">
           <div class="mw-icon">🅰️</div>
           <div class="mw-titel">Multiple Choice</div>
-          <div class="mw-desc">4 Antworten erscheinen auf dem Bildschirm. Buzzer drücken und A, B, C oder D wählen.</div>
+          <div class="mw-desc">4 Antworten auf dem Bildschirm. Spieler wählt A, B, C oder D.</div>
         </div>
       </div>
+
+      <!-- Optionen -->
+      <div style="background:#f8f8f8;border-radius:12px;padding:16px;border:1px solid #e8e8e8">
+        <div style="font-size:13px;font-weight:700;color:#555;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">⚙️ Optionen</div>
+
+        <div class="toggle-zeile">
+          <div class="toggle-info"><strong>Buzzer-Warteschlange</strong><span>Moderator sieht wer zuerst gedrückt hat</span></div>
+          <label class="toggle"><input type="checkbox" id="wiz-warteschlange" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-zeile" id="wiz-zeile-zweite-chance">
+          <div class="toggle-info"><strong>Zweite Chance</strong><span>Nach falscher Antwort kommt der Nächste dran</span></div>
+          <label class="toggle"><input type="checkbox" id="wiz-zweite-chance" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-zeile">
+          <div class="toggle-info"><strong>Reaktionszeit anzeigen</strong><span>Millisekunden in der Warteschlange</span></div>
+          <label class="toggle"><input type="checkbox" id="wiz-reaktion" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-zeile">
+          <div class="toggle-info"><strong>Fragen mischen</strong><span>Zufällige Reihenfolge</span></div>
+          <label class="toggle"><input type="checkbox" id="wiz-mischen" checked><span class="toggle-slider"></span></label>
+        </div>
+
+        <div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:12px;font-weight:600;color:#555">Schwierigkeit:</span>
+          <div class="filter-chip leicht aktiv" id="wfc-leicht" onclick="toggleWizardFilter('leicht')">✓ Leicht</div>
+          <div class="filter-chip mittel aktiv" id="wfc-mittel" onclick="toggleWizardFilter('mittel')">✓ Mittel</div>
+          <div class="filter-chip schwer aktiv" id="wfc-schwer" onclick="toggleWizardFilter('schwer')">✓ Schwer</div>
+        </div>
+
+        <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">✅ Punkte: Richtig</label><input class="num-input" type="number" id="wiz-p-richtig" value="10" min="0" max="100"></div>
+          <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">❌ Punkte: Falsch</label><input class="num-input" type="number" id="wiz-p-falsch" value="5" min="0" max="100"></div>
+        </div>
+      </div>
+
       <div class="wizard-buttons">
         <button class="btn grau" onclick="wizardZurueck(1)">← Zurück</button>
         <button class="btn gruen gross" onclick="wizardWeiter(3)">Weiter →</button>
@@ -386,21 +435,13 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
     <!-- Schritt 3: Fragen -->
     <div class="wizard-inhalt" id="wizard-schritt-3" style="display:none">
       <div class="wizard-titel">📋 Welche Fragen?</div>
-      <div class="wizard-untertitel">Wähle die Fragen für das Spiel aus</div>
+      <div class="wizard-untertitel" id="wiz-modus-hinweis">Nur passende Fragen werden angezeigt</div>
 
-      <!-- Filter -->
       <div class="fragen-toolbar">
         <input class="suche" type="text" placeholder="🔍 Suchen..." oninput="rendereFragenWizard()" id="wiz-suche">
         <select class="filter-sel" id="wiz-filter-kat" onchange="rendereFragenWizard()">
           <option value="">Alle Kategorien</option>
         </select>
-        <button class="btn" onclick="filterWizardZuruecksetzen()" style="font-size:12px;padding:6px 10px">🔄 Reset</button>
-      </div>
-      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-        <span style="font-size:12px;color:#888;font-weight:500">Schwierigkeit:</span>
-        <div class="filter-chip leicht aktiv" id="wfc-leicht" onclick="toggleWizardFilter('leicht')">✓ Leicht</div>
-        <div class="filter-chip mittel aktiv" id="wfc-mittel" onclick="toggleWizardFilter('mittel')">✓ Mittel</div>
-        <div class="filter-chip schwer aktiv" id="wfc-schwer" onclick="toggleWizardFilter('schwer')">✓ Schwer</div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <button class="btn" onclick="alleWaehlenWizard()" style="font-size:12px;padding:6px 12px">Alle</button>
@@ -412,7 +453,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
         <button class="btn lila" onclick="zufaelligWaehlenWizard(20)" style="font-size:12px;padding:6px 12px">20</button>
         <span class="auswahl-info" id="wiz-auswahl-info" style="margin-left:auto"></span>
       </div>
-      <div id="wiz-fragen-liste" style="max-height:320px;overflow-y:auto;border:1px solid #eee;border-radius:10px;padding:4px 12px;"></div>
+      <div id="wiz-fragen-liste" style="max-height:340px;overflow-y:auto;border:1px solid #eee;border-radius:10px;padding:4px 12px;"></div>
 
       <div class="wizard-buttons">
         <button class="btn grau" onclick="wizardZurueck(2)">← Zurück</button>
@@ -828,9 +869,42 @@ async function pruefeSpielStatus() {
 
 // ── WIZARD ──
 function starteWizard() {
+  const e = config.einstellungen;
+  setTimeout(() => {
+    const el = id => document.getElementById(id);
+    if(el('wiz-warteschlange')) el('wiz-warteschlange').checked = e.warteschlange_aktiv !== false;
+    if(el('wiz-zweite-chance')) el('wiz-zweite-chance').checked = e.zweite_chance !== false;
+    if(el('wiz-reaktion')) el('wiz-reaktion').checked = e.reaktionszeit_anzeigen !== false;
+    if(el('wiz-mischen')) el('wiz-mischen').checked = e.fragen_mischen !== false;
+    if(el('wiz-p-richtig')) el('wiz-p-richtig').value = e.punkte_richtig || 10;
+    if(el('wiz-p-falsch')) el('wiz-p-falsch').value = e.punkte_falsch || 5;
+  }, 100);
+  const anzahl = config.spieler.filter(s => s.aktiv !== false).length;
   wizardSchritt(1);
   rendereSpielerwizard();
+  aktualisiereAnzahlButtons(Math.max(anzahl, 2));
   zeigeAnsicht('wizard');
+}
+
+function aktualisiereAnzahlButtons(n) {
+  [2,3,4,5,6].forEach(i => {
+    const btn = document.getElementById('anzahl-btn-'+i);
+    if(btn) btn.className = 'btn' + (i === n ? ' primaer' : '');
+  });
+}
+
+function setzeAnzahlSpieler(n) {
+  config.spieler.forEach((s, i) => s.aktiv = i < n);
+  aktualisiereAnzahlButtons(n);
+  rendereSpielerwizard();
+}
+
+function resetSpieler() {
+  if(!confirm('Alle Spielernamen und Fotos zurücksetzen?')) return;
+  config.spieler = JSON.parse(JSON.stringify(STANDARD_SPIELER));
+  aktualisiereAnzahlButtons(4);
+  rendereSpielerwizard();
+  zeigToast('Spieler zurückgesetzt', '');
 }
 
 function wizardSchritt(n) {
@@ -850,9 +924,23 @@ function wizardSchritt(n) {
 }
 
 function wizardWeiter(schritt) {
+  if(schritt === 2) {
+    const zeile = document.getElementById('wiz-zeile-zweite-chance');
+    if(zeile) zeile.style.opacity = wizardModus === 'mc' ? '0.4' : '1';
+  }
   if(schritt === 3) {
-    // Fragen nach Modus filtern
+    const el = id => document.getElementById(id);
     config.einstellungen.spielmodus = wizardModus;
+    config.einstellungen.warteschlange_aktiv = el('wiz-warteschlange')?.checked !== false;
+    config.einstellungen.zweite_chance = el('wiz-zweite-chance')?.checked !== false;
+    config.einstellungen.reaktionszeit_anzeigen = el('wiz-reaktion')?.checked !== false;
+    config.einstellungen.fragen_mischen = el('wiz-mischen')?.checked !== false;
+    config.einstellungen.punkte_richtig = parseInt(el('wiz-p-richtig')?.value) || 10;
+    config.einstellungen.punkte_falsch = parseInt(el('wiz-p-falsch')?.value) || 5;
+    const hinweis = document.getElementById('wiz-modus-hinweis');
+    if(hinweis) hinweis.textContent = wizardModus === 'mc'
+      ? '🅰️ Nur Multiple Choice Fragen werden angezeigt'
+      : '🎤 Nur Freie Antwort Fragen werden angezeigt';
     rendereFragenWizard();
   }
   wizardSchritt(schritt);
@@ -872,9 +960,19 @@ function rendereSpielerwizard() {
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="sw-avatar" style="background:${s.farbe}">${avatarHTML(s,60)}</div>
-      <div class="sw-name">${s.name}</div>
+      <div class="sw-avatar" style="background:${s.farbe}" onclick="document.getElementById('swupload-${i}').click()" style="cursor:pointer">
+        ${avatarHTML(s,60)}
+        <input type="file" id="swupload-${i}" accept="image/*" style="display:none" onchange="uploadFoto(${i},this)">
+      </div>
+      <div class="sw-name">
+        <input type="text" value="${s.name}" 
+          style="border:1.5px solid #ddd;border-radius:8px;padding:5px 8px;font-size:13px;width:100%;outline:none;text-align:center;margin-top:4px"
+          oninput="updateSpieler(${i},'name',this.value);document.getElementById('swk-${i}').querySelector('.sw-avatar').innerHTML=avatarHTML(config.spieler[${i}],60)">
+      </div>
       <div class="sw-gpio">GPIO ${s.gpio}</div>
+      <input type="color" value="${s.farbe}" 
+        style="width:100%;height:28px;border:1.5px solid #ddd;border-radius:8px;cursor:pointer;padding:2px;margin-top:6px"
+        oninput="updateSpieler(${i},'farbe',this.value);rendereSpielerwizard()">
     </div>`).join('');
 }
 
@@ -897,8 +995,7 @@ function rendereFragenWizard() {
 
   // Nur Fragen die zum gewählten Modus passen
   const gef = config.fragen.filter(f => {
-    const hatMC = f.antworten_mc && f.antworten_mc.filter(a=>a&&a.trim()).length===4;
-    const istMC = f.modus==='mc' || hatMC;
+    const istMC = f.modus === 'mc';
     // Modus Filter
     if(wizardModus==='mc' && !istMC) return false;
     if(wizardModus==='frei' && istMC) return false;
@@ -910,8 +1007,7 @@ function rendereFragenWizard() {
 
   // Kategorien aktualisieren
   const kats = [...new Set(config.fragen.filter(f=>{
-    const hatMC = f.antworten_mc && f.antworten_mc.filter(a=>a&&a.trim()).length===4;
-    const istMC = f.modus==='mc' || hatMC;
+    const istMC = f.modus === 'mc';
     if(wizardModus==='mc' && !istMC) return false;
     if(wizardModus==='frei' && istMC) return false;
     return true;
@@ -964,8 +1060,7 @@ function keineWaehlenWizard() {
 function zufaelligWaehlenWizard(n) {
   const verfuegbar = config.fragen.map((_,i)=>i).filter(i=>{
     const f = config.fragen[i];
-    const hatMC = f.antworten_mc && f.antworten_mc.filter(a=>a&&a.trim()).length===4;
-    const istMC = f.modus==='mc' || hatMC;
+    const istMC = f.modus === 'mc';
     if(wizardModus==='mc' && !istMC) return false;
     if(wizardModus==='frei' && istMC) return false;
     if(!wizardFilterAktiv[f.schwierigkeit]) return false;
@@ -1001,6 +1096,16 @@ function filterWizardZuruecksetzen() {
 
 // ── SPIEL STARTEN ──
 async function spielStarten() {
+  // Punkte abfragen
+  const aktiveSpieler = config.spieler.filter(s => s.aktiv !== false);
+  const hatPunkte = aktiveSpieler.some(s => (punkte[s.nr]||0) > 0);
+  if(hatPunkte) {
+    const punkte_text = aktiveSpieler.map(s => `${s.name}: ${punkte[s.nr]||0}`).join(', ');
+    const antwort = confirm(`Punkte vom letzten Spiel übernehmen?\n\n${punkte_text}\n\nOK = Übernehmen\nAbbrechen = Zurücksetzen`);
+    if(!antwort) {
+      aktiveSpieler.forEach(s => punkte[s.nr] = 0);
+    }
+  }
   await speichereAufPi();
   try {
     const r = await fetch('/api/spiel/starten', {method:'POST'});
