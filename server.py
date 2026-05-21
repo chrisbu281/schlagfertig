@@ -86,22 +86,8 @@ def spiel_stoppen():
         if spiel_laeuft():
             spiel_prozess.terminate()
             spiel_prozess.wait()
-        # Schwarzen Bildschirm zeigen während Neustart
         import time
-        schwarz = subprocess.Popen(
-            ["python3", "-c", """
-import pygame, time
-pygame.init()
-info = pygame.display.Info()
-screen = pygame.display.set_mode((info.current_w, info.current_h), pygame.FULLSCREEN)
-screen.fill((0,0,0))
-pygame.display.flip()
-time.sleep(1.5)
-pygame.quit()
-"""],
-            env={**os.environ, "DISPLAY": ":0"}
-        )
-        schwarz.wait()
+        time.sleep(0.5)
         starte_quiz()
         return jsonify({"status": "ok"})
     except Exception as e:

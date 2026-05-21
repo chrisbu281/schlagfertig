@@ -454,8 +454,11 @@ def main():
     display_setup()
     _foto_cache.clear()
 
-    # Sofort schwarzen Bildschirm zeigen (kein Desktop sichtbar)
-    zeige_schwarz()
+    # Sofort schwarzen Bildschirm zeigen – BEVOR alles andere passiert
+    screen.fill(SCHWARZ)
+    pygame.display.flip()
+    pygame.event.pump()
+    time.sleep(0.1)
 
     # WebSocket Thread
     ws_thread = threading.Thread(target=verbinde_websocket, daemon=True)
