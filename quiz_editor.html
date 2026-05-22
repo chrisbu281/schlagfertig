@@ -704,7 +704,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
         <button class="mod-btn rot" id="mod-btn-falsch" onclick="modBewerteAntwort(false)" disabled>✗ Falsch</button>
       </div>
       <button class="mod-btn lila" id="mod-btn-aufloesen" onclick="modMCAufloesen()" style="display:none">🔍 Auflösen</button>
-      <button class="mod-btn grau" onclick="modNaechsteFrage()">Nächste Frage →</button>
+      <button class="mod-btn grau" id="mod-btn-naechste" onclick="modNaechsteFrage()">Nächste Frage →</button>
     </div>
     <div class="fragen-nav">
       <div class="fragen-nav-kopf">Fragenreihenfolge</div>
@@ -1421,10 +1421,31 @@ function rendereModFrage() {
   modGewaehlteAntwort = null;
   modAufgeloest = false;
   const istMC = wizardModus === 'mc' || f?.modus === 'mc';
+  const naechsteBtn = document.getElementById('mod-btn-naechste');
+
   if(!f) {
     document.getElementById('mod-frage-text').textContent = 'Alle Fragen gespielt!';
-    socket.emit('mod_sieger', {punkte: modPunkte, spieler: config.spieler.filter(s=>s.aktiv!==false)});
+    // Button zu Sieger verkünden ändern
+    if(naechsteBtn) {
+      naechsteBtn.textContent = '🏆 Sieger verkünden!';
+      naechsteBtn.style.background = '#f39c12';
+      naechsteBtn.onclick = verkuendeSimulierer;
+    }
     return;
+  }
+
+  // Button zurücksetzen
+  if(naechsteBtn) {
+    // Letzte Frage? Button schon jetzt anpassen
+    if(modAktuellIdx === modFragenListe.length - 1) {
+      naechsteBtn.textContent = '🏆 Sieger verkünden!';
+      naechsteBtn.style.background = '#f39c12';
+      naechsteBtn.onclick = verkuendeSimulierer;
+    } else {
+      naechsteBtn.textContent = 'Nächste Frage →';
+      naechsteBtn.style.background = '';
+      naechsteBtn.onclick = modNaechsteFrage;
+    }
   }
   document.getElementById('mod-frage-nr').textContent = `FRAGE ${modAktuellIdx+1} / ${modFragenListe.length}`;
   document.getElementById('mod-frage-kat').textContent = f.kategorie;
@@ -1555,6 +1576,11 @@ function modBewerteAntwort(richtig) {
     }
   }
   rendereWarteschlange();
+}
+
+function verkuendeSimulierer() {
+  socket.emit('mod_sieger', {punkte: modPunkte, spieler: config.spieler.filter(s=>s.aktiv!==false)});
+  zeigToast('🏆 Sieger wird verkündet!', 'gruen');
 }
 
 function modNaechsteFrage() {
