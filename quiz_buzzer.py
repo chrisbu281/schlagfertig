@@ -149,6 +149,7 @@ SCHWARZ = (0, 0, 0)
 SF_GR = SF_MI = SF_KL = SF_EMOJI = None
 BR = HO = 0
 screen = None
+spieler_map_global = {}
 
 def display_setup():
     global SF_GR, SF_MI, SF_KL, SF_EMOJI, BR, HO, screen
@@ -227,10 +228,10 @@ def zeige_startbildschirm(spieler, punkte, highlight_nr=None):
         zeichne_kachel(s, pkt, gx+i*(bw+14), gy, bw, bh, highlight=s["nr"]==highlight_nr)
     pygame.display.flip()
 
-def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=None, mc_aufgeloest=False):
+def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=None, mc_aufgeloest=False, do_flip=True):
     screen.fill(DUNKEL)
     if not frage_dict:
-        pygame.display.flip()
+        if do_flip: pygame.display.flip()
         return
 
     # Kategorie + Nummer
@@ -299,13 +300,13 @@ def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=No
     if not istMC:
         blit_mitte(SF_KL.render("Buzzer drücken!", True, (80,200,120)), HO-54)
 
-    pygame.display.flip()
+    if do_flip: pygame.display.flip()
 
 def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", warteschlange=[], frage_dict=None, frage_nr=1, frage_gesamt=1, spielmodus='frei', mc_gewaehlt=None):
     """Zeigt Pop-up über der Frage wer dran ist"""
-    # Erst Frage im Hintergrund zeigen
+    # Erst Frage im Hintergrund zeigen (ohne flip!)
     if frage_dict:
-        zeige_frage_screen(frage_dict, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False)
+        zeige_frage_screen(frage_dict, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False, do_flip=False)
     
     # Pop-up darüber zeichnen
     farbe = hex_zu_rgb(spieler_obj["farbe"])
@@ -354,15 +355,18 @@ def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", wartesch
     
     # Warteschlange unten
     if len(warteschlange) > 1:
-        rang_icons = ["🥇","🥈","🥉","4."]
-        wq_x = px + 20
+        rang_icons = ["🥇","🥈","🥉","4.","5.","6."]
         wq_y = py + ph + 16
         for i, e in enumerate(warteschlange):
             if i == 0: continue
-            s = next((sp for sp in [spieler_obj] if sp["nr"] == e["nr"]), None)
-            wq_txt = SF_KL.render(f"{rang_icons[i]} wartet...", True, (180,180,180))
+            s_nr = e.get('nr')
+            s_ms = e.get('ms', 0)
+            s = spieler_map_global.get(s_nr)
+            s_name = s['name'] if s else f"Spieler {s_nr}"
+            ms_txt = f"  +{s_ms} ms" if s_ms else ""
+            wq_txt = SF_KL.render(f"{rang_icons[i]} {s_name}{ms_txt}", True, (200,200,200))
             screen.blit(wq_txt, (BR//2 - wq_txt.get_width()//2, wq_y))
-            wq_y += 30
+            wq_y += 34
     
     pygame.display.flip()
 
@@ -496,6 +500,8 @@ def main():
     konfig = lade_konfig()
     spieler = konfig["spieler"]
     spieler_map = {s["nr"]: s for s in spieler}
+    global spieler_map_global
+    spieler_map_global = spieler_map
 
     gpio_setup(spieler)
     display_setup()
