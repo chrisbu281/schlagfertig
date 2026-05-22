@@ -306,9 +306,9 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
         <span class="icon">🎮</span>
         Spiel starten
       </button>
-      <button class="start-btn fragen" onclick="zeigeEigeneFragen()">
+      <button class="start-btn fragen" id="btn-eigene-fragen" onclick="zeigeEigeneFragen()">
         <span class="icon">➕</span>
-        Eigene Fragen
+        <span id="btn-fragen-text">Eigene Fragen</span>
       </button>
       <!-- Nur im Admin Modus sichtbar -->
       <button class="start-btn einstellungen" id="btn-einstellungen" onclick="zeigeAnsicht('einstellungen');wechsleTab('spieler')" style="display:none">
@@ -836,15 +836,18 @@ function adminLogoKlick() {
   if(logoKlicks >= 5) {
     logoKlicks = 0;
     if(adminModus) {
-      // Admin ausloggen
       adminModus = false;
       document.getElementById('btn-einstellungen').style.display = 'none';
+      document.getElementById('btn-fragen-text').textContent = 'Eigene Fragen';
+      document.getElementById('btn-eigene-fragen').querySelector('.icon').textContent = '➕';
       zeigToast('Admin Modus beendet', '');
     } else {
       const pw = prompt('🔐 Admin Passwort:');
       if(pw === 'schlagfertig2024') {
         adminModus = true;
         document.getElementById('btn-einstellungen').style.display = 'flex';
+        document.getElementById('btn-fragen-text').textContent = 'Fragen & CSV';
+        document.getElementById('btn-eigene-fragen').querySelector('.icon').textContent = '📋';
         zeigToast('✅ Admin Modus aktiviert', 'gruen');
       } else if(pw !== null) {
         zeigToast('❌ Falsches Passwort', 'rot');
@@ -856,16 +859,22 @@ function adminLogoKlick() {
 // ── EIGENE FRAGEN ──
 function zeigeEigeneFragen() {
   rendereEigeneFragen();
+  // Titel je nach Modus
+  const titel = document.querySelector('#ansicht-eigene-fragen h2');
   zeigeAnsicht('eigene-fragen');
 }
 
 function rendereEigeneFragen() {
   const liste = document.getElementById('eigene-fragen-liste');
   if(!liste) return;
-  // Nur Fragen die nicht als Basisfragen markiert sind
+  // Nur Fragen ohne Basis-Markierung
   const eigeneFragen = config.fragen.filter(f => !f.basis);
   if(eigeneFragen.length === 0) {
-    liste.innerHTML = '<div style="padding:20px;text-align:center;color:#888;font-size:14px">Noch keine eigenen Fragen vorhanden.<br>Lade eine CSV Datei hoch oder füge Fragen manuell hinzu.</div>';
+    liste.innerHTML = `<div style="padding:24px;text-align:center;color:#888;font-size:14px">
+      <div style="font-size:40px;margin-bottom:12px">📝</div>
+      <div style="font-weight:600;margin-bottom:6px">Noch keine eigenen Fragen</div>
+      <div style="font-size:13px">Lade eine CSV Datei hoch oder füge Fragen manuell hinzu.</div>
+    </div>`;
     return;
   }
   liste.innerHTML = eigeneFragen.map(f => {
@@ -1667,12 +1676,21 @@ function speichereFrage(){
     antworten_mc:mc,richtige_antwort_index:richtigeAntwortIdx,
     kategorie:document.getElementById('m-kat').value.trim()||'Allgemein',
     schwierigkeit:document.getElementById('m-schw').value,
-    modus:aktuellerFragenModus
+    modus:aktuellerFragenModus,
+    basis: false  // Neue Fragen sind nie Basisfragen
   };
   if(!f.frage||!f.antwort){alert('Bitte Frage und Antwort ausfüllen.');return;}
-  if(bearbeitenIndex>=0)config.fragen[bearbeitenIndex]=f;
-  else{config.fragen.push(f);gewaehlteFragen.add(config.fragen.length-1);}
-  schliesseFrageModal();rendereFragen();
+  if(bearbeitenIndex>=0) {
+    // Basis Flag beim Bearbeiten beibehalten
+    f.basis = config.fragen[bearbeitenIndex].basis || false;
+    config.fragen[bearbeitenIndex]=f;
+  } else {
+    config.fragen.push(f);
+    gewaehlteFragen.add(config.fragen.length-1);
+  }
+  schliesseFrageModal();
+  rendereFragen();
+  rendereEigeneFragen();
 }
 function loescheFrage(idx){
   if(!confirm('Frage löschen?'))return;
