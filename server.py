@@ -169,6 +169,7 @@ def on_mod_starten(data):
     spiel_state['warteschlange'] = []
     spiel_state['punkte'] = data.get('punkte', {})
     spiel_state['spielmodus'] = data.get('spielmodus', 'frei')
+    spiel_state['aktive_spieler'] = data.get('aktive_spieler', [])
     spiel_state['punktestand_sichtbar'] = False
     schreibe_state("spiel")
     socketio.emit('state_update', spiel_state)
@@ -176,7 +177,8 @@ def on_mod_starten(data):
         'frage': spiel_state['aktuelle_frage'],
         'idx': 0,
         'gesamt': data.get('gesamt', 1),
-        'spielmodus': spiel_state['spielmodus']
+        'spielmodus': spiel_state['spielmodus'],
+        'aktive_spieler': spiel_state['aktive_spieler']
     })
 
 @socketio.on('mod_naechste_frage')
@@ -185,12 +187,15 @@ def on_naechste_frage(data):
     spiel_state['frage_idx'] = data.get('idx', 0)
     spiel_state['warteschlange'] = []
     spiel_state['mc_gewaehlt'] = None
+    if data.get('aktive_spieler'):
+        spiel_state['aktive_spieler'] = data.get('aktive_spieler')
     socketio.emit('state_update', spiel_state)
     socketio.emit('zeige_frage', {
         'frage': spiel_state['aktuelle_frage'],
         'idx': spiel_state['frage_idx'],
         'gesamt': data.get('gesamt', 1),
-        'spielmodus': data.get('spielmodus', 'frei')
+        'spielmodus': data.get('spielmodus', 'frei'),
+        'aktive_spieler': spiel_state.get('aktive_spieler', [])
     })
 
 @socketio.on('mod_richtig')
