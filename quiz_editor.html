@@ -996,10 +996,12 @@ function wizardWeiter(schritt) {
 
 function wizardZurueck(schritt) {
   wizardSchritt(schritt);
+  if(schritt === 1) rendereSpielerwizard();
 }
 
 function rendereSpielerwizard() {
   const grid = document.getElementById('spieler-wizard-grid');
+  if(!grid) return;
   grid.innerHTML = config.spieler.map((s,i) => `
     <div class="spieler-wizard-karte ${s.aktiv!==false?'aktiv':'inaktiv'}" id="swk-${i}">
       <div class="sw-toggle">
@@ -1008,16 +1010,20 @@ function rendereSpielerwizard() {
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="sw-avatar" style="background:${s.farbe}" onclick="document.getElementById('swupload-${i}').click()" style="cursor:pointer">
-        ${avatarHTML(s,60)}
-        <input type="file" id="swupload-${i}" accept="image/*" style="display:none" onchange="uploadFoto(${i},this)">
+      <!-- Avatar mit Stift -->
+      <div style="position:relative;width:70px;margin:0 auto 8px;cursor:pointer" onclick="document.getElementById('swupload-${i}').click()">
+        <div class="sw-avatar" style="background:${s.farbe};width:70px;height:70px">
+          ${avatarHTML(s,70)}
+        </div>
+        <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;background:#1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;border:2px solid #fff">✏️</div>
+        <input type="file" id="swupload-${i}" accept="image/*" capture="user" style="display:none" onchange="uploadFoto(${i},this)">
       </div>
       <div class="sw-name">
         <input type="text" value="${s.name}" 
           style="border:1.5px solid #ddd;border-radius:8px;padding:5px 8px;font-size:13px;width:100%;outline:none;text-align:center;margin-top:4px"
-          oninput="updateSpieler(${i},'name',this.value);document.getElementById('swk-${i}').querySelector('.sw-avatar').innerHTML=avatarHTML(config.spieler[${i}],60)">
+          oninput="updateSpieler(${i},'name',this.value)">
       </div>
-      <div class="sw-gpio">GPIO ${s.gpio}</div>
+      <div class="sw-gpio" style="margin-top:4px">GPIO ${s.gpio}</div>
       <input type="color" value="${s.farbe}" 
         style="width:100%;height:28px;border:1.5px solid #ddd;border-radius:8px;cursor:pointer;padding:2px;margin-top:6px"
         oninput="updateSpieler(${i},'farbe',this.value);rendereSpielerwizard()">
@@ -1459,7 +1465,10 @@ function zuschneiden(dataUrl,idx){
     const src=Math.min(img.width,img.height);
     ctx.drawImage(img,(img.width-src)/2,(img.height-src)/2,src,src,0,0,size,size);
     config.spieler[idx].foto=canvas.toDataURL('image/jpeg',.8);
-    rendereSpieler();
+    // Beide Ansichten aktualisieren
+    if(document.getElementById('spieler-grid')) rendereSpieler();
+    if(document.getElementById('spieler-wizard-grid')) rendereSpielerwizard();
+    zeigToast('✅ Foto gespeichert!','gruen');
   };img.src=dataUrl;
 }
 
