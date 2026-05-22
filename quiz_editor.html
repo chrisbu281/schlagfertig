@@ -719,7 +719,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
     <h2 id="modal-titel">Frage hinzufügen</h2>
     <div class="feld"><label>Frage</label><textarea id="m-frage" rows="3"></textarea></div>
     <div class="feld"><label>Richtige Antwort</label><input id="m-antwort" type="text"></div>
-    <div class="zeile3">
+    <div class="zeile3" id="modal-admin-felder">
       <div class="feld"><label>Kategorie</label><input id="m-kat" type="text"></div>
       <div class="feld"><label>Schwierigkeit</label>
         <select id="m-schw"><option value="leicht">Leicht</option><option value="mittel">Mittel</option><option value="schwer">Schwer</option></select>
@@ -729,6 +729,14 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
           <div class="mt-btn aktiv" id="mt-frei" onclick="setzeFragenModus('frei')">Frei</div>
           <div class="mt-btn" id="mt-mc" onclick="setzeFragenModus('mc')">MC</div>
         </div>
+      </div>
+    </div>
+    <!-- Nur für Kunden: nur Modus auswählen -->
+    <div class="feld" id="modal-kunden-modus" style="display:none">
+      <label>Antworttyp</label>
+      <div class="modus-toggle">
+        <div class="mt-btn aktiv" id="mt-frei-k" onclick="setzeFragenModus('frei')">🎤 Freie Antwort</div>
+        <div class="mt-btn" id="mt-mc-k" onclick="setzeFragenModus('mc')">🅰️ Multiple Choice</div>
       </div>
     </div>
     <div class="mc-bereich" id="mc-bereich" style="display:none">
@@ -1711,8 +1719,20 @@ function frageModal(idx=-1){
   const f=idx>=0?config.fragen[idx]:{frage:'',antwort:'',antworten_mc:['','','',''],richtige_antwort_index:0,kategorie:'',schwierigkeit:'leicht',modus:'frei'};
   document.getElementById('m-frage').value=f.frage;
   document.getElementById('m-antwort').value=f.antwort;
-  document.getElementById('m-kat').value=f.kategorie;
-  document.getElementById('m-schw').value=f.schwierigkeit;
+
+  // Admin oder Kunden Felder anzeigen
+  const adminFelder = document.getElementById('modal-admin-felder');
+  const kundenModus = document.getElementById('modal-kunden-modus');
+  if(adminModus) {
+    adminFelder.style.display='grid';
+    kundenModus.style.display='none';
+    document.getElementById('m-kat').value=f.kategorie;
+    document.getElementById('m-schw').value=f.schwierigkeit;
+  } else {
+    adminFelder.style.display='none';
+    kundenModus.style.display='block';
+  }
+
   const mc=f.antworten_mc||['','','',''];
   ['a','b','c','d'].forEach((l,i)=>document.getElementById('mc-'+l).value=mc[i]||'');
   richtigeAntwortIdx=f.richtige_antwort_index||0;
@@ -1735,24 +1755,42 @@ function speichereFrage(){
   const f={
     frage:document.getElementById('m-frage').value.trim(),
     antwort:document.getElementById('m-antwort').value.trim(),
-    antworten_mc:mc,richtige_antwort_index:richtigeAntwortIdx,
-    kategorie:document.getElementById('m-kat').value.trim()||'Allgemein',
-    schwierigkeit:document.getElementById('m-schw').value,
+    antworten_mc:mc,
+    richtige_antwort_index:richtigeAntwortIdx,
     modus:aktuellerFragenModus,
-    basis: false  // Neue Fragen sind nie Basisfragen
+    basis: false
   };
   if(!f.frage||!f.antwort){alert('Bitte Frage und Antwort ausfüllen.');return;}
+
+  if(adminModus) {
+    // Admin: Kategorie und Schwierigkeit aus Feldern
+    f.kategorie = document.getElementById('m-kat').value.trim()||'Allgemein';
+    f.schwierigkeit = document.getElementById('m-schw').value;
+    f.basis = bearbeitenIndex>=0 ? (config.fragen[bearbeitenIndex].basis || false) : false;
+  } else {
+    // Kunde: automatisch "Meine Fragen"
+    f.kategorie = 'Meine Fragen';
+    f.schwierigkeit = 'leicht';
+    f.basis = false;
+  }
+
   if(bearbeitenIndex>=0) {
-    // Basis Flag beim Bearbeiten beibehalten
-    f.basis = config.fragen[bearbeitenIndex].basis || false;
     config.fragen[bearbeitenIndex]=f;
   } else {
     config.fragen.push(f);
     gewaehlteFragen.add(config.fragen.length-1);
   }
+
   schliesseFrageModal();
   rendereFragen();
   rendereEigeneFragen();
+
+  // Hinweis für Kunden
+  if(!adminModus && bearbeitenIndex===-1) {
+    setTimeout(()=>{
+      alert('✅ Frage gespeichert!\n\nDeine Frage wurde hinzugefügt.\nBeim nächsten Spiel findest du sie unter:\nSpiel starten → Fragen auswählen → Kategorie "Meine Fragen"');
+    }, 100);
+  }
 }
 function loescheFrage(idx){
   if(!confirm('Frage löschen?'))return;
