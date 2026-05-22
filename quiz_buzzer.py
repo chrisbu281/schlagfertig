@@ -650,9 +650,15 @@ def main():
                 frage_nr = data.get('idx', 0) + 1
                 frage_gesamt = data.get('gesamt', 1)
                 spielmodus = data.get('spielmodus', 'frei')
-                # Aktive Spieler übernehmen
+                # Aktive Spieler übernehmen und spieler_map aktualisieren!
                 if data.get('aktive_spieler'):
                     aktive_spieler_liste = data.get('aktive_spieler')
+                    # spieler_map mit neuen Farben/Namen aktualisieren
+                    for s in aktive_spieler_liste:
+                        nr = s.get('nr')
+                        if nr:
+                            spieler_map[nr] = s
+                            spieler_map_global[nr] = s
                 warteschlange = []
                 buzzer_warteschlange_lokal.clear()
                 mc_gewaehlt = None
