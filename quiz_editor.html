@@ -285,12 +285,13 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 <!-- ═══ STARTSEITE ═══ -->
 <div class="ansicht aktiv" id="ansicht-start">
   <header>
-    <div class="logo">Schlag<span>fertig</span></div>
+    <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
       <span style="font-size:12px;color:#aaa">
         <span class="status-dot" id="status-dot"></span>
         <span id="status-text">Prüfe...</span>
       </span>
+      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
     </div>
   </header>
   <div class="start-hero">
@@ -326,9 +327,10 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 <!-- ═══ WIZARD ═══ -->
 <div class="ansicht" id="ansicht-wizard">
   <header>
-    <div class="logo">Schlag<span>fertig</span></div>
+    <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
-      <button class="btn" onclick="zeigeAnsicht('start')">✕ Abbrechen</button>
+      <button class="btn" onclick="zeigeAnsicht('start')" style="font-size:13px">🏠 Home</button>
+      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
     </div>
   </header>
   <div class="wizard-container">
@@ -359,7 +361,11 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
       <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
         <span style="font-size:13px;font-weight:600;color:#555">Anzahl Spieler:</span>
         <div style="display:flex;gap:6px">
-          ${[2,3,4,5,6].map(n=>`<button class="btn" id="anzahl-btn-${n}" onclick="setzeAnzahlSpieler(${n})" style="padding:8px 14px;font-size:15px;font-weight:700">${n}</button>`).join('')}
+          <button class="btn" id="anzahl-btn-2" onclick="setzeAnzahlSpieler(2)" style="padding:8px 14px;font-size:15px;font-weight:700">2</button>
+          <button class="btn" id="anzahl-btn-3" onclick="setzeAnzahlSpieler(3)" style="padding:8px 14px;font-size:15px;font-weight:700">3</button>
+          <button class="btn" id="anzahl-btn-4" onclick="setzeAnzahlSpieler(4)" style="padding:8px 14px;font-size:15px;font-weight:700">4</button>
+          <button class="btn" id="anzahl-btn-5" onclick="setzeAnzahlSpieler(5)" style="padding:8px 14px;font-size:15px;font-weight:700">5</button>
+          <button class="btn" id="anzahl-btn-6" onclick="setzeAnzahlSpieler(6)" style="padding:8px 14px;font-size:15px;font-weight:700">6</button>
         </div>
         <button class="btn rot" onclick="resetSpieler()" style="margin-left:auto;font-size:12px;padding:6px 12px">🔄 Zurücksetzen</button>
       </div>
@@ -396,7 +402,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
       <div style="background:#f8f8f8;border-radius:12px;padding:16px;border:1px solid #e8e8e8">
         <div style="font-size:13px;font-weight:700;color:#555;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">⚙️ Optionen</div>
 
-        <div class="toggle-zeile">
+        <div class="toggle-zeile" id="wiz-zeile-warteschlange">
           <div class="toggle-info"><strong>Buzzer-Warteschlange</strong><span>Moderator sieht wer zuerst gedrückt hat</span></div>
           <label class="toggle"><input type="checkbox" id="wiz-warteschlange" checked><span class="toggle-slider"></span></label>
         </div>
@@ -466,10 +472,11 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 <!-- ═══ EINSTELLUNGEN ═══ -->
 <div class="ansicht" id="ansicht-einstellungen">
   <header>
-    <div class="logo">Schlag<span>fertig</span></div>
+    <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
       <button class="btn gruen" onclick="speichereAufPi()">💾 Speichern</button>
-      <button class="btn" onclick="zeigeAnsicht('start')">← Zurück</button>
+      <button class="btn" onclick="zeigeAnsicht('start')" style="font-size:13px">🏠 Home</button>
+      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
     </div>
   </header>
   <div class="tabs">
@@ -767,6 +774,47 @@ function verbindeSocket() {
 }
 
 // ── INIT ──
+// ── ADMIN LOGIN ──
+let logoKlicks = 0;
+let logoTimer = null;
+
+function adminLogoKlick() {
+  logoKlicks++;
+  if(logoTimer) clearTimeout(logoTimer);
+  logoTimer = setTimeout(() => logoKlicks = 0, 3000);
+  if(logoKlicks >= 5) {
+    logoKlicks = 0;
+    const pw = prompt('🔐 Admin Passwort:');
+    if(pw === 'schlagfertig2024') {
+      zeigToast('✅ Admin Modus aktiviert', 'gruen');
+      // TODO: Admin Modus Features freischalten
+    } else if(pw !== null) {
+      zeigToast('❌ Falsches Passwort', 'rot');
+    }
+  }
+}
+
+// ── SYSTEM ──
+async function systemAusschalten() {
+  if(!confirm('Pi wirklich herunterfahren?\n\nNach dem Herunterfahren Strom trennen.')) return;
+  try {
+    await fetch('/api/system/shutdown', {method:'POST'});
+    zeigToast('⏻ Pi wird heruntergefahren...', '');
+  } catch(e) {
+    zeigToast('❌ Fehler', 'rot');
+  }
+}
+
+async function systemNeustarten() {
+  if(!confirm('Pi wirklich neu starten?')) return;
+  try {
+    await fetch('/api/system/reboot', {method:'POST'});
+    zeigToast('🔄 Pi startet neu...', '');
+  } catch(e) {
+    zeigToast('❌ Fehler', 'rot');
+  }
+}
+
 async function init() {
   await ladeVomPi();
   config.spieler.forEach(s => { if(punkte[s.nr]===undefined) punkte[s.nr]=0; });
@@ -986,6 +1034,18 @@ function toggleSpielerAktiv(idx, aktiv) {
 function setzeWizardModus(modus) {
   wizardModus = modus;
   ['frei','mc'].forEach(m => document.getElementById('mwk-'+m).classList.toggle('aktiv', m===modus));
+  // Warteschlange und Zweite Chance bei MC ausgrauen
+  const istMC = modus === 'mc';
+  const zeileWQ = document.getElementById('wiz-zeile-warteschlange');
+  const zeileZC = document.getElementById('wiz-zeile-zweite-chance');
+  if(zeileWQ) {
+    zeileWQ.style.opacity = istMC ? '0.4' : '1';
+    zeileWQ.style.pointerEvents = istMC ? 'none' : 'auto';
+  }
+  if(zeileZC) {
+    zeileZC.style.opacity = istMC ? '0.4' : '1';
+    zeileZC.style.pointerEvents = istMC ? 'none' : 'auto';
+  }
 }
 
 // Wizard Fragen
@@ -1430,8 +1490,7 @@ function rendereFragen(){
   const fk=document.getElementById('filter-kat').value;
   const gef=config.fragen.filter(f=>{
     if(!filterAktiv[f.schwierigkeit])return false;
-    const hatMC=f.antworten_mc&&f.antworten_mc.filter(a=>a&&a.trim()).length===4;
-    const istMC=f.modus==='mc'||hatMC;
+    const istMC = f.modus === 'mc';
     if(istMC&&!filterAktiv['mc-f'])return false;
     if(!istMC&&!filterAktiv['frei-f'])return false;
     if(fk&&f.kategorie!==fk)return false;
@@ -1446,8 +1505,7 @@ function rendereFragen(){
     ?'<div style="padding:20px;text-align:center;color:#888;font-size:13px">Keine Fragen gefunden</div>'
     :gef.map(f=>{
       const i=config.fragen.indexOf(f);
-      const hatMC=f.antworten_mc&&f.antworten_mc.filter(a=>a&&a.trim()).length===4;
-      const istMC=f.modus==='mc'||hatMC;
+      const istMC = f.modus === 'mc';
       return`<div class="frage-item">
         <div class="frage-inhalt">
           <div class="frage-text">${f.frage}</div>

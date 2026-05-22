@@ -289,6 +289,26 @@ def sound_upload():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route("/api/system/shutdown", methods=["POST"])
+def system_shutdown():
+    import threading
+    def do_shutdown():
+        import time
+        time.sleep(1)
+        os.system("sudo shutdown -h now")
+    threading.Thread(target=do_shutdown, daemon=True).start()
+    return jsonify({"status": "ok"})
+
+@app.route("/api/system/reboot", methods=["POST"])
+def system_reboot():
+    import threading
+    def do_reboot():
+        import time
+        time.sleep(1)
+        os.system("sudo reboot")
+    threading.Thread(target=do_reboot, daemon=True).start()
+    return jsonify({"status": "ok"})
+
 if __name__ == "__main__":
     print("Schlagfertig Server startet...")
     print("Erreichbar unter: http://schlagfertig.local:5000")
