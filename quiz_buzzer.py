@@ -620,8 +620,12 @@ def main():
                         naechster_nr = warteschlange[0]['nr']
                         naechster = spieler_map.get(naechster_nr)
                         if naechster:
+                            # Pop-up für 3 Sekunden
                             zeige_spieler_dran_screen(naechster, "Du darfst antworten!",
                                 warteschlange, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt)
+                            time.sleep(3)
+                            # Zurück zur Frage
+                            zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False)
                             modus = "gewinner"
                             letzter_gewinner_nr = naechster_nr
                     else:
@@ -675,8 +679,12 @@ def main():
                     spiele_sound(sounds_config.get('buzzer'))
                     s = spieler_map.get(nr)
                     if s:
+                        # Pop-up für 3 Sekunden zeigen
                         zeige_spieler_dran_screen(s, "Du darfst antworten!",
                             warteschlange, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt)
+                        time.sleep(3)
+                        # Zurück zur Frage
+                        zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False)
                     modus = "gewinner"
 
         # Bildschirm rendern
