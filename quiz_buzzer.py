@@ -301,41 +301,69 @@ def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=No
 
     pygame.display.flip()
 
-def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!"):
-    """Zeigt welcher Spieler jetzt antworten darf"""
+def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", warteschlange=[], frage_dict=None, frage_nr=1, frage_gesamt=1, spielmodus='frei', mc_gewaehlt=None):
+    """Zeigt Pop-up über der Frage wer dran ist"""
+    # Erst Frage im Hintergrund zeigen
+    if frage_dict:
+        zeige_frage_screen(frage_dict, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False)
+    
+    # Pop-up darüber zeichnen
     farbe = hex_zu_rgb(spieler_obj["farbe"])
-    screen.fill(dunkler(farbe, .3))
-
-    # Großer Kreis/Karte
-    pw, ph = 620, 380
+    
+    # Halbtransparenter dunkler Hintergrund
+    overlay = pygame.Surface((BR, HO), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 140))
+    screen.blit(overlay, (0, 0))
+    
+    # Pop-up Karte
+    pw, ph = 520, 300
     px = BR//2 - pw//2
-    py = HO//2 - ph//2 - 40
-    pygame.draw.rect(screen, dunkler(farbe,.5), (px+6,py+6,pw,ph), border_radius=26)
-    pygame.draw.rect(screen, farbe, (px,py,pw,ph), border_radius=26)
-
+    py = HO//2 - ph//2
+    
+    # Schatten
+    schatten = pygame.Surface((pw+8, ph+8), pygame.SRCALPHA)
+    schatten.fill((0,0,0,80))
+    screen.blit(schatten, (px+4, py+4))
+    
+    # Karte Hintergrund
+    pygame.draw.rect(screen, dunkler(farbe,.3), (px, py, pw, ph), border_radius=24)
+    pygame.draw.rect(screen, farbe, (px+2, py+2, pw-4, ph-4), border_radius=22)
+    
     # Foto oder Avatar
-    kr = 90
+    kr = 60
     foto_surf = _foto_cache.get(spieler_obj["nr"])
     if foto_surf is None and spieler_obj.get("foto"):
         foto_surf = lade_foto(spieler_obj, groesse=kr*2)
         _foto_cache[spieler_obj["nr"]] = foto_surf
     if foto_surf:
         fs = pygame.transform.smoothscale(foto_surf, (kr*2, kr*2))
-        screen.blit(fs, (BR//2 - kr, py+80 - kr))
+        screen.blit(fs, (BR//2 - kr, py+55 - kr))
     else:
-        pygame.draw.circle(screen, dunkler(farbe,.6), (BR//2, py+80), kr+4)
-        pygame.draw.circle(screen, farbe, (BR//2, py+80), kr)
-        ini = SF_GR.render(spieler_obj["name"][0].upper(), True, WEISS)
-        screen.blit(ini, (BR//2-ini.get_width()//2, py+80-ini.get_height()//2))
-
+        pygame.draw.circle(screen, dunkler(farbe,.5), (BR//2, py+55), kr+3)
+        pygame.draw.circle(screen, farbe, (BR//2, py+55), kr)
+        ini = SF_MI.render(spieler_obj["name"][0].upper(), True, WEISS)
+        screen.blit(ini, (BR//2-ini.get_width()//2, py+55-ini.get_height()//2))
+    
     # Name
-    name_surf = SF_GR.render(spieler_obj["name"], True, WEISS)
-    blit_mitte(name_surf, py+190)
-
+    name_surf = SF_MI.render(spieler_obj["name"], True, WEISS)
+    screen.blit(name_surf, (BR//2 - name_surf.get_width()//2, py+125))
+    
     # Text
-    txt_surf = SF_MI.render(text, True, (220,220,220))
-    blit_mitte(txt_surf, py+290)
-
+    txt_surf = SF_KL.render(text, True, (220,220,220))
+    screen.blit(txt_surf, (BR//2 - txt_surf.get_width()//2, py+175))
+    
+    # Warteschlange unten
+    if len(warteschlange) > 1:
+        rang_icons = ["🥇","🥈","🥉","4."]
+        wq_x = px + 20
+        wq_y = py + ph + 16
+        for i, e in enumerate(warteschlange):
+            if i == 0: continue
+            s = next((sp for sp in [spieler_obj] if sp["nr"] == e["nr"]), None)
+            wq_txt = SF_KL.render(f"{rang_icons[i]} wartet...", True, (180,180,180))
+            screen.blit(wq_txt, (BR//2 - wq_txt.get_width()//2, wq_y))
+            wq_y += 30
+    
     pygame.display.flip()
 
 def zeige_richtig_screen(delta):
@@ -581,17 +609,16 @@ def main():
                     spiele_sound(sounds_config.get('falsch'))
                     zeige_falsch_screen(delta)
                     time.sleep(3)
-                    # Nächsten Spieler in Warteschlange anzeigen
                     warteschlange = data.get('warteschlange', warteschlange)
                     if len(warteschlange) > 0:
                         naechster_nr = warteschlange[0]['nr']
                         naechster = spieler_map.get(naechster_nr)
                         if naechster:
-                            zeige_spieler_dran_screen(naechster, "Du darfst antworten!")
+                            zeige_spieler_dran_screen(naechster, "Du darfst antworten!",
+                                warteschlange, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt)
                             modus = "gewinner"
                             letzter_gewinner_nr = naechster_nr
                     else:
-                        # Niemand mehr → Screen bleibt stehen bis Moderator nächste Frage drückt
                         modus = "warte_moderator"
 
             elif befehl == 'zeige_punktestand':
@@ -642,7 +669,8 @@ def main():
                     spiele_sound(sounds_config.get('buzzer'))
                     s = spieler_map.get(nr)
                     if s:
-                        zeige_spieler_dran_screen(s, "Du darfst antworten!")
+                        zeige_spieler_dran_screen(s, "Du darfst antworten!",
+                            warteschlange, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt)
                     modus = "gewinner"
 
         # Bildschirm rendern
