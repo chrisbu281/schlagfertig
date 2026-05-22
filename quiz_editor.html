@@ -306,11 +306,12 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
         <span class="icon">🎮</span>
         Spiel starten
       </button>
-      <button class="start-btn fragen" onclick="zeigeAnsicht('einstellungen');wechsleTab('fragen')">
-        <span class="icon">📋</span>
-        Fragen & CSV
+      <button class="start-btn fragen" onclick="zeigeEigeneFragen()">
+        <span class="icon">➕</span>
+        Eigene Fragen
       </button>
-      <button class="start-btn einstellungen" onclick="zeigeAnsicht('einstellungen');wechsleTab('spieler')">
+      <!-- Nur im Admin Modus sichtbar -->
+      <button class="start-btn einstellungen" id="btn-einstellungen" onclick="zeigeAnsicht('einstellungen');wechsleTab('spieler')" style="display:none">
         <span class="icon">⚙️</span>
         Einstellungen
       </button>
@@ -608,7 +609,52 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
   </div>
 </div>
 
-<!-- ═══ MODERATOR ═══ -->
+<!-- ═══ EIGENE FRAGEN ═══ -->
+<div class="ansicht" id="ansicht-eigene-fragen">
+  <header>
+    <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
+    <div class="header-rechts">
+      <button class="btn" onclick="zeigeAnsicht('start')" style="font-size:13px">🏠 Home</button>
+      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
+    </div>
+  </header>
+  <div style="max-width:700px;margin:0 auto;padding:24px;">
+    <!-- CSV Upload -->
+    <div class="karte">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <span style="font-size:22px">📂</span>
+        <h2 style="font-size:16px;font-weight:700">Fragen hochladen</h2>
+        <button class="btn orange" onclick="ladeCSVVorlage()" style="margin-left:auto">📥 Vorlage</button>
+      </div>
+      <div class="csv-box" onclick="document.getElementById('ef-csv-input').click()">
+        <div class="csv-icon">📊</div>
+        <p style="font-size:14px;color:#666"><strong>CSV Datei hochladen</strong></p>
+        <p style="font-size:12px;color:#999;margin-top:4px">Klicken oder Datei hierher ziehen</p>
+        <input type="file" id="ef-csv-input" accept=".csv" style="display:none" onchange="zeigeCSVOptionen(this)">
+      </div>
+      <div id="csv-optionen" style="display:none;background:#f8f8f8;border:1px solid #ddd;border-radius:10px;padding:14px;margin-top:12px;">
+        <p style="font-size:13px;font-weight:600;margin-bottom:10px">📋 <span id="csv-dateiname"></span></p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn rot" onclick="uploadCSV('ersetzen')">🗑️ Eigene ersetzen</button>
+          <button class="btn gruen" onclick="uploadCSV('hinzufuegen')">➕ Hinzufügen</button>
+          <button class="btn" onclick="abbrechenCSV()">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Eigene Fragen -->
+    <div class="karte">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <span style="font-size:22px">✏️</span>
+        <h2 style="font-size:16px;font-weight:700">Eigene Fragen</h2>
+        <button class="btn primaer" onclick="frageModal()" style="margin-left:auto">+ Hinzufügen</button>
+      </div>
+      <div id="eigene-fragen-liste"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EINSTELLUNGEN ═══ -->
 <div class="ansicht" id="ansicht-moderator">
   <div class="mod-header">
     <div class="logo" style="font-size:18px">Schlag<span style="color:#E24B4A">fertig</span> <span style="font-size:13px;color:#555;font-weight:400">Moderator</span></div>
@@ -781,6 +827,7 @@ function verbindeSocket() {
 // ── ADMIN LOGIN ──
 let logoKlicks = 0;
 let logoTimer = null;
+let adminModus = false;
 
 function adminLogoKlick() {
   logoKlicks++;
@@ -788,14 +835,57 @@ function adminLogoKlick() {
   logoTimer = setTimeout(() => logoKlicks = 0, 3000);
   if(logoKlicks >= 5) {
     logoKlicks = 0;
-    const pw = prompt('🔐 Admin Passwort:');
-    if(pw === 'schlagfertig2024') {
-      zeigToast('✅ Admin Modus aktiviert', 'gruen');
-      // TODO: Admin Modus Features freischalten
-    } else if(pw !== null) {
-      zeigToast('❌ Falsches Passwort', 'rot');
+    if(adminModus) {
+      // Admin ausloggen
+      adminModus = false;
+      document.getElementById('btn-einstellungen').style.display = 'none';
+      zeigToast('Admin Modus beendet', '');
+    } else {
+      const pw = prompt('🔐 Admin Passwort:');
+      if(pw === 'schlagfertig2024') {
+        adminModus = true;
+        document.getElementById('btn-einstellungen').style.display = 'flex';
+        zeigToast('✅ Admin Modus aktiviert', 'gruen');
+      } else if(pw !== null) {
+        zeigToast('❌ Falsches Passwort', 'rot');
+      }
     }
   }
+}
+
+// ── EIGENE FRAGEN ──
+function zeigeEigeneFragen() {
+  rendereEigeneFragen();
+  zeigeAnsicht('eigene-fragen');
+}
+
+function rendereEigeneFragen() {
+  const liste = document.getElementById('eigene-fragen-liste');
+  if(!liste) return;
+  // Nur Fragen die nicht als Basisfragen markiert sind
+  const eigeneFragen = config.fragen.filter(f => !f.basis);
+  if(eigeneFragen.length === 0) {
+    liste.innerHTML = '<div style="padding:20px;text-align:center;color:#888;font-size:14px">Noch keine eigenen Fragen vorhanden.<br>Lade eine CSV Datei hoch oder füge Fragen manuell hinzu.</div>';
+    return;
+  }
+  liste.innerHTML = eigeneFragen.map(f => {
+    const i = config.fragen.indexOf(f);
+    const istMC = f.modus === 'mc';
+    return `<div class="frage-item">
+      <div class="frage-inhalt">
+        <div class="frage-text">${f.frage}</div>
+        <div class="frage-meta">
+          <span class="badge badge-${f.schwierigkeit}">${f.schwierigkeit.charAt(0).toUpperCase()+f.schwierigkeit.slice(1)}</span>
+          <span style="font-size:11px;color:#888">${f.kategorie}</span>
+          ${istMC?'<span class="badge badge-mc">MC</span>':'<span class="badge badge-frei">Frei</span>'}
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="icon-btn" onclick="frageModal(${i})">✏️</button>
+        <button class="icon-btn" onclick="loescheFrage(${i});rendereEigeneFragen()">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── SYSTEM ──
