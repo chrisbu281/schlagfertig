@@ -545,6 +545,8 @@ def main():
     puls = 0.0
     puls_richtung = 1
     punktestand_sichtbar = False
+    popup_timer = None  # Timer für Pop-up
+    buzzer_fenster_offen = False  # 2 Sek Fenster nach erstem Buzzer
 
     schreibe_state("warten")
     clock = pygame.time.Clock()
@@ -620,14 +622,9 @@ def main():
                         naechster_nr = warteschlange[0]['nr']
                         naechster = spieler_map.get(naechster_nr)
                         if naechster:
-                            # Pop-up für 3 Sekunden
-                            zeige_spieler_dran_screen(naechster, "Du darfst antworten!",
-                                warteschlange, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt)
-                            time.sleep(3)
-                            # Zurück zur Frage
-                            zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False)
-                            modus = "gewinner"
                             letzter_gewinner_nr = naechster_nr
+                            popup_timer = time.time()
+                            modus = "gewinner"
                     else:
                         modus = "warte_moderator"
 
@@ -657,6 +654,8 @@ def main():
                 warteschlange = []
                 buzzer_warteschlange_lokal.clear()
                 buzzer_start_zeit = time.time()
+                popup_timer = None
+                buzzer_fenster_offen = False
                 if modus == "punktestand":
                     modus = "frage"
 
@@ -677,14 +676,8 @@ def main():
                 if len(warteschlange) == 1:
                     letzter_gewinner_nr = nr
                     spiele_sound(sounds_config.get('buzzer'))
-                    s = spieler_map.get(nr)
-                    if s:
-                        # Pop-up für 3 Sekunden zeigen
-                        zeige_spieler_dran_screen(s, "Du darfst antworten!",
-                            warteschlange, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt)
-                        time.sleep(3)
-                        # Zurück zur Frage
-                        zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False)
+                    popup_timer = time.time()  # Timer starten
+                    buzzer_fenster_offen = True  # 2 Sek Fenster für weitere Buzzer
                     modus = "gewinner"
 
         # Bildschirm rendern
@@ -698,7 +691,19 @@ def main():
             zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, mc_aufgeloest)
 
         elif modus == "gewinner":
-            pass  # Screen wird direkt beim Buzzer-Druck gezeichnet
+            if letzter_gewinner_nr and letzter_gewinner_nr in spieler_map:
+                s = spieler_map[letzter_gewinner_nr]
+                # Buzzer Fenster nach 2 Sek schließen
+                if buzzer_fenster_offen and popup_timer and (time.time() - popup_timer) > 2.0:
+                    buzzer_fenster_offen = False
+                    buzzer_gesperrt = True  # Keine weiteren Buzzer mehr
+                zeige_spieler_dran_screen(s, "Du darfst antworten!",
+                    warteschlange, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt)
+                # Nach 3 Sekunden zurück zur Frage
+                if popup_timer and (time.time() - popup_timer) > 3.0:
+                    popup_timer = None
+                    buzzer_fenster_offen = False
+                    zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False)
 
         elif modus == "warte_moderator":
             pass  # Falsch-Screen bleibt stehen bis Moderator nächste Frage drückt
