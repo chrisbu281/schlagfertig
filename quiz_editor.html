@@ -642,11 +642,25 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
       </div>
     </div>
 
+    <!-- Admin: Basisfragen verwalten -->
+    <div class="karte" id="admin-basis-karte" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <span style="font-size:22px">🔒</span>
+        <h2 style="font-size:16px;font-weight:700">Basisfragen verwalten</h2>
+      </div>
+      <p style="font-size:13px;color:#888;margin-bottom:14px">Basisfragen sind für Kunden nicht bearbeitbar oder löschbar.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn primaer" onclick="alleAlsBasisMarkieren()">🔒 Alle als Basisfragen markieren</button>
+        <button class="btn grau" onclick="alleBasisMarkierungEntfernen()">🔓 Alle freigeben</button>
+      </div>
+      <div style="margin-top:12px;font-size:13px;color:#888" id="basis-info"></div>
+    </div>
+
     <!-- Eigene Fragen -->
     <div class="karte">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
         <span style="font-size:22px">✏️</span>
-        <h2 style="font-size:16px;font-weight:700">Eigene Fragen</h2>
+        <h2 style="font-size:16px;font-weight:700" id="eigene-fragen-titel">Eigene Fragen</h2>
         <button class="btn primaer" onclick="frageModal()" style="margin-left:auto">+ Hinzufügen</button>
       </div>
       <div id="eigene-fragen-liste"></div>
@@ -858,18 +872,52 @@ function adminLogoKlick() {
 
 // ── EIGENE FRAGEN ──
 function zeigeEigeneFragen() {
-  rendereEigeneFragen();
-  // Titel je nach Modus
-  const titel = document.querySelector('#ansicht-eigene-fragen h2');
   zeigeAnsicht('eigene-fragen');
+  // Admin Karte zeigen/verstecken
+  const adminKarte = document.getElementById('admin-basis-karte');
+  if(adminKarte) adminKarte.style.display = adminModus ? 'block' : 'none';
+  // Titel anpassen
+  const titel = document.getElementById('eigene-fragen-titel');
+  if(titel) titel.textContent = adminModus ? 'Alle Fragen' : 'Eigene Fragen';
+  rendereEigeneFragen();
+  aktualisiereBasisInfo();
+}
+
+function aktualisiereBasisInfo() {
+  const info = document.getElementById('basis-info');
+  if(!info) return;
+  const basis = config.fragen.filter(f => f.basis).length;
+  const eigen = config.fragen.filter(f => !f.basis).length;
+  info.textContent = `🔒 ${basis} Basisfragen  ·  ✏️ ${eigen} eigene Fragen  ·  Gesamt: ${config.fragen.length}`;
+}
+
+function alleAlsBasisMarkieren() {
+  if(!confirm(`Alle ${config.fragen.length} Fragen als Basisfragen markieren? Kunden können sie dann nicht bearbeiten.`)) return;
+  config.fragen.forEach(f => f.basis = true);
+  speichereAufPi();
+  aktualisiereBasisInfo();
+  rendereEigeneFragen();
+  zeigToast(`✅ ${config.fragen.length} Fragen als Basis markiert`, 'gruen');
+}
+
+function alleBasisMarkierungEntfernen() {
+  if(!confirm('Alle Basis-Markierungen entfernen?')) return;
+  config.fragen.forEach(f => f.basis = false);
+  speichereAufPi();
+  aktualisiereBasisInfo();
+  rendereEigeneFragen();
+  zeigToast('🔓 Alle Markierungen entfernt', '');
 }
 
 function rendereEigeneFragen() {
   const liste = document.getElementById('eigene-fragen-liste');
   if(!liste) return;
-  // Nur Fragen ohne Basis-Markierung
-  const eigeneFragen = config.fragen.filter(f => !f.basis);
-  if(eigeneFragen.length === 0) {
+  // Admin sieht alle, Kunde nur eigene
+  const zeigeList = adminModus
+    ? config.fragen
+    : config.fragen.filter(f => !f.basis);
+
+  if(zeigeList.length === 0) {
     liste.innerHTML = `<div style="padding:24px;text-align:center;color:#888;font-size:14px">
       <div style="font-size:40px;margin-bottom:12px">📝</div>
       <div style="font-weight:600;margin-bottom:6px">Noch keine eigenen Fragen</div>
@@ -877,24 +925,38 @@ function rendereEigeneFragen() {
     </div>`;
     return;
   }
-  liste.innerHTML = eigeneFragen.map(f => {
+  liste.innerHTML = zeigeList.map(f => {
     const i = config.fragen.indexOf(f);
     const istMC = f.modus === 'mc';
-    return `<div class="frage-item">
+    const istBasis = f.basis === true;
+    return `<div class="frage-item" style="${istBasis?'background:#f0f8ff;':''}">
       <div class="frage-inhalt">
-        <div class="frage-text">${f.frage}</div>
+        <div class="frage-text">${istBasis?'🔒 ':''}${f.frage}</div>
         <div class="frage-meta">
           <span class="badge badge-${f.schwierigkeit}">${f.schwierigkeit.charAt(0).toUpperCase()+f.schwierigkeit.slice(1)}</span>
           <span style="font-size:11px;color:#888">${f.kategorie}</span>
           ${istMC?'<span class="badge badge-mc">MC</span>':'<span class="badge badge-frei">Frei</span>'}
+          ${istBasis?'<span class="badge" style="background:#e8f4fd;color:#1a56db">Basis</span>':''}
         </div>
       </div>
-      <div style="display:flex;gap:4px;flex-shrink:0">
+      ${adminModus ? `<div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="icon-btn" onclick="toggleBasis(${i})" title="${istBasis?'Basis entfernen':'Als Basis markieren'}">${istBasis?'🔓':'🔒'}</button>
         <button class="icon-btn" onclick="frageModal(${i})">✏️</button>
         <button class="icon-btn" onclick="loescheFrage(${i});rendereEigeneFragen()">🗑️</button>
-      </div>
+      </div>` : `<div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="icon-btn" onclick="frageModal(${i})">✏️</button>
+        <button class="icon-btn" onclick="loescheFrage(${i});rendereEigeneFragen()">🗑️</button>
+      </div>`}
     </div>`;
   }).join('');
+}
+
+function toggleBasis(idx) {
+  config.fragen[idx].basis = !config.fragen[idx].basis;
+  speichereAufPi();
+  aktualisiereBasisInfo();
+  rendereEigeneFragen();
+  zeigToast(config.fragen[idx].basis ? '🔒 Als Basis markiert' : '🔓 Basis entfernt', '');
 }
 
 // ── SYSTEM ──
