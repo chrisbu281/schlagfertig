@@ -696,14 +696,16 @@ def main():
                 # Buzzer Fenster nach 2 Sek schließen
                 if buzzer_fenster_offen and popup_timer and (time.time() - popup_timer) > 2.0:
                     buzzer_fenster_offen = False
-                    buzzer_gesperrt = True  # Keine weiteren Buzzer mehr
+                    buzzer_gesperrt = True
+                # Pop-up anzeigen (ohne Ranking)
                 zeige_spieler_dran_screen(s, "Du darfst antworten!",
-                    warteschlange, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt)
+                    [], aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt)
                 # Nach 3 Sekunden zurück zur Frage
                 if popup_timer and (time.time() - popup_timer) > 3.0:
                     popup_timer = None
                     buzzer_fenster_offen = False
                     zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False)
+                    modus = "frage"
 
         elif modus == "warte_moderator":
             pass  # Falsch-Screen bleibt stehen bis Moderator nächste Frage drückt
