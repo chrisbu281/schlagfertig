@@ -1475,10 +1475,12 @@ function zuschneiden(dataUrl,idx){
 // ── FRAGEN (EINSTELLUNGEN) ──
 function toggleFilter(typ){
   filterAktiv[typ]=!filterAktiv[typ];
-  const el=document.getElementById('fcheck-'+typ);
   const labels={leicht:'Leicht',mittel:'Mittel',schwer:'Schwer','frei-f':'Freie Antwort','mc-f':'Multiple Choice'};
-  el.classList.toggle('aktiv',filterAktiv[typ]);
-  el.textContent=(filterAktiv[typ]?'✓ ':'')+labels[typ];
+  const el=document.getElementById('fcheck-'+typ);
+  if(el) {
+    el.classList.toggle('aktiv',filterAktiv[typ]);
+    el.textContent=(filterAktiv[typ]?'✓ ':'')+labels[typ];
+  }
   rendereFragen();
 }
 
