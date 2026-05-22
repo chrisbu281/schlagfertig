@@ -370,16 +370,38 @@ def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", wartesch
     
     pygame.display.flip()
 
-def zeige_richtig_screen(delta):
-    screen.fill((8, 60, 20))
-    blit_mitte(SF_GR.render("RICHTIG!", True, (60,220,100)), HO//2 - 60)
-    blit_mitte(SF_MI.render(f"+{delta} Punkte", True, (40,180,80)), HO//2 + 60)
+def zeige_richtig_screen(delta, frage_dict=None, frage_nr=1, frage_gesamt=1, spielmodus='frei', mc_gewaehlt=None):
+    if frage_dict:
+        zeige_frage_screen(frage_dict, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False, do_flip=False)
+    else:
+        screen.fill(DUNKEL)
+    overlay = pygame.Surface((BR, HO), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 120))
+    screen.blit(overlay, (0, 0))
+    pw, ph = 480, 220
+    px = BR//2 - pw//2
+    py = HO//2 - ph//2
+    pygame.draw.rect(screen, (8, 80, 30), (px+4, py+4, pw, ph), border_radius=22)
+    pygame.draw.rect(screen, (20, 160, 60), (px, py, pw, ph), border_radius=22)
+    blit_mitte(SF_GR.render("✓ RICHTIG!", True, WEISS), py+60)
+    blit_mitte(SF_MI.render(f"+{delta} Punkte", True, (180,255,180)), py+155)
     pygame.display.flip()
 
-def zeige_falsch_screen(delta):
-    screen.fill((60, 8, 8))
-    blit_mitte(SF_GR.render("FALSCH!", True, (220,60,60)), HO//2 - 60)
-    blit_mitte(SF_MI.render(f"-{delta} Punkte", True, (180,40,40)), HO//2 + 60)
+def zeige_falsch_screen(delta, frage_dict=None, frage_nr=1, frage_gesamt=1, spielmodus='frei', mc_gewaehlt=None):
+    if frage_dict:
+        zeige_frage_screen(frage_dict, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False, do_flip=False)
+    else:
+        screen.fill(DUNKEL)
+    overlay = pygame.Surface((BR, HO), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 120))
+    screen.blit(overlay, (0, 0))
+    pw, ph = 480, 220
+    px = BR//2 - pw//2
+    py = HO//2 - ph//2
+    pygame.draw.rect(screen, (80, 8, 8), (px+4, py+4, pw, ph), border_radius=22)
+    pygame.draw.rect(screen, (200, 40, 40), (px, py, pw, ph), border_radius=22)
+    blit_mitte(SF_GR.render("✗ FALSCH!", True, WEISS), py+60)
+    blit_mitte(SF_MI.render(f"−{delta} Punkte", True, (255,180,180)), py+155)
     pygame.display.flip()
 
 def zeige_gewinner_screen(spieler_obj, punkte_wert, warteschlange, spieler_map):
@@ -610,23 +632,26 @@ def main():
 
                 if richtig:
                     spiele_sound(sounds_config.get('richtig'))
-                    zeige_richtig_screen(delta)
+                    zeige_richtig_screen(delta, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt)
                     time.sleep(3)
                     modus = "punktestand"
                 else:
                     spiele_sound(sounds_config.get('falsch'))
-                    zeige_falsch_screen(delta)
+                    zeige_falsch_screen(delta, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt)
                     time.sleep(3)
                     warteschlange = data.get('warteschlange', warteschlange)
                     if len(warteschlange) > 0:
+                        # Nächster Spieler darf antworten
                         naechster_nr = warteschlange[0]['nr']
                         naechster = spieler_map.get(naechster_nr)
                         if naechster:
                             letzter_gewinner_nr = naechster_nr
                             popup_timer = time.time()
+                            buzzer_fenster_offen = False
                             modus = "gewinner"
                     else:
-                        modus = "warte_moderator"
+                        # Niemand mehr → Punktestand zeigen
+                        modus = "punktestand"
 
             elif befehl == 'zeige_punktestand':
                 sichtbar = data.get('sichtbar', True)
