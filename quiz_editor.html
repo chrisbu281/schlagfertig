@@ -717,38 +717,53 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 <div class="overlay" id="frage-overlay">
   <div class="modal">
     <h2 id="modal-titel">Frage hinzufügen</h2>
-    <div class="feld"><label>Frage</label><textarea id="m-frage" rows="3"></textarea></div>
-    <div class="feld"><label>Richtige Antwort</label><input id="m-antwort" type="text"></div>
-    <div class="zeile3" id="modal-admin-felder">
+
+    <!-- Typ Auswahl – ganz oben, immer sichtbar -->
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <button id="typ-btn-frei" onclick="setzeFragenModus('frei')"
+        style="flex:1;padding:14px;border-radius:12px;border:2px solid #1a1a2e;background:#1a1a2e;color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:all .15s">
+        🎤 Freie Antwort
+      </button>
+      <button id="typ-btn-mc" onclick="setzeFragenModus('mc')"
+        style="flex:1;padding:14px;border-radius:12px;border:2px solid #ddd;background:#fff;color:#666;font-size:15px;font-weight:700;cursor:pointer;transition:all .15s">
+        🅰️ Multiple Choice
+      </button>
+    </div>
+
+    <!-- Frage – immer sichtbar -->
+    <div class="feld"><label>Frage</label><textarea id="m-frage" rows="3" placeholder="Deine Frage eingeben..."></textarea></div>
+
+    <!-- Freie Antwort Feld – nur bei Frei -->
+    <div class="feld" id="m-antwort-feld">
+      <label>Richtige Antwort</label>
+      <input id="m-antwort" type="text" placeholder="Richtige Antwort eingeben...">
+    </div>
+
+    <!-- Admin Felder -->
+    <div class="zeile3" id="modal-admin-felder" style="display:none">
       <div class="feld"><label>Kategorie</label><input id="m-kat" type="text"></div>
       <div class="feld"><label>Schwierigkeit</label>
         <select id="m-schw"><option value="leicht">Leicht</option><option value="mittel">Mittel</option><option value="schwer">Schwer</option></select>
       </div>
-      <div class="feld"><label>Modus</label>
-        <div class="modus-toggle">
-          <div class="mt-btn aktiv" id="mt-frei" onclick="setzeFragenModus('frei')">Frei</div>
-          <div class="mt-btn" id="mt-mc" onclick="setzeFragenModus('mc')">MC</div>
-        </div>
-      </div>
     </div>
-    <!-- Nur für Kunden: nur Modus auswählen -->
-    <div class="feld" id="modal-kunden-modus" style="display:none">
-      <label>Antworttyp</label>
-      <div class="modus-toggle">
-        <div class="mt-btn aktiv" id="mt-frei-k" onclick="setzeFragenModus('frei')">🎤 Freie Antwort</div>
-        <div class="mt-btn" id="mt-mc-k" onclick="setzeFragenModus('mc')">🅰️ Multiple Choice</div>
-      </div>
-    </div>
+
+    <!-- MC Antworten – nur bei MC -->
     <div class="mc-bereich" id="mc-bereich" style="display:none">
-      <h4>Multiple-Choice <span style="color:#888;font-weight:400">(✓ = richtig)</span></h4>
+      <h4>Antworten eingeben <span style="color:#888;font-weight:400">(✓ = richtige Antwort)</span></h4>
       <div class="mc-zeile"><div class="mc-label" style="background:#4361ee">A</div><input class="mc-input" id="mc-a" type="text" placeholder="Antwort A"><div class="mc-richtig" id="mcr-0" onclick="setzeRichtigeAntwort(0)"></div></div>
       <div class="mc-zeile"><div class="mc-label" style="background:#f72585">B</div><input class="mc-input" id="mc-b" type="text" placeholder="Antwort B"><div class="mc-richtig" id="mcr-1" onclick="setzeRichtigeAntwort(1)"></div></div>
       <div class="mc-zeile"><div class="mc-label" style="background:#f4a261;color:#333">C</div><input class="mc-input" id="mc-c" type="text" placeholder="Antwort C"><div class="mc-richtig" id="mcr-2" onclick="setzeRichtigeAntwort(2)"></div></div>
       <div class="mc-zeile"><div class="mc-label" style="background:#2ec4b6">D</div><input class="mc-input" id="mc-d" type="text" placeholder="Antwort D"><div class="mc-richtig" id="mcr-3" onclick="setzeRichtigeAntwort(3)"></div></div>
+      <!-- Richtige Antwort auch bei MC -->
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee">
+        <label style="font-size:12px;color:#666;font-weight:500">Richtige Antwort (für Moderator)</label>
+        <input id="m-antwort" type="text" placeholder="z.B. Paris" style="width:100%;border:1.5px solid #ddd;border-radius:8px;padding:8px 11px;font-size:13px;outline:none;margin-top:4px">
+      </div>
     </div>
+
     <div class="modal-buttons">
       <button class="btn" onclick="schliesseFrageModal()">Abbrechen</button>
-      <button class="btn primaer" onclick="speichereFrage()">Speichern</button>
+      <button class="btn primaer" onclick="speichereFrage()">✓ Speichern</button>
     </div>
   </div>
 </div>
@@ -1718,19 +1733,15 @@ function frageModal(idx=-1){
   document.getElementById('modal-titel').textContent=idx===-1?'Frage hinzufügen':'Frage bearbeiten';
   const f=idx>=0?config.fragen[idx]:{frage:'',antwort:'',antworten_mc:['','','',''],richtige_antwort_index:0,kategorie:'',schwierigkeit:'leicht',modus:'frei'};
   document.getElementById('m-frage').value=f.frage;
-  document.getElementById('m-antwort').value=f.antwort;
 
-  // Admin oder Kunden Felder anzeigen
+  // Admin Felder
   const adminFelder = document.getElementById('modal-admin-felder');
-  const kundenModus = document.getElementById('modal-kunden-modus');
-  if(adminModus) {
-    adminFelder.style.display='grid';
-    kundenModus.style.display='none';
-    document.getElementById('m-kat').value=f.kategorie;
-    document.getElementById('m-schw').value=f.schwierigkeit;
-  } else {
-    adminFelder.style.display='none';
-    kundenModus.style.display='block';
+  if(adminFelder) {
+    adminFelder.style.display = adminModus ? 'grid' : 'none';
+    if(adminModus) {
+      document.getElementById('m-kat').value=f.kategorie;
+      document.getElementById('m-schw').value=f.schwierigkeit;
+    }
   }
 
   const mc=f.antworten_mc||['','','',''];
@@ -1738,12 +1749,46 @@ function frageModal(idx=-1){
   richtigeAntwortIdx=f.richtige_antwort_index||0;
   aktualisiereRichtigeAntwortUI();
   setzeFragenModus(f.modus||'frei');
+
+  // Antwort Feld setzen
+  const antwortInput = document.querySelector('#m-antwort-feld input, #mc-bereich input[id="m-antwort"]');
+  if(antwortInput) antwortInput.value = f.antwort;
+
   document.getElementById('frage-overlay').classList.add('offen');
 }
 function setzeFragenModus(m){
   aktuellerFragenModus=m;
-  ['frei','mc'].forEach(id=>document.getElementById('mt-'+id).classList.toggle('aktiv',id===m));
-  document.getElementById('mc-bereich').style.display=(m==='mc')?'block':'none';
+  const istMC = m === 'mc';
+
+  // Typ Buttons umschalten
+  const btnFrei = document.getElementById('typ-btn-frei');
+  const btnMC = document.getElementById('typ-btn-mc');
+  if(btnFrei) {
+    btnFrei.style.background = istMC ? '#fff' : '#1a1a2e';
+    btnFrei.style.color = istMC ? '#666' : '#fff';
+    btnFrei.style.borderColor = istMC ? '#ddd' : '#1a1a2e';
+  }
+  if(btnMC) {
+    btnMC.style.background = istMC ? '#1a1a2e' : '#fff';
+    btnMC.style.color = istMC ? '#fff' : '#666';
+    btnMC.style.borderColor = istMC ? '#1a1a2e' : '#ddd';
+  }
+
+  // Admin Modus Toggle Buttons
+  ['frei','mc'].forEach(id=>{
+    const el = document.getElementById('mt-'+id);
+    if(el) el.classList.toggle('aktiv', id===m);
+  });
+
+  // Felder ein/ausblenden
+  const antwortFeld = document.getElementById('m-antwort-feld');
+  const mcBereich = document.getElementById('mc-bereich');
+  if(antwortFeld) antwortFeld.style.display = istMC ? 'none' : 'block';
+  if(mcBereich) mcBereich.style.display = istMC ? 'block' : 'none';
+
+  // Admin Felder
+  const adminFelder = document.getElementById('modal-admin-felder');
+  if(adminFelder) adminFelder.style.display = adminModus ? 'grid' : 'none';
 }
 function setzeRichtigeAntwort(idx){richtigeAntwortIdx=idx;aktualisiereRichtigeAntwortUI();}
 function aktualisiereRichtigeAntwortUI(){
