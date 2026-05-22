@@ -645,14 +645,26 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
         <div class="csv-icon">📊</div>
         <p style="font-size:14px;color:#666"><strong>CSV Datei hochladen</strong></p>
         <p style="font-size:12px;color:#999;margin-top:4px">Klicken oder Datei hierher ziehen</p>
-        <input type="file" id="ef-csv-input" accept=".csv" style="display:none" onchange="zeigeCSVOptionen(this)">
+        <input type="file" id="ef-csv-input" accept=".csv" style="display:none" onchange="zeigeCSVOptionen(this, 'ef-csv-optionen')">
       </div>
-      <div id="csv-optionen" style="display:none;background:#f8f8f8;border:1px solid #ddd;border-radius:10px;padding:14px;margin-top:12px;">
-        <p style="font-size:13px;font-weight:600;margin-bottom:10px">📋 <span id="csv-dateiname"></span></p>
+      <div id="ef-csv-optionen" style="display:none;background:#f8f8f8;border:1px solid #ddd;border-radius:10px;padding:14px;margin-top:12px;">
+        <p style="font-size:13px;font-weight:600;margin-bottom:10px">📋 <span id="ef-csv-dateiname"></span></p>
+        <p style="font-size:12px;color:#666;margin-bottom:8px;font-weight:500">Für welchen Spielmodus?</p>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button id="ef-csv-modus-frei" onclick="setzeCSVModus('frei','ef')"
+            style="flex:1;padding:10px;border-radius:10px;border:2px solid #1a1a2e;background:#1a1a2e;color:#fff;font-size:13px;font-weight:600;cursor:pointer">
+            🎤 Freie Antwort
+          </button>
+          <button id="ef-csv-modus-mc" onclick="setzeCSVModus('mc','ef')"
+            style="flex:1;padding:10px;border-radius:10px;border:2px solid #ddd;background:#fff;color:#666;font-size:13px;font-weight:600;cursor:pointer">
+            🅰️ Multiple Choice
+          </button>
+        </div>
+        <p style="font-size:12px;color:#666;margin-bottom:8px;font-weight:500">Was soll passieren?</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn rot" onclick="uploadCSV('ersetzen')">🗑️ Eigene ersetzen</button>
-          <button class="btn gruen" onclick="uploadCSV('hinzufuegen')">➕ Hinzufügen</button>
-          <button class="btn" onclick="abbrechenCSV()">Abbrechen</button>
+          <button class="btn rot" onclick="uploadCSV('ersetzen','ef-csv-optionen')">🗑️ Eigene ersetzen</button>
+          <button class="btn gruen" onclick="uploadCSV('hinzufuegen','ef-csv-optionen')">➕ Hinzufügen</button>
+          <button class="btn" onclick="abbrechenCSV('ef-csv-optionen','ef-csv-input')">Abbrechen</button>
         </div>
       </div>
     </div>
@@ -2028,42 +2040,55 @@ function testSound(id){
 }
 
 // ── CSV ──
-let csvModus = 'frei'; // Standard: Freie Antwort
+let csvModus = 'frei';
+let csvOptionenId = 'csv-optionen';
 
-function setzeCSVModus(modus) {
+function setzeCSVModus(modus, prefix='') {
   csvModus = modus;
-  const btnFrei = document.getElementById('csv-modus-frei');
-  const btnMC = document.getElementById('csv-modus-mc');
+  const p = prefix ? prefix+'-' : '';
+  const btnFrei = document.getElementById(p+'csv-modus-frei');
+  const btnMC = document.getElementById(p+'csv-modus-mc');
   if(btnFrei) {
-    btnFrei.style.background = modus === 'frei' ? '#1a1a2e' : '#fff';
-    btnFrei.style.color = modus === 'frei' ? '#fff' : '#666';
-    btnFrei.style.borderColor = modus === 'frei' ? '#1a1a2e' : '#ddd';
+    btnFrei.style.background = modus==='frei' ? '#1a1a2e' : '#fff';
+    btnFrei.style.color = modus==='frei' ? '#fff' : '#666';
+    btnFrei.style.borderColor = modus==='frei' ? '#1a1a2e' : '#ddd';
   }
   if(btnMC) {
-    btnMC.style.background = modus === 'mc' ? '#1a1a2e' : '#fff';
-    btnMC.style.color = modus === 'mc' ? '#fff' : '#666';
-    btnMC.style.borderColor = modus === 'mc' ? '#1a1a2e' : '#ddd';
+    btnMC.style.background = modus==='mc' ? '#1a1a2e' : '#fff';
+    btnMC.style.color = modus==='mc' ? '#fff' : '#666';
+    btnMC.style.borderColor = modus==='mc' ? '#1a1a2e' : '#ddd';
   }
 }
 
-function zeigeCSVOptionen(input){
+function zeigeCSVOptionen(input, optId='csv-optionen'){
   if(!input.files[0])return;
   csvDateiInput=input;
-  csvModus = 'frei'; // zurücksetzen
-  setzeCSVModus('frei');
-  document.getElementById('csv-dateiname').textContent=input.files[0].name;
-  document.getElementById('csv-optionen').style.display='block';
+  csvOptionenId=optId;
+  csvModus='frei';
+  const prefix = optId==='ef-csv-optionen' ? 'ef' : '';
+  const nameElId = optId==='ef-csv-optionen' ? 'ef-csv-dateiname' : 'csv-dateiname';
+  const nameEl = document.getElementById(nameElId);
+  if(nameEl) nameEl.textContent=input.files[0].name;
+  setzeCSVModus('frei', prefix);
+  document.getElementById(optId).style.display='block';
 }
-function abbrechenCSV(){
+
+function abbrechenCSV(optId, inputId){
+  const oid = optId || csvOptionenId || 'csv-optionen';
   csvDateiInput=null;
-  document.getElementById('csv-optionen').style.display='none';
-  document.getElementById('csv-input').value='';
+  const el = document.getElementById(oid);
+  if(el) el.style.display='none';
+  const inp = document.getElementById(inputId||'csv-input');
+  if(inp) inp.value='';
 }
-async function uploadCSV(aktion){
+
+async function uploadCSV(aktion, optId){
+  const oid = optId || csvOptionenId || 'csv-optionen';
   if(!csvDateiInput||!csvDateiInput.files[0])return;
   const formData=new FormData();
   formData.append('file',csvDateiInput.files[0]);
-  document.getElementById('csv-optionen').style.display='none';
+  const el = document.getElementById(oid);
+  if(el) el.style.display='none';
   try{
     const r=await fetch(`/api/csv-upload?modus=${aktion}&spielmodus=${csvModus}`,{method:'POST',body:formData});
     const d=await r.json();
@@ -2076,8 +2101,7 @@ async function uploadCSV(aktion){
     } else zeigToast('❌ '+(d.error||'Fehler'),'rot');
   }catch(e){zeigToast('❌ Verbindungsfehler','rot');}
   csvDateiInput=null;
-  document.getElementById('csv-input') && (document.getElementById('csv-input').value='');
-  document.getElementById('ef-csv-input') && (document.getElementById('ef-csv-input').value='');
+  ['csv-input','ef-csv-input'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
 function ladeCSVVorlage(){window.open('/api/csv-vorlage','_blank');}
 
