@@ -295,6 +295,41 @@ def sound_upload():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route("/api/system/info", methods=["GET"])
+def system_info():
+    import subprocess
+    try:
+        ip = subprocess.check_output("hostname -I", shell=True).decode().strip().split()[0]
+    except: ip = "Unbekannt"
+    try:
+        wlan = subprocess.check_output("iwgetid -r", shell=True).decode().strip()
+    except: wlan = "Kein WLAN"
+    try:
+        hostname = subprocess.check_output("hostname", shell=True).decode().strip()
+    except: hostname = "schlagfertig"
+    try:
+        df = subprocess.check_output("df -h / | tail -1", shell=True).decode().strip().split()
+        speicher = f"{df[2]} von {df[1]} genutzt ({df[4]})"
+    except: speicher = "Unbekannt"
+    try:
+        temp = subprocess.check_output("vcgencmd measure_temp", shell=True).decode().strip().replace("temp=","")
+    except: temp = "Unbekannt"
+    return jsonify({"ip":ip,"wlan":wlan,"hostname":hostname,"speicher":speicher,"temperatur":temp})
+
+@app.route("/api/system/passwort", methods=["POST"])
+def system_passwort():
+    try:
+        data = request.get_json()
+        neues_pw = data.get("passwort","")
+        if len(neues_pw) < 6:
+            return jsonify({"error": "Zu kurz"}), 400
+        cfg = lese_config()
+        cfg["admin_passwort"] = neues_pw
+        schreibe_config(cfg)
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/api/system/shutdown", methods=["POST"])
 def system_shutdown():
     import threading

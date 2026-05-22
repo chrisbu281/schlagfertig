@@ -491,7 +491,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
     <div class="tab aktiv" onclick="wechsleTab('spieler')">👥 Spieler</div>
     <div class="tab" onclick="wechsleTab('fragen')">📋 Fragen</div>
     <div class="tab" onclick="wechsleTab('punkte')">🏆 Punktestand</div>
-    <div class="tab" onclick="wechsleTab('optionen')">⚙️ Optionen</div>
+    <div class="tab" onclick="wechsleTab('optionen')">🖥️ System</div>
     <div class="tab" onclick="wechsleTab('sounds')">🔊 Sounds</div>
   </div>
   <div class="einst-container">
@@ -581,33 +581,42 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
       </div>
     </div>
 
-    <!-- OPTIONEN -->
+    <!-- GERÄTE & SYSTEM -->
     <div class="seite" id="seite-optionen">
-      <div class="einstell-grid">
-        <div class="karte">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="font-size:18px">⚙️</span><h2 style="font-size:15px;font-weight:600">Spieloptionen</h2></div>
-          <div class="toggle-zeile">
-            <div class="toggle-info"><strong>Buzzer-Warteschlange</strong><span>Moderator sieht 1./2./3. Platz</span></div>
-            <label class="toggle"><input type="checkbox" id="opt-warteschlange" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
-          </div>
-          <div class="toggle-zeile">
-            <div class="toggle-info"><strong>Zweite Chance</strong><span>Nach falscher Antwort kommt der Nächste dran</span></div>
-            <label class="toggle"><input type="checkbox" id="opt-zweite-chance" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
-          </div>
-          <div class="toggle-zeile">
-            <div class="toggle-info"><strong>Reaktionszeiten anzeigen</strong><span>Millisekunden in Warteschlange</span></div>
-            <label class="toggle"><input type="checkbox" id="opt-reaktion" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
-          </div>
-          <div class="toggle-zeile">
-            <div class="toggle-info"><strong>Fragen mischen</strong></div>
-            <label class="toggle"><input type="checkbox" id="opt-mischen" onchange="saveEinstell()"><span class="toggle-slider"></span></label>
-          </div>
-          <div class="trennlinie"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Punkte: Richtig</label><input class="num-input" type="number" id="opt-p-richtig" min="0" max="100" oninput="saveEinstell()"></div>
-            <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Punkte: Falsch</label><input class="num-input" type="number" id="opt-p-falsch" min="0" max="100" oninput="saveEinstell()"></div>
-            <div><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">Timeout (Sek. / 0=aus)</label><input class="num-input" type="number" id="opt-timeout" min="0" max="120" oninput="saveEinstell()"></div>
-          </div>
+      <div class="karte">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span style="font-size:18px">📡</span>
+          <h2 style="font-size:15px;font-weight:600">Netzwerk</h2>
+        </div>
+        <div id="system-info" style="font-size:13px;color:#555;line-height:2">
+          <div>🔄 Lade Systeminformationen...</div>
+        </div>
+      </div>
+
+      <div class="karte">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span style="font-size:18px">⚙️</span>
+          <h2 style="font-size:15px;font-weight:600">System</h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn gruen" onclick="systemNeustarten()" style="justify-content:flex-start;gap:10px;padding:14px 16px">
+            🔄 <span><strong>Pi neu starten</strong><br><span style="font-size:12px;font-weight:400;opacity:.8">Startet das System neu (~30 Sek)</span></span>
+          </button>
+          <button class="btn rot" onclick="systemAusschalten()" style="justify-content:flex-start;gap:10px;padding:14px 16px">
+            ⏻ <span><strong>Pi herunterfahren</strong><br><span style="font-size:12px;font-weight:400;opacity:.8">Dann Strom trennen</span></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="karte">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span style="font-size:18px">🔐</span>
+          <h2 style="font-size:15px;font-weight:600">Admin Passwort ändern</h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="feld"><label>Neues Passwort</label><input type="password" id="neues-pw" placeholder="Neues Passwort eingeben"></div>
+          <div class="feld"><label>Wiederholen</label><input type="password" id="neues-pw2" placeholder="Passwort wiederholen"></div>
+          <button class="btn primaer" onclick="aenderePasswort()">🔐 Passwort ändern</button>
         </div>
       </div>
     </div>
@@ -935,7 +944,8 @@ function adminLogoKlick() {
       zeigToast('Admin Modus beendet', '');
     } else {
       const pw = prompt('🔐 Admin Passwort:');
-      if(pw === 'schlagfertig2024') {
+      const adminPw = config.admin_passwort || 'schlagfertig2024';
+      if(pw === adminPw) {
         adminModus = true;
         document.getElementById('btn-einstellungen').style.display = 'flex';
         document.getElementById('btn-fragen-text').textContent = 'Fragen & CSV';
@@ -1037,8 +1047,44 @@ function toggleBasis(idx) {
   zeigToast(config.fragen[idx].basis ? '🔒 Als Basis markiert' : '🔓 Basis entfernt', '');
 }
 
-// ── SYSTEM ──
-async function systemAusschalten() {
+async function ladeSystemInfo() {
+  try {
+    const r = await fetch('/api/system/info');
+    const d = await r.json();
+    const el = document.getElementById('system-info');
+    if(el) el.innerHTML = `
+      <div>🌐 <strong>IP Adresse:</strong> ${d.ip || 'Unbekannt'}</div>
+      <div>📶 <strong>WLAN:</strong> ${d.wlan || 'Unbekannt'}</div>
+      <div>🔗 <strong>Hostname:</strong> ${d.hostname || 'schlagfertig.local'}</div>
+      <div>💾 <strong>Speicher:</strong> ${d.speicher || 'Unbekannt'}</div>
+      <div>🌡️ <strong>CPU Temperatur:</strong> ${d.temperatur || 'Unbekannt'}</div>
+    `;
+  } catch(e) {
+    const el = document.getElementById('system-info');
+    if(el) el.innerHTML = '<div style="color:#c0392b">❌ Keine Verbindung zum Pi</div>';
+  }
+}
+
+async function aenderePasswort() {
+  const pw1 = document.getElementById('neues-pw').value;
+  const pw2 = document.getElementById('neues-pw2').value;
+  if(!pw1) { zeigToast('Bitte Passwort eingeben','rot'); return; }
+  if(pw1 !== pw2) { zeigToast('Passwörter stimmen nicht überein','rot'); return; }
+  if(pw1.length < 6) { zeigToast('Passwort muss mindestens 6 Zeichen haben','rot'); return; }
+  try {
+    const r = await fetch('/api/system/passwort', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({passwort: pw1})
+    });
+    const d = await r.json();
+    if(d.status === 'ok') {
+      zeigToast('✅ Passwort geändert!', 'gruen');
+      document.getElementById('neues-pw').value = '';
+      document.getElementById('neues-pw2').value = '';
+    } else zeigToast('❌ Fehler', 'rot');
+  } catch(e) { zeigToast('❌ Keine Verbindung', 'rot'); }
+}
   if(!confirm('Pi wirklich herunterfahren?\n\nNach dem Herunterfahren Strom trennen.')) return;
   try {
     await fetch('/api/system/shutdown', {method:'POST'});
@@ -1101,6 +1147,7 @@ function wechsleTab(id) {
   document.getElementById('seite-'+id).classList.add('aktiv');
   if(id==='punkte') renderePunkte();
   if(id==='sounds') rendereEinstellungen();
+  if(id==='optionen') ladeSystemInfo();
 }
 
 // ── FLASK API ──
