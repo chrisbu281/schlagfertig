@@ -438,30 +438,82 @@ def zeige_punktestand_screen(spieler_liste, punkte):
 
 def zeige_sieger_screen(spieler_liste, punkte):
     screen.fill(DUNKEL)
-    blit_mitte(SF_GR.render("SPIELENDE!", True, WEISS), 58)
+    blit_mitte(SF_GR.render("SPIELENDE!", True, WEISS), 30)
+
     if not spieler_liste:
         pygame.display.flip()
         return
-    max_p = max((punkte.get(s["nr"], punkte.get(str(s["nr"]), 0)) for s in spieler_liste), default=0)
-    sieger = [s for s in spieler_liste if punkte.get(s["nr"], punkte.get(str(s["nr"]), 0)) == max_p]
-    if len(sieger) == 1:
-        s = sieger[0]
+
+    # Nach Punkten sortieren
+    sortiert = sorted(spieler_liste,
+        key=lambda s: punkte.get(s["nr"], punkte.get(str(s["nr"]), 0)),
+        reverse=True)
+
+    def zeichne_podium_karte(s, pkt, cx, cy, groesse):
         farbe = hex_zu_rgb(s["farbe"])
-        kr = 100
+        kr = groesse // 2
+        pygame.draw.circle(screen, dunkler(farbe, .5), (cx, cy), kr+4)
+        pygame.draw.circle(screen, farbe, (cx, cy), kr)
+        foto_surf = _foto_cache.get(s["nr"])
+        if foto_surf is None and s.get("foto"):
+            foto_surf = lade_foto(s, groesse=kr*2)
+            _foto_cache[s["nr"]] = foto_surf
+        if foto_surf:
+            fs = pygame.transform.smoothscale(foto_surf, (kr*2, kr*2))
+            screen.blit(fs, (cx-kr, cy-kr))
+        else:
+            ini = SF_MI.render(s["name"][0].upper(), True, WEISS)
+            screen.blit(ini, (cx-ini.get_width()//2, cy-ini.get_height()//2))
+        font_n = pygame.font.SysFont("DejaVu Sans", max(18, groesse//3), bold=True)
+        font_p = pygame.font.SysFont("DejaVu Sans", max(14, groesse//4))
+        name_s = font_n.render(s["name"], True, WEISS)
+        pkt_s = font_p.render(f"{pkt} Punkte", True, (200,200,200))
+        screen.blit(name_s, (cx-name_s.get_width()//2, cy+kr+8))
+        screen.blit(pkt_s, (cx-pkt_s.get_width()//2, cy+kr+8+name_s.get_height()+4))
+
+    # 🥇 Platz 1 – groß oben mitte
+    if len(sortiert) >= 1:
+        s1 = sortiert[0]
+        p1 = punkte.get(s1["nr"], punkte.get(str(s1["nr"]), 0))
+        rang = SF_MI.render("1.", True, (255,215,0))
+        screen.blit(rang, (BR//2-rang.get_width()//2, 110))
+        zeichne_podium_karte(s1, p1, BR//2, 230, 110)
+
+    # 🥈 Platz 2 – links
+    if len(sortiert) >= 2:
+        s2 = sortiert[1]
+        p2 = punkte.get(s2["nr"], punkte.get(str(s2["nr"]), 0))
+        rang = SF_KL.render("2.", True, (192,192,192))
+        screen.blit(rang, (BR//4-rang.get_width()//2, 270))
+        zeichne_podium_karte(s2, p2, BR//4, 360, 80)
+
+    # 🥉 Platz 3 – rechts
+    if len(sortiert) >= 3:
+        s3 = sortiert[2]
+        p3 = punkte.get(s3["nr"], punkte.get(str(s3["nr"]), 0))
+        rang = SF_KL.render("3.", True, (205,127,50))
+        screen.blit(rang, (BR*3//4-rang.get_width()//2, 270))
+        zeichne_podium_karte(s3, p3, BR*3//4, 360, 80)
+
+    # Platz 4-6 – Liste unten
+    y = HO - 160
+    for i, s in enumerate(sortiert[3:]):
+        pkt = punkte.get(s["nr"], punkte.get(str(s["nr"]), 0))
+        farbe = hex_zu_rgb(s["farbe"])
+        kr = 22
+        cx = BR//2 - 180
         foto_surf = _foto_cache.get(s["nr"])
         if foto_surf:
             fs = pygame.transform.smoothscale(foto_surf, (kr*2, kr*2))
-            screen.blit(fs, (BR//2 - kr, HO//2 - 80 - kr))
+            screen.blit(fs, (cx-kr, y-kr))
         else:
-            pygame.draw.circle(screen, farbe, (BR//2, HO//2-80), kr)
-            ini = SF_GR.render(s["name"][0].upper(), True, WEISS)
-            screen.blit(ini, (BR//2-ini.get_width()//2, HO//2-80-ini.get_height()//2))
-        blit_mitte(SF_GR.render("*** " + s["name"] + " gewinnt! ***", True, farbe), HO//2+50)
-        blit_mitte(SF_MI.render(f"{max_p} Punkte", True, WEISS), HO//2+140)
-    else:
-        namen = " & ".join(s["name"] for s in sieger)
-        blit_mitte(SF_MI.render(f"Unentschieden: {namen}!", True, WEISS), HO//2+50)
-        blit_mitte(SF_MI.render(f"{max_p} Punkte", True, WEISS), HO//2+120)
+            pygame.draw.circle(screen, farbe, (cx, y), kr)
+            ini = SF_KL.render(s["name"][0].upper(), True, WEISS)
+            screen.blit(ini, (cx-ini.get_width()//2, y-ini.get_height()//2))
+        txt = SF_KL.render(f"{i+4}.  {s['name']}  –  {pkt} Punkte", True, (160,160,160))
+        screen.blit(txt, (cx+kr+12, y-txt.get_height()//2))
+        y += 46
+
     pygame.display.flip()
 
 # ─────────────────────────────────────────────
@@ -569,6 +621,7 @@ def main():
     punktestand_sichtbar = False
     popup_timer = None  # Timer für Pop-up
     buzzer_fenster_offen = False  # 2 Sek Fenster nach erstem Buzzer
+    aktive_spieler_liste = spieler  # Wird vom Editor übernommen
 
     schreibe_state("warten")
     clock = pygame.time.Clock()
@@ -597,6 +650,9 @@ def main():
                 frage_nr = data.get('idx', 0) + 1
                 frage_gesamt = data.get('gesamt', 1)
                 spielmodus = data.get('spielmodus', 'frei')
+                # Aktive Spieler übernehmen
+                if data.get('aktive_spieler'):
+                    aktive_spieler_liste = data.get('aktive_spieler')
                 warteschlange = []
                 buzzer_warteschlange_lokal.clear()
                 mc_gewaehlt = None
@@ -686,7 +742,13 @@ def main():
 
             elif befehl == 'zeige_sieger':
                 p_raw = data.get('punkte', {})
-                spieler_liste = data.get('spieler', spieler)
+                # Aktive Spieler vom Editor übernehmen
+                aktive_spieler = data.get('spieler', spieler)
+                # Konvertiere falls nötig
+                if aktive_spieler and isinstance(aktive_spieler[0], dict):
+                    spieler_liste = aktive_spieler
+                else:
+                    spieler_liste = spieler
                 for nr in punkte:
                     punkte[nr] = p_raw.get(str(nr), p_raw.get(nr, punkte[nr]))
                 spiele_sound(sounds_config.get('sieger'))
@@ -736,7 +798,7 @@ def main():
             pass  # Falsch-Screen bleibt stehen bis Moderator nächste Frage drückt
 
         elif modus == "punktestand":
-            zeige_punktestand_screen(spieler, punkte)
+            zeige_punktestand_screen(aktive_spieler_liste, punkte)
 
         elif modus == "sieger":
             pass  # Sieger-Screen bleibt stehen
