@@ -1480,12 +1480,18 @@ function zuschneiden(dataUrl,idx){
 function toggleFilter(typ){
   filterAktiv[typ]=!filterAktiv[typ];
   const labels={leicht:'Leicht',mittel:'Mittel',schwer:'Schwer','frei-f':'Freie Antwort','mc-f':'Multiple Choice'};
+  rendereFragen();
+  // Klassen NACH dem Rendern setzen
   const el=document.getElementById('fcheck-'+typ);
   if(el) {
-    el.classList.toggle('aktiv',filterAktiv[typ]);
-    el.textContent=(filterAktiv[typ]?'✓ ':'')+labels[typ];
+    if(filterAktiv[typ]) {
+      el.classList.add('aktiv');
+      el.textContent='✓ '+labels[typ];
+    } else {
+      el.classList.remove('aktiv');
+      el.textContent=labels[typ];
+    }
   }
-  rendereFragen();
 }
 
 function filterZuruecksetzen(){
