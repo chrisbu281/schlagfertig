@@ -522,10 +522,22 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
           <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="zeigeCSVOptionen(this)">
         </div>
         <div id="csv-optionen" style="display:none;background:#f8f8f8;border:1px solid #ddd;border-radius:10px;padding:14px;margin-bottom:12px;">
-          <p style="font-size:13px;font-weight:600;margin-bottom:10px">📋 <span id="csv-dateiname"></span> – Was soll passieren?</p>
+          <p style="font-size:13px;font-weight:600;margin-bottom:10px">📋 <span id="csv-dateiname"></span></p>
+          <p style="font-size:12px;color:#666;margin-bottom:8px;font-weight:500">Für welchen Spielmodus?</p>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <button id="csv-modus-frei" onclick="setzeCSVModus('frei')"
+              style="flex:1;padding:10px;border-radius:10px;border:2px solid #1a1a2e;background:#1a1a2e;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">
+              🎤 Freie Antwort
+            </button>
+            <button id="csv-modus-mc" onclick="setzeCSVModus('mc')"
+              style="flex:1;padding:10px;border-radius:10px;border:2px solid #ddd;background:#fff;color:#666;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">
+              🅰️ Multiple Choice
+            </button>
+          </div>
+          <p style="font-size:12px;color:#666;margin-bottom:8px;font-weight:500">Was soll passieren?</p>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn rot" onclick="uploadCSV('ersetzen')">🗑️ Bestehende ersetzen</button>
-            <button class="btn gruen" onclick="uploadCSV('hinzufuegen')">➕ Zu bestehenden hinzufügen</button>
+            <button class="btn gruen" onclick="uploadCSV('hinzufuegen')">➕ Hinzufügen</button>
             <button class="btn" onclick="abbrechenCSV()">Abbrechen</button>
           </div>
         </div>
@@ -2016,9 +2028,29 @@ function testSound(id){
 }
 
 // ── CSV ──
+let csvModus = 'frei'; // Standard: Freie Antwort
+
+function setzeCSVModus(modus) {
+  csvModus = modus;
+  const btnFrei = document.getElementById('csv-modus-frei');
+  const btnMC = document.getElementById('csv-modus-mc');
+  if(btnFrei) {
+    btnFrei.style.background = modus === 'frei' ? '#1a1a2e' : '#fff';
+    btnFrei.style.color = modus === 'frei' ? '#fff' : '#666';
+    btnFrei.style.borderColor = modus === 'frei' ? '#1a1a2e' : '#ddd';
+  }
+  if(btnMC) {
+    btnMC.style.background = modus === 'mc' ? '#1a1a2e' : '#fff';
+    btnMC.style.color = modus === 'mc' ? '#fff' : '#666';
+    btnMC.style.borderColor = modus === 'mc' ? '#1a1a2e' : '#ddd';
+  }
+}
+
 function zeigeCSVOptionen(input){
   if(!input.files[0])return;
   csvDateiInput=input;
+  csvModus = 'frei'; // zurücksetzen
+  setzeCSVModus('frei');
   document.getElementById('csv-dateiname').textContent=input.files[0].name;
   document.getElementById('csv-optionen').style.display='block';
 }
@@ -2027,23 +2059,25 @@ function abbrechenCSV(){
   document.getElementById('csv-optionen').style.display='none';
   document.getElementById('csv-input').value='';
 }
-async function uploadCSV(modus){
+async function uploadCSV(aktion){
   if(!csvDateiInput||!csvDateiInput.files[0])return;
   const formData=new FormData();
   formData.append('file',csvDateiInput.files[0]);
   document.getElementById('csv-optionen').style.display='none';
   try{
-    const r=await fetch(`/api/csv-upload?modus=${modus}`,{method:'POST',body:formData});
+    const r=await fetch(`/api/csv-upload?modus=${aktion}&spielmodus=${csvModus}`,{method:'POST',body:formData});
     const d=await r.json();
     if(d.status==='ok'){
-      zeigToast(`✅ ${d.anzahl} Fragen ${modus==='hinzufuegen'?'hinzugefügt':'importiert'}!`,'gruen');
+      zeigToast(`✅ ${d.anzahl} Fragen ${aktion==='hinzufuegen'?'hinzugefügt':'importiert'} als ${csvModus==='mc'?'Multiple Choice':'Freie Antwort'}!`,'gruen');
       await ladeVomPi();
       gewaehlteFragen=new Set(config.fragen.map((_,i)=>i));
       rendereFragen();
+      rendereEigeneFragen();
     } else zeigToast('❌ '+(d.error||'Fehler'),'rot');
   }catch(e){zeigToast('❌ Verbindungsfehler','rot');}
   csvDateiInput=null;
-  document.getElementById('csv-input').value='';
+  document.getElementById('csv-input') && (document.getElementById('csv-input').value='');
+  document.getElementById('ef-csv-input') && (document.getElementById('ef-csv-input').value='');
 }
 function ladeCSVVorlage(){window.open('/api/csv-vorlage','_blank');}
 

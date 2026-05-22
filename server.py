@@ -103,6 +103,7 @@ def csv_upload():
         if "file" not in request.files:
             return jsonify({"error": "Keine Datei"}), 400
         file = request.files["file"]
+        spielmodus = request.args.get("spielmodus", "frei")
         # Verschiedene Encodings versuchen
         raw = file.read()
         content = None
@@ -129,7 +130,7 @@ def csv_upload():
             mc_c = row.get("antwort_c","").strip()
             mc_d = row.get("antwort_d","").strip()
             richtig = row.get("richtige_antwort","").strip().upper()
-            fo = {"frage":frage,"antwort":antwort,"kategorie":kat,"schwierigkeit":schw,"modus":"frei"}
+            fo = {"frage":frage,"antwort":antwort,"kategorie":kat,"schwierigkeit":schw,"modus":spielmodus,"basis":False}
             if mc_a and mc_b and mc_c and mc_d:
                 fo["antworten_mc"] = [mc_a,mc_b,mc_c,mc_d]
                 fo["richtige_antwort_index"] = {"A":0,"B":1,"C":2,"D":3}.get(richtig,0)
