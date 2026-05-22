@@ -143,8 +143,11 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .avatar-ring img { width: 100%; height: 100%; object-fit: cover; }
 .spieler-karte label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; margin-top: 8px; font-weight: 500; }
 .spieler-karte input[type=text] { width: 100%; border: 1.5px solid #ddd; border-radius: 8px; padding: 7px 10px; font-size: 13px; outline: none; }
-.farb-zeile { display: flex; gap: 7px; align-items: center; margin-top: 3px; }
-.farb-zeile input[type=color] { width: 34px; height: 30px; border: 1.5px solid #ddd; border-radius: 6px; cursor: pointer; padding: 2px; }
+.farb-zeile { display: flex; gap: 7px; align-items: center; margin-top: 3px; flex-wrap: wrap; }
+.farb-palette { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.farb-btn { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: all .15s; }
+.farb-btn:hover { transform: scale(1.2); }
+.farb-btn.aktiv { border-color: #fff; box-shadow: 0 0 0 2px #1a1a2e; transform: scale(1.15); }
 .gpio-badge { font-size: 11px; background: #f0f0f0; border-radius: 5px; padding: 2px 8px; color: #555; }
 .av-btn { width: 100%; padding: 6px; border-radius: 8px; border: 1.5px solid #ddd; background: #fff; cursor: pointer; font-size: 12px; font-weight: 500; color: #444; display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 6px; }
 .av-btn.primaer { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
@@ -861,7 +864,33 @@ function verbindeSocket() {
 }
 
 // ── INIT ──
-// ── ADMIN LOGIN ──
+// ── FARB PALETTE ──
+const FARB_PALETTE = [
+  '#E74C3C','#E91E63','#9C27B0','#673AB7',
+  '#3F51B5','#2196F3','#03A9F4','#00BCD4',
+  '#009688','#4CAF50','#8BC34A','#CDDC39',
+  '#FFC107','#FF9800','#FF5722','#795548',
+  '#607D8B','#9E9E9E','#1a1a2e','#FFFFFF'
+];
+
+function farbPaletteHTML(spielerIdx, aktuellefarbe, bereich='einst') {
+  return `<div class="farb-palette">
+    ${FARB_PALETTE.map(f => `
+      <div class="farb-btn ${f.toLowerCase()===aktuellefarbe.toLowerCase()?'aktiv':''}"
+        style="background:${f}"
+        onclick="waehlefarbe(${spielerIdx},'${f}','${bereich}')">
+      </div>`).join('')}
+  </div>`;
+}
+
+function waehlefarbe(idx, farbe, bereich) {
+  config.spieler[idx].farbe = farbe;
+  if(bereich === 'wizard') {
+    rendereSpielerwizard();
+  } else {
+    rendereSpieler();
+  }
+}
 let logoKlicks = 0;
 let logoTimer = null;
 let adminModus = false;
@@ -1212,9 +1241,7 @@ function rendereSpielerwizard() {
           oninput="updateSpieler(${i},'name',this.value)">
       </div>
       <div class="sw-gpio" style="margin-top:4px">GPIO ${s.gpio}</div>
-      <input type="color" value="${s.farbe}" 
-        style="width:100%;height:28px;border:1.5px solid #ddd;border-radius:8px;cursor:pointer;padding:2px;margin-top:6px"
-        oninput="updateSpieler(${i},'farbe',this.value);rendereSpielerwizard()">
+      ${farbPaletteHTML(i, s.farbe, 'wizard')}
     </div>`).join('');
 }
 
@@ -1594,7 +1621,8 @@ function modNaechsteFrage() {
       frage:modFragenListe[modAktuellIdx],
       idx:modAktuellIdx,
       gesamt:modFragenListe.length,
-      spielmodus:wizardModus
+      spielmodus:wizardModus,
+      aktive_spieler:config.spieler.filter(s=>s.aktiv!==false)
     });
   } else {
     zeigToast('Alle Fragen gespielt!','');
@@ -1611,7 +1639,8 @@ function modSpringe(idx) {
   socket.emit('mod_naechste_frage',{
     frage:modFragenListe[idx],idx,
     gesamt:modFragenListe.length,
-    spielmodus:wizardModus
+    spielmodus:wizardModus,
+    aktive_spieler:config.spieler.filter(s=>s.aktiv!==false)
   });
 }
 
@@ -1654,9 +1683,10 @@ function rendereSpieler(){
       <input type="text" value="${s.name}" oninput="updateSpieler(${idx},'name',this.value)">
       <label>Farbe</label>
       <div class="farb-zeile">
-        <input type="color" value="${s.farbe}" oninput="updateSpieler(${idx},'farbe',this.value);rendereSpieler()">
+        <div style="width:26px;height:26px;border-radius:50%;background:${s.farbe};border:2px solid #ddd;flex-shrink:0"></div>
         <span class="gpio-badge">GPIO ${s.gpio}</span>
-      </div>`;
+      </div>
+      ${farbPaletteHTML(idx, s.farbe, 'einst')}`;
     grid.appendChild(div);
   });
 }
