@@ -1085,6 +1085,8 @@ async function aenderePasswort() {
     } else zeigToast('❌ Fehler', 'rot');
   } catch(e) { zeigToast('❌ Keine Verbindung', 'rot'); }
 }
+
+async function systemAusschalten() {
   if(!confirm('Pi wirklich herunterfahren?\n\nNach dem Herunterfahren Strom trennen.')) return;
   try {
     await fetch('/api/system/shutdown', {method:'POST'});
