@@ -181,11 +181,18 @@ def setup_wlan_verbinden():
 
 @app.route("/api/setup/qr")
 def setup_qr():
-    """QR-Code als SVG für die Geräte-URL."""
+    """QR-Code als SVG.
+    ?phone=1  → URL zeigt auf /setup?mode=phone  (für TV-Bildschirm)
+    sonst     → URL zeigt auf Geräte-Startseite  (für Moderator-Verbindung)
+    """
     try:
         import qrcode, qrcode.image.svg, io
-        ip  = _get_ip() or "schlagfertig.local"
-        url = f"http://{ip}:5000"
+        ip   = _get_ip() or "schlagfertig.local"
+        base = f"http://{ip}:5000"
+        if request.args.get("phone") == "1":
+            url = base + "/setup?mode=phone"
+        else:
+            url = base
         img = qrcode.make(url, image_factory=qrcode.image.svg.SvgPathImage)
         buf = io.BytesIO()
         img.save(buf)

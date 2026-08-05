@@ -280,6 +280,99 @@ body{
   text-decoration:underline;display:inline-block;margin-bottom:12px;
 }
 .url-toggle:hover{color:rgba(255,255,255,.6)}
+
+/* ═══════════════════ TV-QR-BILDSCHIRM (Schritt 0) ═══════════════════ */
+.tv-screen{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;height:100%;
+}
+.tv-logo{font-size:48px;font-weight:900;letter-spacing:-1px;line-height:1}
+.tv-logo .akzent{color:#E24B4A}
+.tv-sub-title{
+  font-size:20px;color:rgba(255,255,255,.5);
+  margin-top:10px;margin-bottom:0;line-height:1.4;max-width:500px;
+}
+.tv-qr-container{
+  width:260px;height:260px;margin:28px 0 16px;
+  background:#fff;border-radius:20px;padding:14px;
+  box-shadow:0 0 0 2px rgba(255,255,255,.08),0 24px 60px rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  animation:qr-glow 3s ease-in-out infinite;
+  position:relative;
+}
+@keyframes qr-glow{
+  0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,.08),0 24px 60px rgba(0,0,0,.6)}
+  50%{box-shadow:0 0 0 3px rgba(226,75,74,.35),0 24px 60px rgba(0,0,0,.6),0 0 50px rgba(226,75,74,.15)}
+}
+.tv-qr-container img,.tv-qr-container svg{width:100%;height:100%;display:block;object-fit:contain}
+.tv-url-box{
+  font-size:20px;font-weight:700;font-family:monospace;letter-spacing:.5px;
+  color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;padding:13px 28px;word-break:break-all;max-width:480px;
+}
+.tv-keyboard-btn{
+  margin-top:24px;font-size:14px;color:rgba(255,255,255,.28);
+  background:none;border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;padding:9px 20px;cursor:pointer;font-family:inherit;transition:.2s;
+}
+.tv-keyboard-btn:hover{
+  color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.25);
+  background:rgba(255,255,255,.05);
+}
+
+/* ═══════════════════ VERBINDUNGS-OVERLAY (WiFi-Animation) ═══════════════════ */
+#verbind-overlay{
+  position:fixed;inset:0;
+  background:rgba(13,13,26,.93);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  z-index:1000;backdrop-filter:blur(6px);text-align:center;
+}
+#verbind-overlay.sichtbar{display:flex}
+.ov-ring-wrap{
+  position:relative;width:100px;height:100px;
+  display:flex;align-items:center;justify-content:center;margin-bottom:28px;
+}
+.ov-ring{
+  position:absolute;border-radius:50%;
+  border:2px solid rgba(255,255,255,.2);
+  animation:ov-ring-pulse 2s ease-out infinite;
+}
+.ov-ring:nth-child(1){width:60px;height:60px;animation-delay:0s}
+.ov-ring:nth-child(2){width:80px;height:80px;animation-delay:.6s}
+.ov-ring:nth-child(3){width:100px;height:100px;animation-delay:1.2s}
+@keyframes ov-ring-pulse{
+  0%{opacity:.8;transform:scale(.4)}
+  100%{opacity:0;transform:scale(1)}
+}
+.ov-icon{font-size:40px;z-index:1;position:relative;transition:all .4s}
+.ov-titel{font-size:22px;font-weight:700;margin-bottom:8px;transition:.3s}
+.ov-sub{font-size:15px;color:rgba(255,255,255,.4);transition:.3s}
+#verbind-overlay.erfolg .ov-ring{animation:none;border-color:rgba(45,138,78,.3);opacity:.6}
+#verbind-overlay.fehler  .ov-ring{animation:none;border-color:rgba(226,75,74,.3);opacity:.6}
+
+/* ═══════════════════ HANDY-ANIMATION (Schritt 3) ═══════════════════ */
+.handy-anim-wrap{
+  position:relative;width:160px;height:160px;flex-shrink:0;
+}
+.h-ring{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  border-radius:50%;border:1.5px solid rgba(45,138,78,.3);
+  animation:h-pulse 3s ease-out infinite;
+}
+.h-ring:nth-child(1){width:160px;height:160px;animation-delay:0s}
+.h-ring:nth-child(2){width:210px;height:210px;animation-delay:1s}
+.h-ring:nth-child(3){width:260px;height:260px;animation-delay:2s}
+@keyframes h-pulse{
+  0%{opacity:.55;transform:translate(-50%,-50%) scale(.5)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1)}
+}
+.h-qr-inner{
+  position:absolute;inset:0;
+  background:#fff;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;z-index:1;
+}
+.h-qr-inner img{width:100%;height:100%;object-fit:contain}
 </style>
 </head>
 <body>
@@ -316,35 +409,20 @@ body{
 <!-- ╔════════════════════ SCHRITT-INHALTE ════════════════════╗ -->
 <div class="haupt">
 
-  <!-- ══ SCHRITT 0: WILLKOMMEN ══ -->
+  <!-- ══ SCHRITT 0: TV QR-BILDSCHIRM ══ -->
   <div id="inhalt-0" class="schritt-inhalt aktiv">
-    <div class="schritt-nr">Willkommen</div>
-    <div class="schritt-titel">Hallo! Lass uns <span class="akzent">loslegen.</span></div>
-    <div class="schritt-sub">
-      Dieser Assistent führt dich in wenigen Minuten durch die Ersteinrichtung.
-      Am Ende ist dein Schlagfertig-Gerät startklar.
-    </div>
-    <div class="drei-spalten" style="max-width:700px">
-      <div class="karte" style="text-align:center;padding:20px">
-        <div style="font-size:32px;margin-bottom:10px">📶</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:4px">WLAN</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.4)">Internet verbinden</div>
+    <div class="tv-screen">
+      <div class="tv-logo">SCHLAG<span class="akzent">FERTIG</span></div>
+      <div class="tv-sub-title">Scanne den QR-Code mit deinem Handy um die Einrichtung zu starten</div>
+
+      <div class="tv-qr-container" id="tv-qr-container">
+        <div class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:#1a1a2e;width:32px;height:32px;border-width:3px"></div>
       </div>
-      <div class="karte" style="text-align:center;padding:20px">
-        <div style="font-size:32px;margin-bottom:10px">☁️</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:4px">Konto</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.4)">Fragen laden</div>
-      </div>
-      <div class="karte" style="text-align:center;padding:20px">
-        <div style="font-size:32px;margin-bottom:10px">📱</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:4px">Handy</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.4)">Moderator-App</div>
-      </div>
-    </div>
-    <div style="margin-top:32px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
-      <button class="btn primaer gross" onclick="goto_schritt(1)">Los geht's →</button>
-      <button class="btn glas" onclick="offline_start()" style="font-size:17px;padding:20px 32px;border-radius:16px">
-        📴 Ohne Internet starten
+
+      <div class="tv-url-box" id="tv-url">Lade…</div>
+
+      <button class="tv-keyboard-btn" onclick="ohne_handy()">
+        ⌨️ Tastatur / Maus vorhanden? Hier direkt einrichten
       </button>
     </div>
   </div>
@@ -467,10 +545,12 @@ body{
     <div class="schritt-sub">Scanne den QR-Code, um die Moderator-App auf deinem Handy zu öffnen.</div>
 
     <div class="qr-wrap" style="max-width:700px">
-      <div class="qr-bild-wrap" id="qr-container">
-        <div class="qr-placeholder" id="qr-placeholder">
-          <div class="spinner dunkel" style="border-color:rgba(0,0,0,.1);border-top-color:#1a1a2e;margin:0 auto 8px"></div>
-          <div>Wird geladen…</div>
+      <div class="handy-anim-wrap">
+        <div class="h-ring"></div>
+        <div class="h-ring"></div>
+        <div class="h-ring"></div>
+        <div class="h-qr-inner" id="qr-container">
+          <div class="spinner" style="border-color:rgba(0,0,0,.1);border-top-color:#1a1a2e"></div>
         </div>
       </div>
       <div class="qr-info">
@@ -509,7 +589,7 @@ body{
 </div><!-- haupt -->
 
 <!-- ╔════════════════════ NAVIGATION ════════════════════╗ -->
-<div class="nav-leiste">
+<div class="nav-leiste" id="nav-leiste">
   <button class="btn glas" id="zurueck-btn" onclick="zurueck()" style="display:none">
     ← Zurück
   </button>
@@ -519,7 +599,24 @@ body{
   </button>
 </div>
 
+<!-- ╔════════════════════ VERBINDUNGS-OVERLAY ════════════════════╗ -->
+<div id="verbind-overlay">
+  <div class="ov-ring-wrap">
+    <div class="ov-ring"></div>
+    <div class="ov-ring"></div>
+    <div class="ov-ring"></div>
+    <div class="ov-icon" id="ov-icon">📶</div>
+  </div>
+  <div class="ov-titel" id="ov-titel">Verbinde…</div>
+  <div class="ov-sub"   id="ov-sub">Bitte warten</div>
+</div>
+
 <script>
+// ═══════════════════════ MODUS-ERKENNUNG ═══════════════════════
+const URL_PARAMS  = new URLSearchParams(window.location.search);
+const PHONE_MODUS = URL_PARAMS.get('mode') === 'phone';
+let tv_poll_id    = null;
+
 // ═══════════════════════ STATE ═══════════════════════
 let aktSchritt   = 0;
 const MAX_SCHRITT = 4;
@@ -538,8 +635,24 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Aktuellen Status laden
   try {
     const r = await fetch('/api/setup/status');
-    status = await r.json();
+    const s = await r.json();
+    status = {wlan: s.wlan, cloud: s.cloud};
+    // Setup bereits abgeschlossen → direkt zum Editor
+    if (s.setup_fertig) { window.location.href = '/editor'; return; }
   } catch(_) {}
+
+  if (PHONE_MODUS) {
+    // Handy steuert die Einrichtung: Header + Nav zeigen, ab Schritt 1
+    document.querySelector('.progress-header').style.removeProperty('display');
+    zeige_nav(true);
+    goto_schritt(1);
+  } else {
+    // TV-Modus: nur QR-Bildschirm, kein Header, kein Nav
+    document.querySelector('.progress-header').style.display = 'none';
+    zeige_nav(false);
+    lade_tv_qr();
+    start_tv_poll();
+  }
 
   // WLAN-Banner zeigen wenn bereits verbunden
   if (status.wlan.verbunden) {
@@ -550,6 +663,73 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('wlan-pw').addEventListener('keydown', e => { if(e.key==='Enter') wlan_verbinden(); });
   document.getElementById('k-pw').addEventListener('keydown',   e => { if(e.key==='Enter') konto_anmelden(); });
 });
+
+function zeige_nav(sichtbar) {
+  document.getElementById('nav-leiste').style.display = sichtbar ? 'flex' : 'none';
+}
+
+// ═══════════════════════ TV-POLLING & QR ═══════════════════════
+function start_tv_poll() {
+  if (tv_poll_id) return;
+  tv_poll_id = setInterval(async () => {
+    try {
+      const r = await fetch('/api/setup/status');
+      const s = await r.json();
+      if (s.setup_fertig) { stop_tv_poll(); window.location.href = '/editor'; }
+    } catch(_) {}
+  }, 3000);
+}
+
+function stop_tv_poll() {
+  if (tv_poll_id) { clearInterval(tv_poll_id); tv_poll_id = null; }
+}
+
+async function lade_tv_qr() {
+  try {
+    const r    = await fetch('/api/setup/ip');
+    const data = await r.json();
+    const base = data.url || 'http://schlagfertig.local:5000';
+    document.getElementById('tv-url').textContent = base + '/setup';
+
+    const container = document.getElementById('tv-qr-container');
+    const img = document.createElement('img');
+    img.style.cssText = 'width:100%;height:100%;display:block;object-fit:contain';
+    img.onerror = () => {
+      container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:12px;color:#1a1a2e;text-align:center;line-height:1.6;padding:12px;font-weight:600">
+        ${esc(base)}/setup?mode=phone
+      </div>`;
+    };
+    img.onload = () => { container.innerHTML = ''; container.appendChild(img); };
+    img.src = '/api/setup/qr?phone=1&t=' + Date.now();
+  } catch(_) {}
+}
+
+function ohne_handy() {
+  stop_tv_poll();
+  document.querySelector('.progress-header').style.removeProperty('display');
+  zeige_nav(true);
+  goto_schritt(1);
+}
+
+// ═══════════════════════ VERBINDUNGS-ANIMATION ═══════════════════════
+function zeige_verbind_anim(text) {
+  const ov = document.getElementById('verbind-overlay');
+  ov.className = 'sichtbar';
+  document.getElementById('ov-icon').textContent  = '📶';
+  document.getElementById('ov-titel').textContent = text;
+  document.getElementById('ov-sub').textContent   = 'Bitte warten…';
+}
+
+function hide_verbind_anim(erfolg, haupttext, sub) {
+  const ov = document.getElementById('verbind-overlay');
+  document.getElementById('ov-icon').textContent  = erfolg ? '✅' : '❌';
+  document.getElementById('ov-titel').textContent = haupttext;
+  document.getElementById('ov-sub').textContent   = sub || '';
+  ov.classList.remove('sichtbar');
+  ov.classList.add(erfolg ? 'erfolg' : 'fehler');
+  ov.style.display = 'flex';
+  setTimeout(() => { ov.style.display = ''; ov.className = ''; }, erfolg ? 1500 : 2500);
+}
 
 // ═══════════════════════ SCHRITT-NAVIGATION ═══════════════════════
 function goto_schritt(n) {
@@ -562,28 +742,31 @@ function goto_schritt(n) {
   const neu = document.getElementById('inhalt-' + n);
   neu.classList.add('aktiv');
 
-  // Progress-Indikatoren aktualisieren
-  for (let i=1; i<=4; i++) {
-    const k = document.getElementById('sk-'+i);
-    const l = document.getElementById('sl-'+i);
+  // Progress-Indikatoren aktualisieren (Steps 1–4)
+  for (let i = 1; i <= 4; i++) {
+    const k  = document.getElementById('sk-'+i);
+    const l  = document.getElementById('sl-'+i);
     const ln = document.getElementById('sl-l'+i);
     if (i < n) {
       k.classList.add('fertig'); k.textContent = '✓';
       l.className = 'schritt-label fertig';
-      if(ln) ln.classList.add('fertig');
+      if (ln) ln.classList.add('fertig');
     } else if (i === n) {
       k.classList.remove('fertig'); k.textContent = i; k.classList.add('aktiv');
       l.className = 'schritt-label aktiv';
-      if(ln) ln.classList.remove('fertig');
+      if (ln) ln.classList.remove('fertig');
     } else {
       k.classList.remove('fertig','aktiv'); k.textContent = i;
       l.className = 'schritt-label';
-      if(ln) ln.classList.remove('fertig');
+      if (ln) ln.classList.remove('fertig');
     }
   }
 
   // Zurück-Button
-  document.getElementById('zurueck-btn').style.display    = n > 0 ? 'inline-flex' : 'none';
+  const zb = document.getElementById('zurueck-btn');
+  // Schritt 1 im Tastatur-Modus → zurück zum TV-Bildschirm erlaubt
+  zb.style.display = (n > 1 || (n === 1 && !PHONE_MODUS)) ? 'inline-flex' : 'none';
+
   // Überspringen-Button
   document.getElementById('ueberspringen-btn').style.display = (n >= 1 && n <= 3) ? 'inline-flex' : 'none';
 
@@ -593,7 +776,20 @@ function goto_schritt(n) {
 }
 
 function zurueck() {
-  if (aktSchritt > 0) goto_schritt(aktSchritt - 1);
+  if (aktSchritt === 1 && !PHONE_MODUS) {
+    // Tastatur-Modus: zurück zum TV-Bildschirm
+    const alt = document.getElementById('inhalt-1');
+    alt.classList.add('verlassen');
+    setTimeout(() => alt.classList.remove('aktiv', 'verlassen'), 350);
+    aktSchritt = 0;
+    document.getElementById('inhalt-0').classList.add('aktiv');
+    document.querySelector('.progress-header').style.display = 'none';
+    zeige_nav(false);
+    lade_tv_qr();
+    start_tv_poll();
+  } else if (aktSchritt > 1) {
+    goto_schritt(aktSchritt - 1);
+  }
 }
 
 async function ueberspringen() {
@@ -684,7 +880,8 @@ async function wlan_verbinden() {
   const btn = document.getElementById('verbinden-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Verbinde…';
-  zeige_meldung('wlan-meldung','info','Verbinde mit ' + ausgewaehltSsid + '…');
+
+  zeige_verbind_anim('Verbinde mit ' + ausgewaehltSsid + '…');
 
   try {
     const r    = await fetch('/api/setup/wlan/verbinden', {
@@ -696,13 +893,15 @@ async function wlan_verbinden() {
 
     status.wlan = {verbunden: true, ssid: ausgewaehltSsid, ip: data.ip};
     zeige_wlan_banner(true, ausgewaehltSsid, data.ip);
-    zeige_meldung('wlan-meldung','erfolg','✅ Verbunden! IP: ' + data.ip);
-
-    setTimeout(() => goto_schritt(2), 1500);
+    hide_verbind_anim(true, 'Verbunden mit ' + ausgewaehltSsid, 'IP: ' + (data.ip || ''));
+    setTimeout(() => goto_schritt(2), 1800);
   } catch(e) {
-    zeige_meldung('wlan-meldung','fehler','❌ ' + (e.message || 'Verbindung fehlgeschlagen'));
-    btn.disabled = false;
-    btn.innerHTML = '🔗 Verbinden';
+    hide_verbind_anim(false, 'Verbindung fehlgeschlagen', e.message || '');
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = '🔗 Verbinden';
+      zeige_meldung('wlan-meldung','fehler','❌ ' + (e.message || 'Verbindung fehlgeschlagen'));
+    }, 2600);
   }
 }
 
@@ -769,22 +968,21 @@ async function gast_modus() {
   goto_schritt(3);
 }
 
-// ═══════════════════════ QR-CODE / IP ═══════════════════════
+// ═══════════════════════ QR-CODE / IP (Schritt 3: Moderator-App) ═══════════════════════
 async function lade_qr() {
   try {
     const r    = await fetch('/api/setup/ip');
     const data = await r.json();
-    document.getElementById('geraet-url').textContent = data.url || 'http://schlagfertig.local:5000';
+    const url  = data.url || 'http://schlagfertig.local:5000';
+    document.getElementById('geraet-url').textContent = url;
 
-    // QR-Code versuchen
-    const qr = document.getElementById('qr-container');
+    const qr  = document.getElementById('qr-container');
     const img = document.createElement('img');
     img.style.cssText = 'width:100%;height:100%;object-fit:contain';
     img.onerror = () => {
-      // Fallback: URL als Text anzeigen
-      qr.innerHTML = `<div class="qr-placeholder" style="color:#1a1a2e;font-size:13px;line-height:1.5">
-        <div style="font-size:11px;font-weight:700;margin-bottom:4px">URL öffnen:</div>
-        ${data.url || 'http://schlagfertig.local:5000'}
+      qr.innerHTML = `<div style="padding:10px;text-align:center;font-size:11px;color:#1a1a2e;line-height:1.5;font-weight:600">
+        <div style="margin-bottom:4px">URL öffnen:</div>
+        ${esc(url)}
       </div>`;
     };
     img.onload = () => { qr.innerHTML = ''; qr.appendChild(img); };
