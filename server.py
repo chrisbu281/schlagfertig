@@ -12,6 +12,7 @@ KONFIG       = os.path.join(BASIS, "quiz_config.json")
 STATE_DATEI  = os.path.join(BASIS, ".spiel_state")
 CLOUD_KONFIG = os.path.join(BASIS, ".cloud_config.json")
 GAST_FRAGEN  = os.path.join(BASIS, "fragen_default.json")
+SETUP_DATEI  = os.path.join(BASIS, ".setup_fertig")
 spiel_prozess = None
 
 spiel_state = {
@@ -77,15 +78,128 @@ def starte_quiz():
 # ── ROUTES ──
 @app.route("/")
 def index():
+    # Ersteinrichtung noch nicht abgeschlossen?
+    if not os.path.exists(SETUP_DATEI):
+        return redirect("/setup")
     cfg = lese_cloud_config()
-    # Wenn noch kein Modus gewählt wurde, zur Login-Seite
     if not cfg.get("modus"):
         return redirect("/login")
     return redirect("/editor")
 
+@app.route("/setup")
+def setup_page():
+    return send_from_directory(BASIS, "setup.html")
+
 @app.route("/login")
 def login_page():
     return send_from_directory(BASIS, "login.html")
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SETUP-ASSISTENT ROUTEN
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _get_ip():
+    try:
+        return subprocess.check_output("hostname -I", shell=True).decode().strip().split()[0]
+    except Exception:
+        return None
+
+def _get_wlan_ssid():
+    try:
+        return subprocess.check_output("iwgetid -r", shell=True).decode().strip()
+    except Exception:
+        return None
+
+@app.route("/api/setup/status")
+def setup_status():
+    ip   = _get_ip()
+    ssid = _get_wlan_ssid()
+    cfg  = lese_cloud_config()
+    return jsonify({
+        "wlan":  {"verbunden": bool(ip), "ssid": ssid or "", "ip": ip or ""},
+        "cloud": {"modus": cfg.get("modus",""), "name": cfg.get("benutzer_name",""), "email": cfg.get("email","")},
+        "setup_fertig": os.path.exists(SETUP_DATEI),
+    })
+
+@app.route("/api/setup/ip")
+def setup_ip():
+    ip   = _get_ip()
+    ssid = _get_wlan_ssid()
+    return jsonify({"ip": ip or "", "ssid": ssid or "", "url": f"http://{ip}:5000" if ip else ""})
+
+@app.route("/api/setup/wlan/scan")
+def setup_wlan_scan():
+    try:
+        subprocess.run(["nmcli", "device", "wifi", "rescan"], timeout=5, capture_output=True)
+        import time; time.sleep(2)
+        out = subprocess.check_output(
+            ["nmcli", "--terse", "--fields", "SSID,SIGNAL,SECURITY", "device", "wifi", "list"],
+            timeout=10
+        ).decode("utf-8", errors="replace")
+        netzwerke, seen = [], set()
+        for line in out.strip().splitlines():
+            # rsplit von rechts: SIGNAL und SECURITY enthalten keine Doppelpunkte
+            parts = line.rsplit(":", 2)
+            if len(parts) < 2:
+                continue
+            ssid = parts[0].replace("\\:", ":").strip()
+            if not ssid or ssid == "--" or ssid in seen:
+                continue
+            seen.add(ssid)
+            try:    signal = int(parts[1])
+            except Exception: signal = 0
+            secured = len(parts) > 2 and "--" not in parts[2] and parts[2].strip() != ""
+            netzwerke.append({"ssid": ssid, "signal": signal, "secured": secured})
+        netzwerke.sort(key=lambda x: x["signal"], reverse=True)
+        return jsonify(netzwerke)
+    except FileNotFoundError:
+        return jsonify({"error": "nmcli nicht gefunden – WLAN-Verwaltung nicht verfügbar"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/setup/wlan/verbinden", methods=["POST"])
+def setup_wlan_verbinden():
+    d       = request.get_json() or {}
+    ssid    = d.get("ssid", "").strip()
+    passwort = d.get("passwort", "").strip()
+    if not ssid:
+        return jsonify({"error": "SSID fehlt"}), 400
+    try:
+        cmd = ["nmcli", "device", "wifi", "connect", ssid]
+        if passwort:
+            cmd += ["password", passwort]
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        if r.returncode == 0:
+            import time; time.sleep(1)
+            return jsonify({"status": "ok", "ip": _get_ip() or ""})
+        err = (r.stderr or r.stdout).strip()
+        return jsonify({"error": err or "Verbindung fehlgeschlagen"}), 400
+    except subprocess.TimeoutExpired:
+        return jsonify({"error": "Zeitüberschreitung – Verbindung fehlgeschlagen"}), 408
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/setup/qr")
+def setup_qr():
+    """QR-Code als SVG für die Geräte-URL."""
+    try:
+        import qrcode, qrcode.image.svg, io
+        ip  = _get_ip() or "schlagfertig.local"
+        url = f"http://{ip}:5000"
+        img = qrcode.make(url, image_factory=qrcode.image.svg.SvgPathImage)
+        buf = io.BytesIO()
+        img.save(buf)
+        return Response(buf.getvalue(), mimetype="image/svg+xml")
+    except ImportError:
+        return Response("", status=503)   # Fallback: JS zeigt URL-Text
+    except Exception:
+        return Response("", status=500)
+
+@app.route("/api/setup/abschliessen", methods=["POST"])
+def setup_abschliessen():
+    with open(SETUP_DATEI, "w") as f:
+        f.write("fertig")
+    return jsonify({"status": "ok"})
 
 @app.route("/editor")
 def editor(): return send_from_directory(BASIS, "quiz_editor.html")

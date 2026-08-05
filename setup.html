@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schlagfertig – Einrichtung</title>
+<style>
+/* ═══════════════════ RESET & BASIS ═══════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:#0d0d1a;
+  color:#fff;
+  font-size:18px;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ═══════════════════ PROGRESS-HEADER ═══════════════════ */
+.progress-header{
+  padding:20px 40px 0;
+  flex-shrink:0;
+}
+.logo-zeile{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-bottom:24px;
+}
+.logo{font-size:22px;font-weight:900;letter-spacing:-.5px}
+.logo span{color:#E24B4A}
+.einrichtungs-label{
+  background:rgba(226,75,74,.15);
+  border:1px solid rgba(226,75,74,.3);
+  color:#E24B4A;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:1px;
+  padding:4px 12px;
+  border-radius:20px;
+}
+
+.schritte{
+  display:flex;
+  gap:0;
+  align-items:center;
+}
+.schritt-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.schritt-kreis{
+  width:36px;height:36px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:rgba(255,255,255,.3);
+  transition:all .4s;flex-shrink:0;
+}
+.schritt-kreis.aktiv{border-color:#E24B4A;color:#E24B4A;background:rgba(226,75,74,.1)}
+.schritt-kreis.fertig{border-color:#2d8a4e;background:#2d8a4e;color:#fff}
+.schritt-label{font-size:13px;color:rgba(255,255,255,.3);font-weight:500;transition:color .4s;white-space:nowrap}
+.schritt-label.aktiv{color:#fff;font-weight:700}
+.schritt-label.fertig{color:#2d8a4e}
+.schritt-linie{flex:1;height:1px;background:rgba(255,255,255,.1);margin:0 12px;min-width:30px;transition:background .4s}
+.schritt-linie.fertig{background:#2d8a4e}
+
+/* ═══════════════════ HAUPTBEREICH ═══════════════════ */
+.haupt{
+  flex:1;
+  overflow:hidden;
+  position:relative;
+  padding:32px 40px;
+}
+
+.schritt-inhalt{
+  position:absolute;
+  inset:32px 40px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  opacity:0;
+  transform:translateX(60px);
+  transition:all .35s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+.schritt-inhalt.aktiv{
+  opacity:1;transform:translateX(0);pointer-events:auto;
+}
+.schritt-inhalt.verlassen{
+  opacity:0;transform:translateX(-60px);
+}
+
+/* ═══════════════════ TYPOGRAPHIE ═══════════════════ */
+.schritt-nr{
+  font-size:12px;font-weight:700;letter-spacing:2px;
+  color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:8px;
+}
+.schritt-titel{font-size:40px;font-weight:900;line-height:1.1;margin-bottom:10px}
+.schritt-titel .akzent{color:#E24B4A}
+.schritt-sub{font-size:17px;color:rgba(255,255,255,.5);line-height:1.5;margin-bottom:32px;max-width:600px}
+
+/* ═══════════════════ KARTEN ═══════════════════ */
+.karte{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:18px;
+  padding:28px;
+}
+.karte.gruen{background:rgba(45,138,78,.1);border-color:rgba(45,138,78,.3)}
+.karte.rot{background:rgba(226,75,74,.1);border-color:rgba(226,75,74,.3)}
+
+/* ═══════════════════ FORM-ELEMENTE ═══════════════════ */
+.form-label{
+  display:block;font-size:13px;font-weight:700;letter-spacing:.5px;
+  color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:8px;
+}
+.form-input{
+  width:100%;padding:14px 18px;
+  border-radius:12px;
+  border:2px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.06);
+  color:#fff;font-size:17px;font-family:inherit;
+  transition:border-color .2s;
+}
+.form-input:focus{outline:none;border-color:#E24B4A;background:rgba(255,255,255,.09)}
+.form-input::placeholder{color:rgba(255,255,255,.25)}
+.form-gruppe{margin-bottom:16px}
+
+/* ═══════════════════ BUTTONS ═══════════════════ */
+.btn{
+  padding:15px 30px;border-radius:14px;border:none;
+  font-size:17px;font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .2s;font-family:inherit;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.btn.primaer{background:#E24B4A;color:#fff}
+.btn.primaer:hover{background:#c73c3b}
+.btn.gruen{background:#2d8a4e;color:#fff}
+.btn.gruen:hover{background:#237a40}
+.btn.glas{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15)}
+.btn.glas:hover{background:rgba(255,255,255,.18)}
+.btn.gross{padding:20px 40px;font-size:20px;border-radius:16px}
+
+/* ═══════════════════ STATUS-PILL ═══════════════════ */
+.pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600;
+}
+.pill.ok{background:rgba(45,138,78,.2);border:1px solid rgba(45,138,78,.4);color:#4ade80}
+.pill.warnung{background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.3);color:#fbbf24}
+.pill.fehler-pill{background:rgba(226,75,74,.15);border:1px solid rgba(226,75,74,.3);color:#f87171}
+.pill-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+
+/* ═══════════════════ WLAN-LISTE ═══════════════════ */
+.netz-liste{
+  display:flex;flex-direction:column;gap:6px;
+  max-height:220px;overflow-y:auto;padding-right:4px;
+}
+.netz-liste::-webkit-scrollbar{width:4px}
+.netz-liste::-webkit-scrollbar-track{background:transparent}
+.netz-liste::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+
+.netz-item{
+  display:flex;align-items:center;gap:14px;
+  padding:12px 16px;border-radius:12px;
+  border:1.5px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  cursor:pointer;transition:all .15s;
+}
+.netz-item:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.08)}
+.netz-item.ausgewaehlt{border-color:#E24B4A;background:rgba(226,75,74,.1)}
+.netz-name{flex:1;font-size:16px;font-weight:500}
+.netz-rechts{display:flex;align-items:center;gap:8px}
+.signal-icon{display:flex;align-items:flex-end;gap:2px;height:14px}
+.signal-icon span{width:3px;border-radius:1px;background:rgba(255,255,255,.2)}
+.signal-icon span:nth-child(1){height:4px}
+.signal-icon span:nth-child(2){height:7px}
+.signal-icon span:nth-child(3){height:10px}
+.signal-icon span:nth-child(4){height:14px}
+.signal-icon.s4 span{background:#4ade80}
+.signal-icon.s3 span:nth-child(4){background:rgba(255,255,255,.2)}
+.signal-icon.s3 span:nth-child(1),.signal-icon.s3 span:nth-child(2),.signal-icon.s3 span:nth-child(3){background:#fbbf24}
+.signal-icon.s2 span:nth-child(3),.signal-icon.s2 span:nth-child(4){background:rgba(255,255,255,.2)}
+.signal-icon.s2 span:nth-child(1),.signal-icon.s2 span:nth-child(2){background:#f87171}
+.signal-icon.s1 span:nth-child(2),.signal-icon.s1 span:nth-child(3),.signal-icon.s1 span:nth-child(4){background:rgba(255,255,255,.2)}
+.signal-icon.s1 span:nth-child(1){background:#f87171}
+.lock-icon{font-size:12px;opacity:.5}
+
+/* Passwort-Feld unter ausgewähltem Netz */
+.pw-bereich{
+  margin-top:12px;display:none;
+  flex-direction:column;gap:10px;
+}
+.pw-bereich.sichtbar{display:flex}
+
+/* ═══════════════════ LAYOUT-RASTER ═══════════════════ */
+.zwei-spalten{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.drei-spalten{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+/* ═══════════════════ QR-CODE BEREICH ═══════════════════ */
+.qr-wrap{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:18px;padding:28px;
+  display:flex;align-items:center;gap:32px;
+}
+.qr-bild-wrap{
+  width:160px;height:160px;flex-shrink:0;
+  background:#fff;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.qr-bild-wrap img{width:100%;height:100%;object-fit:contain}
+.qr-bild-wrap .qr-placeholder{
+  padding:16px;text-align:center;
+  font-size:12px;color:#1a1a2e;line-height:1.4;
+}
+.url-box{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  border-radius:10px;padding:12px 18px;
+  font-size:20px;font-weight:700;font-family:monospace;
+  letter-spacing:1px;word-break:break-all;
+  color:#fff;margin-top:10px;
+}
+.qr-info{flex:1}
+.qr-info h3{font-size:18px;font-weight:700;margin-bottom:8px}
+.qr-info p{font-size:15px;color:rgba(255,255,255,.5);line-height:1.5;margin-bottom:12px}
+.qr-steps{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.qr-steps li{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:rgba(255,255,255,.7)}
+.qr-steps .nr{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+
+/* ═══════════════════ ZUSAMMENFASSUNG ═══════════════════ */
+.zusammenfassung{display:flex;flex-direction:column;gap:14px;max-width:600px}
+.zusammen-item{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 20px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+}
+.zusammen-icon{font-size:22px;flex-shrink:0}
+.zusammen-text strong{display:block;font-size:15px}
+.zusammen-text span{font-size:13px;color:rgba(255,255,255,.45)}
+.zusammen-status{margin-left:auto}
+
+/* ═══════════════════ NAVIGATION ═══════════════════ */
+.nav-leiste{
+  padding:16px 40px 24px;
+  display:flex;align-items:center;gap:12px;
+  flex-shrink:0;
+}
+.nav-leiste .spacer{flex:1}
+
+/* ═══════════════════ MELDUNG ═══════════════════ */
+.meldung{
+  padding:12px 18px;border-radius:12px;
+  font-size:14px;font-weight:500;margin-top:12px;
+  display:none;
+}
+.meldung.fehler{background:rgba(226,75,74,.15);border:1px solid rgba(226,75,74,.3);color:#f87171;display:block}
+.meldung.erfolg{background:rgba(45,138,78,.15);border:1px solid rgba(45,138,78,.3);color:#4ade80;display:block}
+.meldung.info{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:#93c5fd;display:block}
+
+/* ═══════════════════ SPINNER ═══════════════════ */
+.spinner{
+  display:inline-block;width:18px;height:18px;
+  border:2px solid rgba(255,255,255,.2);border-top-color:#fff;
+  border-radius:50%;animation:dreh .7s linear infinite;
+}
+@keyframes dreh{to{transform:rotate(360deg)}}
+
+/* ═══════════════════ KONTO-TOGGLE ═══════════════════ */
+.url-toggle{
+  font-size:13px;color:rgba(255,255,255,.35);cursor:pointer;
+  text-decoration:underline;display:inline-block;margin-bottom:12px;
+}
+.url-toggle:hover{color:rgba(255,255,255,.6)}
+</style>
+</head>
+<body>
+
+<!-- ╔════════════════════ PROGRESS-HEADER ════════════════════╗ -->
+<div class="progress-header">
+  <div class="logo-zeile">
+    <div class="logo">SCHLAG<span>FERTIG</span></div>
+    <div class="einrichtungs-label">EINRICHTUNG</div>
+  </div>
+  <div class="schritte">
+    <div class="schritt-item">
+      <div class="schritt-kreis" id="sk-1">1</div>
+      <div class="schritt-label" id="sl-1">WLAN</div>
+    </div>
+    <div class="schritt-linie" id="sl-l1"></div>
+    <div class="schritt-item">
+      <div class="schritt-kreis" id="sk-2">2</div>
+      <div class="schritt-label" id="sl-2">Konto</div>
+    </div>
+    <div class="schritt-linie" id="sl-l2"></div>
+    <div class="schritt-item">
+      <div class="schritt-kreis" id="sk-3">3</div>
+      <div class="schritt-label" id="sl-3">Handy</div>
+    </div>
+    <div class="schritt-linie" id="sl-l3"></div>
+    <div class="schritt-item">
+      <div class="schritt-kreis" id="sk-4">4</div>
+      <div class="schritt-label" id="sl-4">Fertig</div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔════════════════════ SCHRITT-INHALTE ════════════════════╗ -->
+<div class="haupt">
+
+  <!-- ══ SCHRITT 0: WILLKOMMEN ══ -->
+  <div id="inhalt-0" class="schritt-inhalt aktiv">
+    <div class="schritt-nr">Willkommen</div>
+    <div class="schritt-titel">Hallo! Lass uns <span class="akzent">loslegen.</span></div>
+    <div class="schritt-sub">
+      Dieser Assistent führt dich in wenigen Minuten durch die Ersteinrichtung.
+      Am Ende ist dein Schlagfertig-Gerät startklar.
+    </div>
+    <div class="drei-spalten" style="max-width:700px">
+      <div class="karte" style="text-align:center;padding:20px">
+        <div style="font-size:32px;margin-bottom:10px">📶</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px">WLAN</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.4)">Internet verbinden</div>
+      </div>
+      <div class="karte" style="text-align:center;padding:20px">
+        <div style="font-size:32px;margin-bottom:10px">☁️</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px">Konto</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.4)">Fragen laden</div>
+      </div>
+      <div class="karte" style="text-align:center;padding:20px">
+        <div style="font-size:32px;margin-bottom:10px">📱</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px">Handy</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.4)">Moderator-App</div>
+      </div>
+    </div>
+    <div style="margin-top:32px">
+      <button class="btn primaer gross" onclick="goto_schritt(1)">Los geht's →</button>
+    </div>
+  </div>
+
+  <!-- ══ SCHRITT 1: WLAN ══ -->
+  <div id="inhalt-1" class="schritt-inhalt">
+    <div class="schritt-nr">Schritt 1 von 3</div>
+    <div class="schritt-titel">📶 WLAN einrichten</div>
+    <div class="schritt-sub">Verbinde das Gerät mit deinem Heimnetzwerk.</div>
+
+    <div id="wlan-status-banner" style="margin-bottom:16px;display:none"></div>
+
+    <div class="zwei-spalten" style="max-width:800px">
+      <!-- Linke Spalte: Netzwerke -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="form-label" style="margin:0">Verfügbare Netzwerke</div>
+          <button class="btn glas" style="padding:8px 16px;font-size:13px" onclick="wlan_scannen()" id="scan-btn">
+            🔄 Scannen
+          </button>
+        </div>
+        <div id="netz-liste" class="netz-liste">
+          <div style="padding:20px;text-align:center;color:rgba(255,255,255,.3);font-size:14px">
+            Klicke auf "Scannen" um Netzwerke zu finden…
+          </div>
+        </div>
+      </div>
+
+      <!-- Rechte Spalte: Verbinden -->
+      <div>
+        <div id="verbinden-karte" class="karte" style="display:none">
+          <div style="font-size:16px;font-weight:700;margin-bottom:16px">
+            Verbinden mit: <span id="ausgewaehlt-ssid" style="color:#E24B4A"></span>
+          </div>
+          <div id="pw-bereich" class="pw-bereich sichtbar">
+            <div class="form-gruppe">
+              <label class="form-label">WLAN-Passwort</label>
+              <input id="wlan-pw" type="password" class="form-input" placeholder="Passwort eingeben…">
+            </div>
+          </div>
+          <button class="btn gruen" id="verbinden-btn" onclick="wlan_verbinden()" style="width:100%;margin-top:8px">
+            🔗 Verbinden
+          </button>
+          <div id="wlan-meldung" class="meldung"></div>
+        </div>
+
+        <div class="karte" style="margin-top:16px;padding:16px" id="ethernet-hinweis">
+          <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.5">
+            💡 <strong style="color:rgba(255,255,255,.6)">Tipp:</strong>
+            Du kannst das Gerät auch per LAN-Kabel verbinden und diesen Schritt überspringen.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="wlan-meldung-global" class="meldung"></div>
+  </div>
+
+  <!-- ══ SCHRITT 2: KONTO ══ -->
+  <div id="inhalt-2" class="schritt-inhalt">
+    <div class="schritt-nr">Schritt 2 von 3</div>
+    <div class="schritt-titel">☁️ Konto verbinden</div>
+    <div class="schritt-sub">Lade deine Fragenbibliothek vom Cloud-Server.</div>
+
+    <div class="zwei-spalten" style="max-width:800px">
+      <!-- Cloud Login -->
+      <div>
+        <div class="karte">
+          <div style="font-size:16px;font-weight:700;margin-bottom:16px">Mit Cloud-Konto anmelden</div>
+
+          <span class="url-toggle" onclick="toggle_url_feld()">
+            ⚙️ Server-URL festlegen <span id="url-pfeil">▼</span>
+          </span>
+          <div id="url-feld" style="display:none" class="form-gruppe">
+            <label class="form-label">Cloud-Server URL</label>
+            <input id="cloud-url" type="url" class="form-input" placeholder="http://192.168.1.100:5001">
+          </div>
+
+          <div class="form-gruppe">
+            <label class="form-label">E-Mail-Adresse</label>
+            <input id="k-email" type="email" class="form-input" placeholder="name@beispiel.de">
+          </div>
+          <div class="form-gruppe">
+            <label class="form-label">Passwort</label>
+            <input id="k-pw" type="password" class="form-input" placeholder="••••••••">
+          </div>
+          <button class="btn primaer" id="konto-btn" onclick="konto_anmelden()" style="width:100%">
+            ☁️ Anmelden & Fragen laden
+          </button>
+          <div id="konto-meldung" class="meldung"></div>
+        </div>
+      </div>
+
+      <!-- Gast-Modus -->
+      <div>
+        <div class="karte" style="height:100%;display:flex;flex-direction:column;justify-content:space-between;min-height:200px">
+          <div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:8px">Als Gast starten</div>
+            <div style="font-size:14px;color:rgba(255,255,255,.45);line-height:1.6;margin-bottom:20px">
+              Kein Konto? Kein Problem — starte mit 15 vorinstallierten Fragen.
+              Du kannst dich jederzeit später anmelden.
+            </div>
+          </div>
+          <div>
+            <button class="btn glas" onclick="gast_modus()" style="width:100%">
+              🎮 Als Gast starten
+            </button>
+            <div style="font-size:12px;color:rgba(255,255,255,.25);text-align:center;margin-top:8px">
+              Standardfragen werden geladen
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCHRITT 3: HANDY ══ -->
+  <div id="inhalt-3" class="schritt-inhalt">
+    <div class="schritt-nr">Schritt 3 von 3</div>
+    <div class="schritt-titel">📱 Handy verbinden</div>
+    <div class="schritt-sub">Scanne den QR-Code, um die Moderator-App auf deinem Handy zu öffnen.</div>
+
+    <div class="qr-wrap" style="max-width:700px">
+      <div class="qr-bild-wrap" id="qr-container">
+        <div class="qr-placeholder" id="qr-placeholder">
+          <div class="spinner dunkel" style="border-color:rgba(0,0,0,.1);border-top-color:#1a1a2e;margin:0 auto 8px"></div>
+          <div>Wird geladen…</div>
+        </div>
+      </div>
+      <div class="qr-info">
+        <h3>Moderator-App öffnen</h3>
+        <p>Verbinde dein Handy mit demselben WLAN und scanne den QR-Code.</p>
+        <div class="url-box" id="geraet-url">–</div>
+        <ul class="qr-steps">
+          <li><span class="nr">1</span>Handy ins gleiche WLAN</li>
+          <li><span class="nr">2</span>QR-Code scannen <em style="opacity:.5">(oder URL eingeben)</em></li>
+          <li><span class="nr">3</span>Quiz steuern</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCHRITT 4: FERTIG ══ -->
+  <div id="inhalt-4" class="schritt-inhalt">
+    <div class="schritt-nr">Alles erledigt!</div>
+    <div class="schritt-titel">🎉 Bereit zum <span class="akzent">Spielen.</span></div>
+    <div class="schritt-sub">Dein Schlagfertig-Gerät ist eingerichtet.</div>
+
+    <div class="zusammenfassung" id="zusammenfassung">
+      <!-- Wird dynamisch befüllt -->
+    </div>
+
+    <div style="margin-top:32px;display:flex;gap:14px;align-items:center">
+      <button class="btn primaer gross" onclick="abschliessen()">
+        🎮 Quiz starten!
+      </button>
+      <button class="btn glas" onclick="abschliessen(true)">
+        Einstellungen öffnen
+      </button>
+    </div>
+  </div>
+
+</div><!-- haupt -->
+
+<!-- ╔════════════════════ NAVIGATION ════════════════════╗ -->
+<div class="nav-leiste">
+  <button class="btn glas" id="zurueck-btn" onclick="zurueck()" style="display:none">
+    ← Zurück
+  </button>
+  <span class="spacer"></span>
+  <button class="btn glas" id="ueberspringen-btn" onclick="ueberspringen()">
+    Überspringen →
+  </button>
+</div>
+
+<script>
+// ═══════════════════════ STATE ═══════════════════════
+let aktSchritt   = 0;
+const MAX_SCHRITT = 4;
+
+// Sync-Status für Zusammenfassung
+let status = {
+  wlan:  {verbunden: false, ssid: '', ip: ''},
+  cloud: {modus: '',  name: '', email: ''},
+};
+
+let ausgewaehltSsid    = '';
+let ausgewaehltSecured = false;
+
+// ═══════════════════════ INIT ═══════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  // Aktuellen Status laden
+  try {
+    const r = await fetch('/api/setup/status');
+    status = await r.json();
+  } catch(_) {}
+
+  // WLAN-Banner zeigen wenn bereits verbunden
+  if (status.wlan.verbunden) {
+    zeige_wlan_banner(true, status.wlan.ssid, status.wlan.ip);
+  }
+
+  // Enter-Taste
+  document.getElementById('wlan-pw').addEventListener('keydown', e => { if(e.key==='Enter') wlan_verbinden(); });
+  document.getElementById('k-pw').addEventListener('keydown',   e => { if(e.key==='Enter') konto_anmelden(); });
+});
+
+// ═══════════════════════ SCHRITT-NAVIGATION ═══════════════════════
+function goto_schritt(n) {
+  const alt = document.getElementById('inhalt-' + aktSchritt);
+  alt.classList.add('verlassen');
+  setTimeout(() => alt.classList.remove('aktiv', 'verlassen'), 350);
+
+  aktSchritt = n;
+
+  const neu = document.getElementById('inhalt-' + n);
+  neu.classList.add('aktiv');
+
+  // Progress-Indikatoren aktualisieren
+  for (let i=1; i<=4; i++) {
+    const k = document.getElementById('sk-'+i);
+    const l = document.getElementById('sl-'+i);
+    const ln = document.getElementById('sl-l'+i);
+    if (i < n) {
+      k.classList.add('fertig'); k.textContent = '✓';
+      l.className = 'schritt-label fertig';
+      if(ln) ln.classList.add('fertig');
+    } else if (i === n) {
+      k.classList.remove('fertig'); k.textContent = i; k.classList.add('aktiv');
+      l.className = 'schritt-label aktiv';
+      if(ln) ln.classList.remove('fertig');
+    } else {
+      k.classList.remove('fertig','aktiv'); k.textContent = i;
+      l.className = 'schritt-label';
+      if(ln) ln.classList.remove('fertig');
+    }
+  }
+
+  // Zurück-Button
+  document.getElementById('zurueck-btn').style.display    = n > 0 ? 'inline-flex' : 'none';
+  // Überspringen-Button
+  document.getElementById('ueberspringen-btn').style.display = (n >= 1 && n <= 3) ? 'inline-flex' : 'none';
+
+  // Schritt-spezifische Aktionen
+  if (n === 3) lade_qr();
+  if (n === 4) zeige_zusammenfassung();
+}
+
+function zurueck() {
+  if (aktSchritt > 0) goto_schritt(aktSchritt - 1);
+}
+
+function ueberspringen() {
+  goto_schritt(aktSchritt + 1);
+}
+
+// ═══════════════════════ WLAN ═══════════════════════
+async function wlan_scannen() {
+  const btn  = document.getElementById('scan-btn');
+  const liste = document.getElementById('netz-liste');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Scanne…';
+  liste.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.3);font-size:14px">Suche nach Netzwerken…</div>';
+
+  try {
+    const r = await fetch('/api/setup/wlan/scan');
+    if (!r.ok) {
+      const err = await r.json();
+      throw new Error(err.error);
+    }
+    const netze = await r.json();
+
+    if (!netze.length) {
+      liste.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.3);font-size:14px">Keine Netzwerke gefunden.</div>';
+    } else {
+      liste.innerHTML = netze.map(n => `
+        <div class="netz-item" onclick="waehle_netz(this,'${esc(n.ssid)}',${n.secured})" data-ssid="${esc(n.ssid)}">
+          <span class="netz-name">${esc(n.ssid)}</span>
+          <span class="netz-rechts">
+            ${n.secured ? '<span class="lock-icon" title="Gesichert">🔒</span>' : ''}
+            <span class="signal-icon ${signal_klasse(n.signal)}">
+              <span></span><span></span><span></span><span></span>
+            </span>
+          </span>
+        </div>
+      `).join('');
+    }
+  } catch(e) {
+    liste.innerHTML = `<div style="padding:16px;font-size:14px;color:#f87171">⚠️ ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔄 Scannen';
+  }
+}
+
+function signal_klasse(s) {
+  if (s >= 75) return 's4';
+  if (s >= 50) return 's3';
+  if (s >= 25) return 's2';
+  return 's1';
+}
+
+function waehle_netz(el, ssid, secured) {
+  document.querySelectorAll('.netz-item').forEach(i => i.classList.remove('ausgewaehlt'));
+  el.classList.add('ausgewaehlt');
+  ausgewaehltSsid    = ssid;
+  ausgewaehltSecured = secured;
+  document.getElementById('ausgewaehlt-ssid').textContent = ssid;
+  document.getElementById('verbinden-karte').style.display = 'block';
+  if (!secured) {
+    document.getElementById('pw-bereich').classList.remove('sichtbar');
+  } else {
+    document.getElementById('pw-bereich').classList.add('sichtbar');
+    document.getElementById('wlan-pw').focus();
+  }
+  zeige_meldung('wlan-meldung','','');
+}
+
+async function wlan_verbinden() {
+  if (!ausgewaehltSsid) return;
+  const pw  = document.getElementById('wlan-pw').value;
+  const btn = document.getElementById('verbinden-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Verbinde…';
+  zeige_meldung('wlan-meldung','info','Verbinde mit ' + ausgewaehltSsid + '…');
+
+  try {
+    const r    = await fetch('/api/setup/wlan/verbinden', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ssid: ausgewaehltSsid, passwort: pw})
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+
+    status.wlan = {verbunden: true, ssid: ausgewaehltSsid, ip: data.ip};
+    zeige_wlan_banner(true, ausgewaehltSsid, data.ip);
+    zeige_meldung('wlan-meldung','erfolg','✅ Verbunden! IP: ' + data.ip);
+
+    setTimeout(() => goto_schritt(2), 1500);
+  } catch(e) {
+    zeige_meldung('wlan-meldung','fehler','❌ ' + (e.message || 'Verbindung fehlgeschlagen'));
+    btn.disabled = false;
+    btn.innerHTML = '🔗 Verbinden';
+  }
+}
+
+function zeige_wlan_banner(ok, ssid, ip) {
+  const b = document.getElementById('wlan-status-banner');
+  if (ok) {
+    b.style.display = 'block';
+    b.innerHTML = `
+      <div class="karte gruen" style="padding:12px 18px;display:flex;align-items:center;gap:12px">
+        <span class="pill ok"><span class="pill-dot"></span>Verbunden</span>
+        <span style="font-size:15px;font-weight:600">${esc(ssid || '')}</span>
+        ${ip ? `<span style="font-size:13px;color:rgba(255,255,255,.4);font-family:monospace">${ip}</span>` : ''}
+      </div>`;
+  } else {
+    b.style.display = 'none';
+  }
+}
+
+// ═══════════════════════ KONTO ═══════════════════════
+function toggle_url_feld() {
+  const feld  = document.getElementById('url-feld');
+  const pfeil = document.getElementById('url-pfeil');
+  const sichtbar = feld.style.display !== 'none';
+  feld.style.display = sichtbar ? 'none' : 'block';
+  pfeil.textContent  = sichtbar ? '▼' : '▲';
+}
+
+async function konto_anmelden() {
+  const url   = (document.getElementById('cloud-url').value || '').trim().replace(/\/$/,'');
+  const email = document.getElementById('k-email').value.trim();
+  const pw    = document.getElementById('k-pw').value;
+
+  if (!email || !pw) { zeige_meldung('konto-meldung','fehler','Bitte E-Mail und Passwort eingeben.'); return; }
+  if (!url)          { zeige_meldung('konto-meldung','fehler','Bitte die Cloud-Server-URL eingeben.'); toggle_url_feld(); return; }
+
+  const btn = document.getElementById('konto-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Verbinde mit Cloud…';
+  zeige_meldung('konto-meldung','info','Anmelden und Fragen laden…');
+
+  try {
+    const r    = await fetch('/api/cloud/sync', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({cloud_url: url, email, passwort: pw})
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+
+    status.cloud = {modus:'cloud', name: data.name, email};
+    zeige_meldung('konto-meldung','erfolg',`✅ ${data.anzahl} Fragen von ${data.name} geladen!`);
+    setTimeout(() => goto_schritt(3), 1200);
+  } catch(e) {
+    zeige_meldung('konto-meldung','fehler','❌ ' + (e.message || 'Verbindung fehlgeschlagen'));
+    btn.disabled = false;
+    btn.innerHTML = '☁️ Anmelden & Fragen laden';
+  }
+}
+
+async function gast_modus() {
+  try {
+    await fetch('/api/cloud/gast', {method:'POST'});
+    status.cloud = {modus:'gast', name:'Gast', email:''};
+  } catch(_) {}
+  goto_schritt(3);
+}
+
+// ═══════════════════════ QR-CODE / IP ═══════════════════════
+async function lade_qr() {
+  try {
+    const r    = await fetch('/api/setup/ip');
+    const data = await r.json();
+    document.getElementById('geraet-url').textContent = data.url || 'http://schlagfertig.local:5000';
+
+    // QR-Code versuchen
+    const qr = document.getElementById('qr-container');
+    const img = document.createElement('img');
+    img.style.cssText = 'width:100%;height:100%;object-fit:contain';
+    img.onerror = () => {
+      // Fallback: URL als Text anzeigen
+      qr.innerHTML = `<div class="qr-placeholder" style="color:#1a1a2e;font-size:13px;line-height:1.5">
+        <div style="font-size:11px;font-weight:700;margin-bottom:4px">URL öffnen:</div>
+        ${data.url || 'http://schlagfertig.local:5000'}
+      </div>`;
+    };
+    img.onload = () => { qr.innerHTML = ''; qr.appendChild(img); };
+    img.src = '/api/setup/qr?t=' + Date.now();
+  } catch(_) {
+    document.getElementById('geraet-url').textContent = 'http://schlagfertig.local:5000';
+  }
+}
+
+// ═══════════════════════ ZUSAMMENFASSUNG ═══════════════════════
+async function zeige_zusammenfassung() {
+  // Frischer Status vom Server
+  try {
+    const r = await fetch('/api/setup/status');
+    const s = await r.json();
+    status.wlan  = s.wlan;
+    status.cloud = s.cloud;
+  } catch(_) {}
+
+  const items = [
+    {
+      icon: '📶',
+      titel: status.wlan.verbunden
+        ? (status.wlan.ssid || 'LAN-Kabel')
+        : 'Kein WLAN',
+      sub: status.wlan.verbunden
+        ? (status.wlan.ip ? `IP: ${status.wlan.ip}` : 'Verbunden')
+        : 'Übersprungen – per LAN oder später einrichten',
+      ok: status.wlan.verbunden,
+    },
+    {
+      icon: '☁️',
+      titel: status.cloud.modus === 'cloud'
+        ? `${status.cloud.name}`
+        : (status.cloud.modus === 'gast' ? 'Gastmodus' : 'Kein Konto'),
+      sub: status.cloud.modus === 'cloud'
+        ? status.cloud.email
+        : (status.cloud.modus === 'gast' ? '15 Standardfragen geladen' : 'Übersprungen'),
+      ok: !!status.cloud.modus,
+    },
+    {
+      icon: '📱',
+      titel: 'Moderator-App',
+      sub: 'QR-Code scannen oder URL öffnen',
+      ok: true,
+    },
+  ];
+
+  document.getElementById('zusammenfassung').innerHTML = items.map(item => `
+    <div class="zusammen-item">
+      <span class="zusammen-icon">${item.icon}</span>
+      <div class="zusammen-text">
+        <strong>${esc(item.titel)}</strong>
+        <span>${esc(item.sub)}</span>
+      </div>
+      <span class="zusammen-status">
+        <span class="pill ${item.ok ? 'ok' : 'warnung'}">
+          <span class="pill-dot"></span>
+          ${item.ok ? 'Bereit' : 'Übersprungen'}
+        </span>
+      </span>
+    </div>
+  `).join('');
+}
+
+async function abschliessen(zuEditor = false) {
+  try { await fetch('/api/setup/abschliessen', {method:'POST'}); } catch(_) {}
+  window.location.href = zuEditor ? '/editor' : '/editor';
+}
+
+// ═══════════════════════ HILFSFUNKTIONEN ═══════════════════════
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function zeige_meldung(id, typ, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'meldung';
+  if (typ && text) { el.classList.add(typ); el.textContent = text; }
+}
+</script>
+</body>
+</html>
