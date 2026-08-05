@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schlagfertig Cloud</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f0f0ec;color:#1a1a1a;font-size:15px;min-height:100vh}
+
+/* ── HEADER ── */
+header{background:#1a1a2e;color:#fff;padding:0 24px;display:flex;align-items:center;gap:12px;height:56px;position:sticky;top:0;z-index:100}
+.logo{font-size:18px;font-weight:800;letter-spacing:-.5px}
+.logo span{color:#E24B4A}
+.logo-badge{background:rgba(255,255,255,.12);color:#aaa;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:.5px}
+.header-r{margin-left:auto;display:flex;align-items:center;gap:10px}
+.user-chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px}
+.user-chip:hover{background:rgba(255,255,255,.18)}
+.user-chip .dot{width:7px;height:7px;border-radius:50%;background:#2d8a4e}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 18px;border-radius:10px;border:1.5px solid #ddd;background:#fff;cursor:pointer;font-size:14px;font-weight:500;transition:all .15s;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.btn:hover{background:#f5f5f5;transform:translateY(-1px)}
+.btn.primaer{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.btn.primaer:hover{background:#2a2a4e}
+.btn.gruen{background:#2d8a4e;color:#fff;border-color:#2d8a4e}
+.btn.gruen:hover{background:#237a40}
+.btn.rot{background:#c0392b;color:#fff;border-color:#c0392b}
+.btn.rot:hover{background:#a93226}
+.btn.grau{background:#888;color:#fff;border-color:#888}
+.btn.klein{padding:6px 12px;font-size:13px}
+.btn.icon-btn{padding:7px 10px;border-radius:8px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* ── AUTH ── */
+#auth-view{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.auth-box{background:#fff;border-radius:20px;border:1px solid #e0e0e0;padding:40px;width:100%;max-width:420px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-logo .big{font-size:32px;font-weight:900;letter-spacing:-1px}
+.auth-logo .big span{color:#E24B4A}
+.auth-logo .sub{color:#888;font-size:13px;margin-top:4px}
+.auth-tabs{display:flex;background:#f5f5f5;border-radius:10px;padding:3px;margin-bottom:24px;gap:3px}
+.auth-tab{flex:1;padding:8px;border:none;background:transparent;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;color:#666;transition:.15s}
+.auth-tab.aktiv{background:#fff;color:#1a1a2e;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+/* ── FORM ── */
+.form-gruppe{margin-bottom:16px}
+.form-label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:5px}
+.form-input{width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid #ddd;font-size:14px;font-family:inherit;transition:border-color .15s;background:#fff}
+.form-input:focus{outline:none;border-color:#1a1a2e}
+.form-input.fehler{border-color:#c0392b}
+textarea.form-input{resize:vertical;min-height:80px}
+select.form-input{cursor:pointer}
+.form-hilfe{font-size:12px;color:#888;margin-top:4px}
+
+/* ── FEHLER / ERFOLG ── */
+.meldung{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:500;margin-bottom:16px;display:none}
+.meldung.fehler{background:#fef2f2;border:1px solid #fca5a5;color:#c0392b}
+.meldung.erfolg{background:#f0fdf4;border:1px solid #86efac;color:#166534}
+.meldung.info{background:#eff6ff;border:1px solid #93c5fd;color:#1e40af}
+.meldung.sichtbar{display:block}
+
+/* ── APP LAYOUT ── */
+#app-view{display:none}
+#app-view.aktiv{display:block}
+.app-nav{background:#fff;border-bottom:1px solid #e5e5e5;padding:0 24px;display:flex;gap:0;overflow-x:auto}
+.nav-tab{padding:14px 20px;border:none;background:transparent;font-size:14px;font-weight:500;cursor:pointer;color:#666;border-bottom:2px solid transparent;white-space:nowrap;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.nav-tab:hover{color:#1a1a2e}
+.nav-tab.aktiv{color:#1a1a2e;border-bottom-color:#E24B4A;font-weight:700}
+.nav-badge{background:#E24B4A;color:#fff;border-radius:10px;font-size:11px;padding:1px 6px;font-weight:700}
+
+.app-inhalt{max-width:1100px;margin:0 auto;padding:24px}
+.ansicht{display:none}
+.ansicht.aktiv{display:block}
+
+/* ── FILTER-BAR ── */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;background:#fff;padding:14px;border-radius:12px;border:1px solid #e5e5e5}
+.filter-bar .form-input{width:auto;flex:1;min-width:120px;padding:8px 12px}
+.filter-bar .such-input{min-width:200px;flex:2}
+.chip-gruppe{display:flex;gap:4px}
+.chip{padding:5px 12px;border-radius:20px;border:1.5px solid #ddd;background:#fff;cursor:pointer;font-size:13px;font-weight:500;transition:.15s}
+.chip:hover{border-color:#1a1a2e}
+.chip.aktiv{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.chip.gruen.aktiv{background:#2d8a4e;border-color:#2d8a4e}
+.chip.orange.aktiv{background:#e67e22;border-color:#e67e22}
+.chip.rot.aktiv{background:#c0392b;border-color:#c0392b}
+.chip.lila.aktiv{background:#8e44ad;border-color:#8e44ad}
+
+/* ── STATS BAR ── */
+.stats-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;color:#666;font-size:13px}
+.stats-bar strong{color:#1a1a2e}
+.stats-bar .spacer{flex:1}
+
+/* ── FRAGEN-LISTE ── */
+.fragen-liste{display:flex;flex-direction:column;gap:8px}
+.frage-karte{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:14px;transition:.15s}
+.frage-karte:hover{border-color:#1a1a2e;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.frage-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px}
+.frage-icon.frei{background:#dbeafe}
+.frage-icon.mc{background:#fce7f3}
+.frage-body{flex:1;min-width:0}
+.frage-text{font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frage-antwort{font-size:13px;color:#555}
+.frage-meta{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.badge{padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge.kat{background:#f0f0ec;color:#666}
+.badge.leicht{background:#dcfce7;color:#166534}
+.badge.mittel{background:#fef3c7;color:#92400e}
+.badge.schwer{background:#fee2e2;color:#991b1b}
+.badge.mc{background:#fce7f3;color:#9d174d}
+.frage-aktionen{display:flex;gap:6px;flex-shrink:0;align-items:center}
+
+/* ── LEER-ZUSTAND ── */
+.leer{text-align:center;padding:60px 20px;color:#999}
+.leer .icon{font-size:48px;margin-bottom:12px}
+.leer p{font-size:14px}
+
+/* ── FRAGE-FORMULAR ── */
+.frage-form{background:#fff;border-radius:16px;border:1px solid #e5e5e5;padding:28px;max-width:700px}
+.form-titel{font-size:20px;font-weight:700;margin-bottom:4px}
+.form-untertitel{font-size:13px;color:#888;margin-bottom:24px}
+.form-reihe{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.form-reihe{grid-template-columns:1fr}}
+.radio-gruppe{display:flex;gap:8px;flex-wrap:wrap}
+.radio-chip{padding:7px 16px;border-radius:20px;border:2px solid #ddd;cursor:pointer;font-size:13px;font-weight:500;transition:.15s}
+.radio-chip:hover{border-color:#1a1a2e}
+.radio-chip.aktiv.leicht{border-color:#2d8a4e;background:#dcfce7;color:#166534}
+.radio-chip.aktiv.mittel{border-color:#e67e22;background:#fef3c7;color:#92400e}
+.radio-chip.aktiv.schwer{border-color:#c0392b;background:#fee2e2;color:#991b1b}
+.modus-toggle{display:flex;background:#f5f5f5;border-radius:10px;padding:3px;gap:3px;width:fit-content}
+.modus-btn{padding:7px 18px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:.15s;color:#666}
+.modus-btn.aktiv{background:#fff;color:#1a1a2e;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.mc-bereich{margin-top:16px;padding-top:16px;border-top:1px solid #eee}
+.mc-antworten{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+@media(max-width:500px){.mc-antworten{grid-template-columns:1fr}}
+.mc-antwort-wrap{position:relative;display:flex;align-items:center;gap:8px}
+.mc-buchstabe{font-weight:700;font-size:13px;color:#999;width:18px;flex-shrink:0}
+.mc-richtig-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.mc-richtig-btn{padding:5px 14px;border:2px solid #ddd;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+.mc-richtig-btn:hover{border-color:#2d8a4e}
+.mc-richtig-btn.aktiv{border-color:#2d8a4e;background:#dcfce7;color:#166534}
+.form-aktionen{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}
+
+/* ── CSV ── */
+.csv-bereich{max-width:600px}
+.upload-zone{border:2px dashed #ddd;border-radius:12px;padding:48px;text-align:center;cursor:pointer;transition:.15s;background:#fff}
+.upload-zone:hover,.upload-zone.drag{border-color:#1a1a2e;background:#f8f8ff}
+.upload-zone .icon{font-size:40px;margin-bottom:12px}
+.upload-zone p{color:#888;font-size:14px}
+.upload-zone strong{color:#1a1a2e}
+.upload-info{margin-top:12px;font-size:13px;color:#2d8a4e;font-weight:500;display:none}
+.csv-optionen{background:#fff;border-radius:12px;border:1px solid #e5e5e5;padding:20px;margin-top:16px}
+.csv-optionen h3{font-size:15px;font-weight:700;margin-bottom:14px}
+.option-reihe{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.option-chip{padding:7px 16px;border:2px solid #ddd;border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;transition:.15s}
+.option-chip:hover{border-color:#1a1a2e}
+.option-chip.aktiv{border-color:#1a1a2e;background:#f0f0ff;color:#1a1a2e}
+.csv-format{background:#f8f8f8;border-radius:10px;padding:14px;font-size:12px;font-family:monospace;color:#555;margin-top:12px;overflow-x:auto;white-space:pre}
+
+/* ── PROFIL ── */
+.profil-karten{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
+.profil-karte{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:20px;text-align:center}
+.profil-karte .zahl{font-size:36px;font-weight:900;color:#1a1a2e}
+.profil-karte .label{font-size:13px;color:#888;margin-top:4px}
+.profil-info{background:#fff;border-radius:14px;border:1px solid #e5e5e5;padding:24px;max-width:500px}
+.profil-info h3{font-size:16px;font-weight:700;margin-bottom:16px}
+.profil-zeile{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0}
+.profil-zeile:last-child{border-bottom:none}
+.profil-zeile .pz-label{color:#888;font-size:13px;width:100px;flex-shrink:0}
+.profil-zeile .pz-wert{font-weight:500}
+
+/* ── SPINNER ── */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner.dunkel{border-color:rgba(0,0,0,.1);border-top-color:#1a1a2e}
+
+/* ── PAGINIERUNG ── */
+.paging{display:flex;justify-content:center;gap:6px;margin-top:16px}
+.page-btn{padding:6px 12px;border-radius:8px;border:1.5px solid #ddd;background:#fff;cursor:pointer;font-size:13px;transition:.15s}
+.page-btn:hover{background:#f5f5f5}
+.page-btn.aktiv{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .app-inhalt{padding:16px}
+  .fragen-liste .frage-karte{flex-wrap:wrap}
+  .fragen-liste .frage-aktionen{width:100%;justify-content:flex-end}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ AUTH VIEW ═══════════════════════════ -->
+<div id="auth-view">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="big">SCHLAG<span>FERTIG</span></div>
+      <div class="sub">☁️ Cloud-Fragenverwaltung</div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab aktiv" onclick="zeige_auth_tab('login')">Anmelden</button>
+      <button class="auth-tab" onclick="zeige_auth_tab('register')">Registrieren</button>
+    </div>
+    <div id="auth-meldung" class="meldung"></div>
+
+    <!-- LOGIN -->
+    <div id="login-form">
+      <div class="form-gruppe">
+        <label class="form-label">E-Mail-Adresse</label>
+        <input id="l-email" type="email" class="form-input" placeholder="name@beispiel.de" autocomplete="email">
+      </div>
+      <div class="form-gruppe">
+        <label class="form-label">Passwort</label>
+        <input id="l-pw" type="password" class="form-input" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn primaer" style="width:100%;justify-content:center" id="login-btn" onclick="do_login()">
+        Anmelden
+      </button>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="register-form" style="display:none">
+      <div class="form-gruppe">
+        <label class="form-label">Name</label>
+        <input id="r-name" type="text" class="form-input" placeholder="Max Mustermann">
+      </div>
+      <div class="form-gruppe">
+        <label class="form-label">E-Mail-Adresse</label>
+        <input id="r-email" type="email" class="form-input" placeholder="name@beispiel.de" autocomplete="email">
+      </div>
+      <div class="form-gruppe">
+        <label class="form-label">Passwort <span style="color:#999;font-weight:400">(min. 6 Zeichen)</span></label>
+        <input id="r-pw" type="password" class="form-input" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <button class="btn gruen" style="width:100%;justify-content:center" id="reg-btn" onclick="do_register()">
+        Konto erstellen
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ APP VIEW ════════════════════════════ -->
+<div id="app-view">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">SCHLAG<span>FERTIG</span></div>
+    <div class="logo-badge">CLOUD</div>
+    <div class="header-r">
+      <div class="user-chip" onclick="zeige_tab('profil')">
+        <span class="dot"></span>
+        <span id="header-name">–</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- TAB NAV -->
+  <div class="app-nav">
+    <button class="nav-tab aktiv" data-tab="fragen" onclick="zeige_tab('fragen')">
+      📋 Fragen
+      <span class="nav-badge" id="fragen-badge" style="display:none"></span>
+    </button>
+    <button class="nav-tab" data-tab="neu" onclick="zeige_tab('neu')">➕ Hinzufügen</button>
+    <button class="nav-tab" data-tab="csv" onclick="zeige_tab('csv')">📤 CSV-Import</button>
+    <button class="nav-tab" data-tab="profil" onclick="zeige_tab('profil')">👤 Profil</button>
+  </div>
+
+  <div class="app-inhalt">
+
+    <!-- ── FRAGEN ── -->
+    <div id="ansicht-fragen" class="ansicht aktiv">
+      <div class="filter-bar">
+        <input id="filter-suche" class="form-input such-input" placeholder="🔍 Suche nach Frage oder Antwort…" oninput="debounce_laden()">
+        <select id="filter-kat" class="form-input" onchange="lade_fragen()">
+          <option value="">Alle Kategorien</option>
+        </select>
+        <div class="chip-gruppe">
+          <span class="chip" data-schw="" onclick="toggle_schw(this)">Alle</span>
+          <span class="chip gruen" data-schw="leicht" onclick="toggle_schw(this)">Leicht</span>
+          <span class="chip orange" data-schw="mittel" onclick="toggle_schw(this)">Mittel</span>
+          <span class="chip rot" data-schw="schwer" onclick="toggle_schw(this)">Schwer</span>
+        </div>
+        <div class="chip-gruppe">
+          <span class="chip" data-mod="" onclick="toggle_mod(this)">Alle</span>
+          <span class="chip" data-mod="frei" onclick="toggle_mod(this)">Freitext</span>
+          <span class="chip lila" data-mod="mc" onclick="toggle_mod(this)">MC</span>
+        </div>
+      </div>
+
+      <div class="stats-bar">
+        <span id="fragen-anzahl" style="color:#888">Lädt…</span>
+        <span class="spacer"></span>
+        <button class="btn klein primaer" onclick="zeige_tab('neu')">➕ Neue Frage</button>
+      </div>
+
+      <div id="fragen-liste" class="fragen-liste">
+        <div class="leer"><div class="icon">⏳</div><p>Fragen werden geladen…</p></div>
+      </div>
+
+      <div class="paging" id="paging" style="display:none"></div>
+    </div>
+
+    <!-- ── NEU / BEARBEITEN ── -->
+    <div id="ansicht-neu" class="ansicht">
+      <div class="frage-form">
+        <div class="form-titel" id="form-titel">Neue Frage</div>
+        <div class="form-untertitel" id="form-untertitel">Füge eine neue Frage zur Bibliothek hinzu.</div>
+        <div id="form-meldung" class="meldung"></div>
+
+        <div class="form-gruppe">
+          <label class="form-label">Frage *</label>
+          <textarea id="f-frage" class="form-input" rows="3" placeholder="Wie lautet die Frage?"></textarea>
+        </div>
+
+        <div class="form-gruppe">
+          <label class="form-label">Antwort *</label>
+          <input id="f-antwort" type="text" class="form-input" placeholder="Korrekte Antwort">
+        </div>
+
+        <div class="form-reihe">
+          <div class="form-gruppe">
+            <label class="form-label">Kategorie</label>
+            <input id="f-kat" type="text" class="form-input" placeholder="z.B. Geografie" list="kat-list">
+            <datalist id="kat-list"></datalist>
+          </div>
+          <div class="form-gruppe">
+            <label class="form-label">Schwierigkeit</label>
+            <div class="radio-gruppe">
+              <span class="radio-chip aktiv leicht" data-schw="leicht" onclick="waehle_schw(this)">😊 Leicht</span>
+              <span class="radio-chip mittel"        data-schw="mittel" onclick="waehle_schw(this)">🤔 Mittel</span>
+              <span class="radio-chip schwer"        data-schw="schwer" onclick="waehle_schw(this)">🔥 Schwer</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-gruppe">
+          <label class="form-label">Fragemodus</label>
+          <div class="modus-toggle">
+            <button class="modus-btn aktiv" onclick="waehle_modus('frei',this)">📝 Freitext</button>
+            <button class="modus-btn"       onclick="waehle_modus('mc',this)">🔡 Multiple Choice</button>
+          </div>
+        </div>
+
+        <!-- MC-Felder -->
+        <div id="mc-bereich" class="mc-bereich" style="display:none">
+          <div class="form-label" style="margin-bottom:10px">Antwortoptionen</div>
+          <div class="mc-antworten">
+            <div class="mc-antwort-wrap"><span class="mc-buchstabe">A</span><input id="mc-a" class="form-input" placeholder="Option A"></div>
+            <div class="mc-antwort-wrap"><span class="mc-buchstabe">B</span><input id="mc-b" class="form-input" placeholder="Option B"></div>
+            <div class="mc-antwort-wrap"><span class="mc-buchstabe">C</span><input id="mc-c" class="form-input" placeholder="Option C"></div>
+            <div class="mc-antwort-wrap"><span class="mc-buchstabe">D</span><input id="mc-d" class="form-input" placeholder="Option D"></div>
+          </div>
+          <div class="form-label" style="margin-bottom:6px">Richtige Antwort</div>
+          <div class="mc-richtig-row">
+            <span class="mc-richtig-btn" data-idx="0" onclick="waehle_richtig(this)">A</span>
+            <span class="mc-richtig-btn" data-idx="1" onclick="waehle_richtig(this)">B</span>
+            <span class="mc-richtig-btn" data-idx="2" onclick="waehle_richtig(this)">C</span>
+            <span class="mc-richtig-btn" data-idx="3" onclick="waehle_richtig(this)">D</span>
+          </div>
+        </div>
+
+        <div class="form-aktionen">
+          <button id="form-save-btn" class="btn gruen" onclick="speichere_frage()">💾 Speichern</button>
+          <button id="form-cancel-btn" class="btn grau" onclick="abbrechen_bearbeiten()" style="display:none">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CSV IMPORT ── -->
+    <div id="ansicht-csv" class="ansicht">
+      <div class="csv-bereich">
+        <div id="csv-meldung" class="meldung"></div>
+
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('csv-datei').click()"
+             ondragover="ev.preventDefault();this.classList.add('drag')"
+             ondragleave="this.classList.remove('drag')"
+             ondrop="on_drop(event)">
+          <div class="icon">📤</div>
+          <p><strong>CSV-Datei auswählen</strong><br>oder hier reinziehen</p>
+          <div class="upload-info" id="upload-info"></div>
+        </div>
+        <input type="file" id="csv-datei" accept=".csv" style="display:none" onchange="csv_ausgewaehlt(this)">
+
+        <div class="csv-optionen">
+          <h3>Importoptionen</h3>
+          <div style="font-size:13px;color:#666;margin-bottom:10px">Importmodus</div>
+          <div class="option-reihe">
+            <span class="option-chip aktiv" data-modus="hinzufuegen" onclick="waehle_csv_modus(this)">➕ Hinzufügen</span>
+            <span class="option-chip" data-modus="ersetzen" onclick="waehle_csv_modus(this)">🔄 Ersetzen</span>
+          </div>
+          <button class="btn gruen" id="csv-import-btn" onclick="starte_import()" disabled>
+            📥 Importieren
+          </button>
+          <a class="btn" style="margin-left:8px" href="/api/csv-vorlage" download>📄 Vorlage herunterladen</a>
+
+          <div style="font-size:13px;font-weight:600;color:#555;margin-top:20px;margin-bottom:8px">CSV-Format</div>
+          <div class="csv-format">frage,antwort,kategorie,schwierigkeit,antwort_a,antwort_b,antwort_c,antwort_d,richtige_antwort
+Was ist die Hauptstadt von Frankreich?,Paris,Geografie,leicht,Berlin,Paris,Madrid,Rom,B
+Wie viele Planeten?,8,Astronomie,leicht,,,,,</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROFIL ── -->
+    <div id="ansicht-profil" class="ansicht">
+      <div class="profil-karten">
+        <div class="profil-karte">
+          <div class="zahl" id="p-fragen">–</div>
+          <div class="label">Fragen</div>
+        </div>
+        <div class="profil-karte">
+          <div class="zahl" id="p-kat">–</div>
+          <div class="label">Kategorien</div>
+        </div>
+      </div>
+
+      <div class="profil-info">
+        <h3>Mein Konto</h3>
+        <div class="profil-zeile">
+          <span class="pz-label">Name</span>
+          <span class="pz-wert" id="p-name">–</span>
+        </div>
+        <div class="profil-zeile">
+          <span class="pz-label">E-Mail</span>
+          <span class="pz-wert" id="p-email">–</span>
+        </div>
+        <div style="margin-top:20px">
+          <button class="btn rot" onclick="do_logout()">🚪 Abmelden</button>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;padding:16px;background:#fff;border-radius:12px;border:1px solid #e5e5e5;max-width:500px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px">📱 Gerät synchronisieren</div>
+        <div style="font-size:13px;color:#666;line-height:1.6">
+          Melde dich auf dem Schlagfertig-Gerät unter <strong>/login</strong> mit deiner E-Mail und deinem Passwort an.
+          Alle deine Fragen werden automatisch auf das Gerät geladen.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- app-inhalt -->
+</div><!-- app-view -->
+
+<script>
+// ── STATE ──
+let token      = localStorage.getItem('sg_token') || null;
+let userName   = localStorage.getItem('sg_name')  || '';
+let fragen_all = [];
+let kategorien = [];
+let edit_id    = null;
+let akt_schw   = '';
+let akt_mod    = '';
+let csv_modus  = 'hinzufuegen';
+let csv_datei  = null;
+let page       = 1;
+const PAGE_SIZE = 20;
+let suche_timer = null;
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+  if (token) {
+    zeige_app();
+  } else {
+    document.getElementById('auth-view').style.display = 'flex';
+  }
+  // Enter-Taste in Login
+  ['l-email','l-pw'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') do_login(); });
+  });
+  ['r-name','r-email','r-pw'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') do_register(); });
+  });
+});
+
+// ── AUTH ──
+function zeige_auth_tab(tab) {
+  document.getElementById('login-form').style.display    = tab==='login'    ? 'block' : 'none';
+  document.getElementById('register-form').style.display = tab==='register' ? 'block' : 'none';
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('aktiv', (i===0)===(tab==='login')));
+  zeige_meldung('auth-meldung','','');
+}
+
+async function do_login() {
+  const email = document.getElementById('l-email').value.trim();
+  const pw    = document.getElementById('l-pw').value;
+  if (!email || !pw) { zeige_meldung('auth-meldung','fehler','Bitte alle Felder ausfüllen.'); return; }
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Anmelden…';
+  try {
+    const r = await api_post('/api/auth/login', {email, passwort: pw});
+    token = r.token; userName = r.name;
+    localStorage.setItem('sg_token', token);
+    localStorage.setItem('sg_name',  userName);
+    zeige_app();
+  } catch(e) {
+    zeige_meldung('auth-meldung','fehler', e.message || 'Anmeldung fehlgeschlagen.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Anmelden';
+  }
+}
+
+async function do_register() {
+  const name  = document.getElementById('r-name').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  const pw    = document.getElementById('r-pw').value;
+  if (!name || !email || !pw) { zeige_meldung('auth-meldung','fehler','Bitte alle Felder ausfüllen.'); return; }
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Konto wird erstellt…';
+  try {
+    const r = await api_post('/api/auth/register', {name, email, passwort: pw});
+    token = r.token; userName = r.name;
+    localStorage.setItem('sg_token', token);
+    localStorage.setItem('sg_name',  userName);
+    zeige_app();
+  } catch(e) {
+    zeige_meldung('auth-meldung','fehler', e.message || 'Registrierung fehlgeschlagen.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Konto erstellen';
+  }
+}
+
+async function do_logout() {
+  try { await api_post('/api/auth/logout', {}); } catch(_) {}
+  token = null; userName = '';
+  localStorage.removeItem('sg_token');
+  localStorage.removeItem('sg_name');
+  location.reload();
+}
+
+// ── APP ──
+function zeige_app() {
+  document.getElementById('auth-view').style.display = 'none';
+  document.getElementById('app-view').classList.add('aktiv');
+  document.getElementById('header-name').textContent = userName || 'Mein Konto';
+  lade_kategorien();
+  lade_fragen();
+  lade_profil();
+}
+
+function zeige_tab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('aktiv', t.dataset.tab===tab));
+  document.querySelectorAll('.ansicht').forEach(a => a.classList.remove('aktiv'));
+  document.getElementById('ansicht-'+tab).classList.add('aktiv');
+  if (tab==='fragen')  { lade_fragen(); }
+  if (tab==='profil')  { lade_profil(); }
+  if (tab==='neu' && !edit_id) { reset_form(); }
+}
+
+// ── FRAGEN LADEN ──
+async function lade_fragen() {
+  page = 1;
+  try {
+    const params = new URLSearchParams();
+    const suche = document.getElementById('filter-suche').value.trim();
+    const kat   = document.getElementById('filter-kat').value;
+    if (suche) params.set('suche', suche);
+    if (kat)   params.set('kategorie', kat);
+    if (akt_schw) params.set('schwierigkeit', akt_schw);
+    if (akt_mod)  params.set('modus', akt_mod);
+    const data = await api_get('/api/fragen?' + params);
+    fragen_all = data;
+    rendere_fragen();
+  } catch(e) {
+    document.getElementById('fragen-liste').innerHTML = `<div class="leer"><div class="icon">⚠️</div><p>${e.message}</p></div>`;
+  }
+}
+
+function rendere_fragen() {
+  const liste = document.getElementById('fragen-liste');
+  const anzEl = document.getElementById('fragen-anzahl');
+  const badge = document.getElementById('fragen-badge');
+  const total = fragen_all.length;
+  anzEl.innerHTML = `<strong>${total}</strong> Frage${total!==1?'n':''}`;
+  badge.textContent = total;
+  badge.style.display = total > 0 ? 'inline' : 'none';
+
+  const start = (page-1)*PAGE_SIZE;
+  const seite = fragen_all.slice(start, start+PAGE_SIZE);
+
+  if (!seite.length) {
+    liste.innerHTML = `<div class="leer"><div class="icon">🔍</div><p>Keine Fragen gefunden.</p></div>`;
+    document.getElementById('paging').style.display = 'none';
+    return;
+  }
+
+  liste.innerHTML = seite.map(f => `
+    <div class="frage-karte">
+      <div class="frage-icon ${f.modus}">
+        ${f.modus==='mc' ? '🔡' : '📝'}
+      </div>
+      <div class="frage-body">
+        <div class="frage-text" title="${esc(f.frage)}">${esc(f.frage)}</div>
+        <div class="frage-antwort">✓ ${esc(f.antwort)}</div>
+        <div class="frage-meta">
+          <span class="badge kat">${esc(f.kategorie)}</span>
+          <span class="badge ${f.schwierigkeit}">${f.schwierigkeit.charAt(0).toUpperCase()+f.schwierigkeit.slice(1)}</span>
+          ${f.modus==='mc' ? '<span class="badge mc">MC</span>' : ''}
+        </div>
+      </div>
+      <div class="frage-aktionen">
+        <button class="btn klein icon-btn" title="Bearbeiten" onclick="bearbeite_frage(${f.id})">✏️</button>
+        <button class="btn klein icon-btn rot" title="Löschen" onclick="loesche_frage(${f.id})">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+
+  rendere_paging(total);
+}
+
+function rendere_paging(total) {
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const paging = document.getElementById('paging');
+  if (pages <= 1) { paging.style.display='none'; return; }
+  paging.style.display = 'flex';
+  let html = '';
+  for (let i=1; i<=pages; i++) {
+    html += `<button class="page-btn ${i===page?'aktiv':''}" onclick="goto_page(${i})">${i}</button>`;
+  }
+  paging.innerHTML = html;
+}
+
+function goto_page(p) { page = p; rendere_fragen(); window.scrollTo(0,0); }
+
+function debounce_laden() {
+  clearTimeout(suche_timer);
+  suche_timer = setTimeout(lade_fragen, 300);
+}
+
+// ── FILTER ──
+function toggle_schw(el) {
+  akt_schw = el.dataset.schw;
+  document.querySelectorAll('.filter-bar [data-schw]').forEach(c => c.classList.remove('aktiv'));
+  el.classList.add('aktiv');
+  lade_fragen();
+}
+function toggle_mod(el) {
+  akt_mod = el.dataset.mod;
+  document.querySelectorAll('.filter-bar [data-mod]').forEach(c => c.classList.remove('aktiv'));
+  el.classList.add('aktiv');
+  lade_fragen();
+}
+
+// ── KATEGORIEN ──
+async function lade_kategorien() {
+  try {
+    kategorien = await api_get('/api/fragen/kategorien');
+    const sel = document.getElementById('filter-kat');
+    const dl  = document.getElementById('kat-list');
+    sel.innerHTML = '<option value="">Alle Kategorien</option>' +
+      kategorien.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
+    dl.innerHTML = kategorien.map(k => `<option value="${esc(k)}">`).join('');
+  } catch(_) {}
+}
+
+// ── FRAGE FORMULR ──
+let akt_schw_form = 'leicht';
+let akt_modus_form = 'frei';
+let richtig_idx = 0;
+
+function waehle_schw(el) {
+  akt_schw_form = el.dataset.schw;
+  document.querySelectorAll('.radio-chip').forEach(c => c.classList.remove('aktiv'));
+  el.classList.add('aktiv');
+}
+function waehle_modus(modus, el) {
+  akt_modus_form = modus;
+  document.querySelectorAll('.modus-btn').forEach(b => b.classList.remove('aktiv'));
+  el.classList.add('aktiv');
+  document.getElementById('mc-bereich').style.display = modus==='mc' ? 'block' : 'none';
+}
+function waehle_richtig(el) {
+  richtig_idx = parseInt(el.dataset.idx);
+  document.querySelectorAll('.mc-richtig-btn').forEach(b => b.classList.remove('aktiv'));
+  el.classList.add('aktiv');
+}
+
+function reset_form() {
+  edit_id = null;
+  document.getElementById('form-titel').textContent = 'Neue Frage';
+  document.getElementById('form-untertitel').textContent = 'Füge eine neue Frage zur Bibliothek hinzu.';
+  document.getElementById('form-save-btn').textContent = '💾 Speichern';
+  document.getElementById('form-cancel-btn').style.display = 'none';
+  ['f-frage','f-antwort','f-kat','mc-a','mc-b','mc-c','mc-d'].forEach(id => document.getElementById(id).value='');
+  zeige_meldung('form-meldung','','');
+  waehle_schw(document.querySelector('.radio-chip.leicht'));
+  waehle_modus('frei', document.querySelector('.modus-btn'));
+  waehle_richtig(document.querySelector('[data-idx="0"]'));
+}
+
+function bearbeite_frage(id) {
+  const f = fragen_all.find(x => x.id===id);
+  if (!f) return;
+  edit_id = id;
+  zeige_tab('neu');
+  document.getElementById('form-titel').textContent = 'Frage bearbeiten';
+  document.getElementById('form-untertitel').textContent = `ID #${id}`;
+  document.getElementById('form-save-btn').textContent = '💾 Änderungen speichern';
+  document.getElementById('form-cancel-btn').style.display = 'inline-flex';
+  document.getElementById('f-frage').value  = f.frage;
+  document.getElementById('f-antwort').value= f.antwort;
+  document.getElementById('f-kat').value    = f.kategorie;
+  zeige_meldung('form-meldung','','');
+  // Schwierigkeit
+  const schw_el = document.querySelector(`.radio-chip[data-schw="${f.schwierigkeit}"]`);
+  if (schw_el) waehle_schw(schw_el);
+  // Modus
+  const mod_el = document.querySelector(`.modus-btn[onclick*="'${f.modus}'"]`);
+  if (mod_el) waehle_modus(f.modus, mod_el);
+  if (f.modus==='mc' && f.antworten_mc) {
+    ['a','b','c','d'].forEach((l,i) => {
+      document.getElementById('mc-'+l).value = f.antworten_mc[i] || '';
+    });
+    const ri = document.querySelector(`.mc-richtig-btn[data-idx="${f.richtige_antwort_index||0}"]`);
+    if (ri) waehle_richtig(ri);
+  }
+}
+
+function abbrechen_bearbeiten() {
+  edit_id = null;
+  reset_form();
+  zeige_tab('fragen');
+}
+
+async function speichere_frage() {
+  const frage  = document.getElementById('f-frage').value.trim();
+  const antwort= document.getElementById('f-antwort').value.trim();
+  const kat    = document.getElementById('f-kat').value.trim() || 'Allgemein';
+  if (!frage || !antwort) {
+    zeige_meldung('form-meldung','fehler','Frage und Antwort sind Pflichtfelder.'); return;
+  }
+  const payload = { frage, antwort, kategorie: kat, schwierigkeit: akt_schw_form, modus: akt_modus_form };
+  if (akt_modus_form==='mc') {
+    const opts = ['mc-a','mc-b','mc-c','mc-d'].map(id => document.getElementById(id).value.trim());
+    if (opts.some(o=>!o)) { zeige_meldung('form-meldung','fehler','Alle 4 Antwortoptionen müssen ausgefüllt sein.'); return; }
+    payload.antworten_mc = opts;
+    payload.richtige_antwort_index = richtig_idx;
+  }
+  const btn = document.getElementById('form-save-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Speichern…';
+  try {
+    if (edit_id) {
+      await api_put(`/api/fragen/${edit_id}`, payload);
+      zeige_meldung('form-meldung','erfolg','✅ Frage aktualisiert.');
+      edit_id = null;
+      document.getElementById('form-cancel-btn').style.display = 'none';
+      document.getElementById('form-titel').textContent = 'Neue Frage';
+      document.getElementById('form-untertitel').textContent = 'Füge eine neue Frage zur Bibliothek hinzu.';
+    } else {
+      await api_post('/api/fragen', payload);
+      zeige_meldung('form-meldung','erfolg','✅ Frage gespeichert!');
+      ['f-frage','f-antwort','mc-a','mc-b','mc-c','mc-d'].forEach(id => document.getElementById(id).value='');
+    }
+    lade_kategorien();
+    lade_fragen();
+    btn.textContent = '💾 Speichern';
+  } catch(e) {
+    zeige_meldung('form-meldung','fehler', e.message || 'Fehler beim Speichern.');
+  } finally {
+    btn.disabled = false;
+    if (!btn.textContent.includes('Speichern')) btn.textContent = '💾 Speichern';
+  }
+}
+
+async function loesche_frage(id) {
+  const f = fragen_all.find(x=>x.id===id);
+  if (!f) return;
+  if (!confirm(`Frage löschen?\n\n"${f.frage}"`)) return;
+  try {
+    await api_del(`/api/fragen/${id}`);
+    lade_fragen();
+    lade_kategorien();
+  } catch(e) { alert('Fehler: ' + e.message); }
+}
+
+// ── PROFIL ──
+async function lade_profil() {
+  try {
+    const p = await api_get('/api/profil');
+    document.getElementById('p-name').textContent   = p.name;
+    document.getElementById('p-email').textContent  = p.email;
+    document.getElementById('p-fragen').textContent = p.anzahl_fragen;
+    document.getElementById('p-kat').textContent    = p.anzahl_kategorien;
+    document.getElementById('header-name').textContent = p.name;
+  } catch(_) {}
+}
+
+// ── CSV IMPORT ──
+function waehle_csv_modus(el) {
+  csv_modus = el.dataset.modus;
+  document.querySelectorAll('.option-chip').forEach(c => c.classList.remove('aktiv'));
+  el.classList.add('aktiv');
+}
+
+function csv_ausgewaehlt(input) {
+  csv_datei = input.files[0];
+  if (!csv_datei) return;
+  document.getElementById('upload-info').style.display = 'block';
+  document.getElementById('upload-info').textContent = '📄 ' + csv_datei.name;
+  document.getElementById('csv-import-btn').disabled = false;
+  zeige_meldung('csv-meldung','','');
+}
+
+function on_drop(ev) {
+  ev.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  const f = ev.dataTransfer.files[0];
+  if (f && f.name.endsWith('.csv')) {
+    csv_datei = f;
+    document.getElementById('upload-info').style.display = 'block';
+    document.getElementById('upload-info').textContent = '📄 ' + f.name;
+    document.getElementById('csv-import-btn').disabled = false;
+  } else {
+    zeige_meldung('csv-meldung','fehler','Nur CSV-Dateien erlaubt.');
+  }
+}
+
+async function starte_import() {
+  if (!csv_datei) return;
+  const btn = document.getElementById('csv-import-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Importiere…';
+  const formData = new FormData();
+  formData.append('file', csv_datei);
+  try {
+    const resp = await fetch(`/api/csv-import?modus=${csv_modus}`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: formData
+    });
+    const r = await resp.json();
+    if (!resp.ok) throw new Error(r.error || 'Fehler');
+    let msg = `✅ ${r.anzahl} Frage${r.anzahl!==1?'n':''} importiert.`;
+    if (r.fehler && r.fehler.length) msg += ` (${r.fehler.length} übersprungen)`;
+    zeige_meldung('csv-meldung','erfolg', msg);
+    csv_datei = null;
+    document.getElementById('upload-info').style.display='none';
+    document.getElementById('csv-datei').value='';
+    lade_fragen(); lade_kategorien();
+  } catch(e) {
+    zeige_meldung('csv-meldung','fehler', e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '📥 Importieren';
+  }
+}
+
+// ── API HELPERS ──
+async function api_get(url) {
+  const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'API-Fehler');
+  if (r.status===401) { do_logout(); }
+  return data;
+}
+async function api_post(url, body) {
+  const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:JSON.stringify(body) });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'API-Fehler');
+  return data;
+}
+async function api_put(url, body) {
+  const r = await fetch(url, { method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:JSON.stringify(body) });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'API-Fehler');
+  return data;
+}
+async function api_del(url) {
+  const r = await fetch(url, { method:'DELETE', headers:{'Authorization':'Bearer '+token} });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'API-Fehler');
+  return data;
+}
+
+// ── HILFSFUNKTIONEN ──
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function zeige_meldung(id, typ, text) {
+  const el = document.getElementById(id);
+  el.className = 'meldung';
+  if (typ && text) {
+    el.classList.add(typ, 'sichtbar');
+    el.textContent = text;
+  }
+}
+</script>
+</body>
+</html>

@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify, send_from_directory, redirect, Response
 from flask_socketio import SocketIO, emit
-import json, os, csv, io, subprocess
+import json, os, csv, io, subprocess, urllib.request, urllib.parse
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'schlagfertig2024'
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
-BASIS       = os.path.dirname(os.path.abspath(__file__))
-KONFIG      = os.path.join(BASIS, "quiz_config.json")
-STATE_DATEI = os.path.join(BASIS, ".spiel_state")
+BASIS        = os.path.dirname(os.path.abspath(__file__))
+KONFIG       = os.path.join(BASIS, "quiz_config.json")
+STATE_DATEI  = os.path.join(BASIS, ".spiel_state")
+CLOUD_KONFIG = os.path.join(BASIS, ".cloud_config.json")
+GAST_FRAGEN  = os.path.join(BASIS, "fragen_default.json")
 spiel_prozess = None
 
 spiel_state = {
@@ -22,6 +24,35 @@ spiel_state = {
     "mc_gewaehlt": None,
     "punktestand_sichtbar": False
 }
+
+# ── CLOUD-CONFIG HELPERS ──
+def lese_cloud_config():
+    try:
+        with open(CLOUD_KONFIG, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def schreibe_cloud_config(cfg):
+    with open(CLOUD_KONFIG, "w") as f:
+        json.dump(cfg, f, indent=2)
+
+def lese_oder_erstelle_config():
+    """Liest quiz_config.json, erstellt sie mit Standardwerten falls nicht vorhanden."""
+    if os.path.exists(KONFIG):
+        with open(KONFIG, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {"einstellungen": {}, "spieler": [], "fragen": []}
+
+def cloud_request(methode, url, token=None, daten=None, timeout=15):
+    """Hilfsfunktion für HTTP-Requests zum Cloud-Server."""
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    body = json.dumps(daten).encode() if daten else None
+    req = urllib.request.Request(url, data=body, headers=headers, method=methode)
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read())
 
 def schreibe_state(modus):
     with open(STATE_DATEI, "w") as f: f.write(modus)
@@ -45,7 +76,16 @@ def starte_quiz():
 
 # ── ROUTES ──
 @app.route("/")
-def index(): return redirect("/editor")
+def index():
+    cfg = lese_cloud_config()
+    # Wenn noch kein Modus gewählt wurde, zur Login-Seite
+    if not cfg.get("modus"):
+        return redirect("/login")
+    return redirect("/editor")
+
+@app.route("/login")
+def login_page():
+    return send_from_directory(BASIS, "login.html")
 
 @app.route("/editor")
 def editor(): return send_from_directory(BASIS, "quiz_editor.html")
@@ -96,6 +136,137 @@ def spiel_stoppen():
 @app.route("/api/spiel/status")
 def spiel_status():
     return jsonify({"laeuft": spiel_laeuft(), "state": lese_state()})
+
+# ══════════════════════════════════════════════════════════════════════════════
+# CLOUD-SYNC ROUTEN
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/cloud/config", methods=["GET"])
+def cloud_config_get():
+    cfg = lese_cloud_config()
+    return jsonify({
+        "cloud_url":  cfg.get("cloud_url", ""),
+        "name":       cfg.get("benutzer_name", ""),
+        "email":      cfg.get("email", ""),
+        "modus":      cfg.get("modus", ""),
+    })
+
+@app.route("/api/cloud/sync", methods=["POST"])
+def cloud_sync():
+    """Anmelden am Cloud-Server und Fragen auf das Gerät laden."""
+    try:
+        data       = request.get_json() or {}
+        cloud_url  = data.get("cloud_url", "").rstrip("/")
+        email      = data.get("email", "")
+        passwort   = data.get("passwort", "")
+        kategorien = data.get("kategorien", [])
+        schwierigkeit = data.get("schwierigkeit", "")
+
+        if not cloud_url or not email or not passwort:
+            return jsonify({"error": "cloud_url, email und passwort erforderlich"}), 400
+
+        # 1. Login beim Cloud-Server
+        login_result = cloud_request(
+            "POST", f"{cloud_url}/api/auth/login",
+            daten={"email": email, "passwort": passwort}
+        )
+        token = login_result.get("token")
+        name  = login_result.get("name")
+        if not token:
+            return jsonify({"error": "Anmeldung fehlgeschlagen"}), 401
+
+        # 2. Fragen-Export laden (mit optionalen Filtern)
+        params = []
+        for kat in kategorien:
+            params.append("kategorie=" + urllib.parse.quote(kat))
+        if schwierigkeit:
+            params.append("schwierigkeit=" + schwierigkeit)
+        query = "?" + "&".join(params) if params else ""
+
+        profil = cloud_request(
+            "GET", f"{cloud_url}/api/profil/export{query}",
+            token=token
+        )
+
+        # 3. Lokale Config aktualisieren (Einstellungen + Spieler beibehalten)
+        config = lese_oder_erstelle_config()
+        config["fragen"] = profil.get("fragen", [])
+        with open(KONFIG, "w", encoding="utf-8") as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+
+        # 4. Cloud-Konfiguration speichern
+        schreibe_cloud_config({
+            "cloud_url":     cloud_url,
+            "token":         token,
+            "benutzer_name": name,
+            "email":         email,
+            "modus":         "cloud",
+        })
+
+        return jsonify({"status": "ok", "name": name, "anzahl": len(profil.get("fragen", []))})
+
+    except urllib.error.HTTPError as e:
+        try:
+            err = json.loads(e.read()).get("error", str(e))
+        except Exception:
+            err = str(e)
+        return jsonify({"error": err}), e.code
+    except urllib.error.URLError as e:
+        return jsonify({"error": f"Server nicht erreichbar: {e.reason}"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/cloud/sync-refresh", methods=["POST"])
+def cloud_sync_refresh():
+    """Erneuter Sync mit gespeichertem Token (kein Passwort nötig)."""
+    try:
+        cfg = lese_cloud_config()
+        cloud_url = cfg.get("cloud_url", "").rstrip("/")
+        token     = cfg.get("token", "")
+        if not cloud_url or not token:
+            return jsonify({"error": "Kein gespeichertes Konto – bitte neu anmelden."}), 400
+
+        profil = cloud_request("GET", f"{cloud_url}/api/profil/export", token=token)
+
+        config = lese_oder_erstelle_config()
+        config["fragen"] = profil.get("fragen", [])
+        with open(KONFIG, "w", encoding="utf-8") as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+
+        return jsonify({"status": "ok", "name": cfg.get("benutzer_name", ""), "anzahl": len(profil.get("fragen", []))})
+
+    except urllib.error.HTTPError as e:
+        if e.code == 401:
+            # Token abgelaufen – zur Login-Seite
+            schreibe_cloud_config({**lese_cloud_config(), "modus": ""})
+            return jsonify({"error": "Sitzung abgelaufen – bitte neu anmelden."}), 401
+        return jsonify({"error": str(e)}), e.code
+    except urllib.error.URLError as e:
+        return jsonify({"error": f"Server nicht erreichbar: {e.reason}"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/cloud/gast", methods=["POST"])
+def cloud_gast():
+    """Gastmodus aktivieren – lokale Standardfragen laden."""
+    try:
+        if os.path.exists(GAST_FRAGEN):
+            with open(GAST_FRAGEN, "r", encoding="utf-8") as f:
+                gast = json.load(f)
+            config = lese_oder_erstelle_config()
+            config["fragen"] = gast.get("fragen", [])
+            with open(KONFIG, "w", encoding="utf-8") as f:
+                json.dump(config, f, ensure_ascii=False, indent=2)
+        schreibe_cloud_config({"modus": "gast"})
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/cloud/abmelden", methods=["POST"])
+def cloud_abmelden():
+    """Cloud-Konto vom Gerät abmelden."""
+    schreibe_cloud_config({})
+    return jsonify({"status": "ok"})
 
 @app.route("/api/csv-upload", methods=["POST"])
 def csv_upload():

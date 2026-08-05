@@ -1,0 +1,46 @@
+{
+  "fragen": [
+    {"frage": "Was ist die Hauptstadt von Deutschland?", "antwort": "Berlin", "kategorie": "Geografie", "schwierigkeit": "leicht", "modus": "frei", "basis": true},
+    {"frage": "Wie viele Kontinente hat die Erde?", "antwort": "7", "kategorie": "Geografie", "schwierigkeit": "leicht", "modus": "frei", "basis": true},
+    {"frage": "In welchem Jahr fiel die Berliner Mauer?", "antwort": "1989", "kategorie": "Geschichte", "schwierigkeit": "mittel", "modus": "frei", "basis": true},
+    {"frage": "Was ist die chemische Formel für Wasser?", "antwort": "H2O", "kategorie": "Chemie", "schwierigkeit": "leicht", "modus": "frei", "basis": true},
+    {"frage": "Wer entwickelte die Relativitätstheorie?", "antwort": "Albert Einstein", "kategorie": "Wissenschaft", "schwierigkeit": "leicht", "modus": "frei", "basis": true},
+    {"frage": "Welches ist das größte Land der Welt nach Fläche?", "antwort": "Russland", "kategorie": "Geografie", "schwierigkeit": "leicht", "modus": "frei", "basis": true},
+    {"frage": "Wer schrieb das Drama 'Faust'?", "antwort": "Johann Wolfgang von Goethe", "kategorie": "Literatur", "schwierigkeit": "mittel", "modus": "frei", "basis": true},
+    {"frage": "Wie heißt das schnellste Landtier der Welt?", "antwort": "Gepard", "kategorie": "Natur", "schwierigkeit": "leicht", "modus": "frei", "basis": true},
+    {"frage": "In welchem Land liegt die Pyramide von Gizeh?", "antwort": "Ägypten", "kategorie": "Geografie", "schwierigkeit": "leicht", "modus": "frei", "basis": true},
+    {"frage": "Was ist das chemische Symbol für Gold?", "antwort": "Au", "kategorie": "Chemie", "schwierigkeit": "mittel", "modus": "frei", "basis": true},
+    {"frage": "Wie heißt der längste Fluss der Welt?", "antwort": "Nil", "kategorie": "Geografie", "schwierigkeit": "mittel", "modus": "frei", "basis": true},
+    {"frage": "Wie viele Farben hat ein Regenbogen?", "antwort": "7", "kategorie": "Allgemein", "schwierigkeit": "leicht", "modus": "frei", "basis": true},
+    {
+      "frage": "Wie viele Planeten hat unser Sonnensystem?",
+      "antwort": "8",
+      "kategorie": "Astronomie",
+      "schwierigkeit": "leicht",
+      "modus": "mc",
+      "basis": true,
+      "antworten_mc": ["7", "8", "9", "10"],
+      "richtige_antwort_index": 1
+    },
+    {
+      "frage": "Welche Farbe hat Chlorophyll in Pflanzen?",
+      "antwort": "Grün",
+      "kategorie": "Biologie",
+      "schwierigkeit": "leicht",
+      "modus": "mc",
+      "basis": true,
+      "antworten_mc": ["Rot", "Grün", "Blau", "Gelb"],
+      "richtige_antwort_index": 1
+    },
+    {
+      "frage": "In welchem Jahr begann der Zweite Weltkrieg?",
+      "antwort": "1939",
+      "kategorie": "Geschichte",
+      "schwierigkeit": "mittel",
+      "modus": "mc",
+      "basis": true,
+      "antworten_mc": ["1933", "1936", "1939", "1941"],
+      "richtige_antwort_index": 2
+    }
+  ]
+}
