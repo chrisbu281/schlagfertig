@@ -311,6 +311,24 @@ html,body{
 .sieg-tname{flex:1;font-size:15px;font-weight:700;text-align:left}
 .sieg-tpts{font-size:18px;font-weight:900}
 
+/* Buzzer-Status (Idle) */
+.buz-zeile{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:600;color:rgba(255,255,255,.5);
+}
+.buz-led{
+  width:9px;height:9px;border-radius:50%;flex-shrink:0;
+  background:rgba(255,255,255,.15);transition:.4s;
+}
+.buz-led.ok{
+  background:#2d8a4e;
+  box-shadow:0 0 7px rgba(45,138,78,.6);
+}
+@keyframes led-ping{
+  0%{transform:scale(1)} 40%{transform:scale(1.8);opacity:.5} 100%{transform:scale(1)}
+}
+.buz-led.ping{animation:led-ping .4s ease}
+
 /* Transition-Animation Idle→Spiel */
 @keyframes slide-in{
   from{transform:translateX(100%);opacity:0}
@@ -380,6 +398,12 @@ html,body{
           <span style="font-size:20px">🎮</span>
         </div>
         <div class="bereit-text">Warte auf Spielstart…</div>
+      </div>
+
+      <!-- Buzzer-Status -->
+      <div style="margin-top:20px" id="buz-status-sektion" style="display:none">
+        <div class="info-label" style="margin-bottom:8px">BUZZER</div>
+        <div id="buz-status-liste" style="display:flex;flex-direction:column;gap:5px"></div>
       </div>
 
     </div>
@@ -538,6 +562,46 @@ socket.on('buzzer_freigeben', () => {
   zeige_buzzer([]);
 });
 
+// ══ BUZZER-STATUS (Idle) ══
+let displayBuzzerStatus = {};
+let displayConfig = null;
+
+socket.on('buzzer_status_update', d => {
+  displayBuzzerStatus[d.nr] = d.ts;
+  buz_led_ping(d.nr);
+  rendere_buz_status();
+});
+
+socket.on('buzzer_status_reset', () => {
+  displayBuzzerStatus = {};
+  rendere_buz_status();
+});
+
+function buz_led_ping(nr) {
+  const led = document.getElementById('buz-led-' + nr);
+  if (!led) return;
+  led.classList.add('ok', 'ping');
+  led.addEventListener('animationend', () => led.classList.remove('ping'), { once: true });
+}
+
+function rendere_buz_status() {
+  if (!displayConfig || !displayConfig.spieler || !displayConfig.spieler.length) return;
+  const sektion = document.getElementById('buz-status-sektion');
+  const liste   = document.getElementById('buz-status-liste');
+  sektion.style.display = '';
+  liste.innerHTML = displayConfig.spieler.map(s => {
+    const nr = s.nr ?? s.nummer;
+    const ok = displayBuzzerStatus[nr] !== undefined;
+    return `
+      <div class="buz-zeile">
+        <div class="buz-led${ok ? ' ok' : ''}" id="buz-led-${nr}"></div>
+        <span style="color:${ok ? '#4ade80' : 'rgba(255,255,255,.35)'}">
+          ${esc(s.name)}${ok ? ' ✓' : ''}
+        </span>
+      </div>`;
+  }).join('');
+}
+
 socket.on('zeige_punktestand', d => {
   if (d.punkte)  spielPunkte  = d.punkte;
   if (d.spieler) spielSpieler = d.spieler;
@@ -575,6 +639,25 @@ async function lade_status() {
     if (d2.speicher)   info.push('💾 ' + d2.speicher);
     document.getElementById('system-info').textContent = info.join('  ·  ') || '–';
   } catch(e) {}
+
+  // Config + Buzzer-Status laden
+  try {
+    const rc = await fetch('/api/config');
+    if (rc.ok) {
+      displayConfig = await rc.json();
+      rendere_buz_status();
+    }
+  } catch(_) {}
+
+  try {
+    const rb = await fetch('/api/buzzer/status');
+    const db = await rb.json();
+    displayBuzzerStatus = {};
+    for (const [nr, info] of Object.entries(db.buzzer || {})) {
+      displayBuzzerStatus[nr] = info.ts;
+    }
+    rendere_buz_status();
+  } catch(_) {}
 
   // Alle 60s aktualisieren
   setTimeout(lade_status, 60000);

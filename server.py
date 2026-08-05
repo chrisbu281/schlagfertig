@@ -26,6 +26,9 @@ spiel_state = {
     "punktestand_sichtbar": False
 }
 
+# Letzter Buzzer-Druck pro Spieler-Nr  { nr: unix_timestamp }
+buzzer_zuletzt = {}
+
 # ── CLOUD-CONFIG HELPERS ──
 def lese_cloud_config():
     try:
@@ -269,6 +272,24 @@ def spiel_stoppen():
 @app.route("/api/spiel/status")
 def spiel_status():
     return jsonify({"laeuft": spiel_laeuft(), "state": lese_state()})
+
+@app.route("/api/buzzer/status")
+def buzzer_status():
+    """Gibt zurück wann jeder Buzzer zuletzt gedrückt wurde."""
+    import time as _time
+    now = _time.time()
+    return jsonify({
+        "buzzer": {str(nr): {"ts": ts, "vor_sek": round(now - ts, 1)}
+                   for nr, ts in buzzer_zuletzt.items()},
+        "gesamt": len(buzzer_zuletzt),
+    })
+
+@app.route("/api/buzzer/reset", methods=["POST"])
+def buzzer_reset():
+    """Setzt Buzzer-Status zurück (Testmodus neu starten)."""
+    buzzer_zuletzt.clear()
+    socketio.emit('buzzer_status_reset')
+    return jsonify({"status": "ok"})
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CLOUD-SYNC ROUTEN
@@ -575,10 +596,22 @@ def on_stoppen():
 
 @socketio.on('buzzer_gedrueckt')
 def on_buzzer(data):
-    eintrag = {'nr': data.get('nr'), 'ms': data.get('ms')}
+    import time as _time
+    nr = data.get('nr')
+    eintrag = {'nr': nr, 'ms': data.get('ms')}
     if not any(e['nr'] == eintrag['nr'] for e in spiel_state['warteschlange']):
         spiel_state['warteschlange'].append(eintrag)
+    # Letzten Druckzeitpunkt speichern (für Buzzer-Status)
+    if nr is not None:
+        buzzer_zuletzt[nr] = _time.time()
+        socketio.emit('buzzer_status_update', {'nr': nr, 'ts': buzzer_zuletzt[nr]})
     socketio.emit('state_update', spiel_state)
+
+@socketio.on('buzzer_reset_test')
+def on_buzzer_reset_test():
+    """Setzt alle Buzzer-Zeitstempel zurück (für Testmodus)."""
+    buzzer_zuletzt.clear()
+    socketio.emit('buzzer_status_reset')
 
 @app.route("/sounds/<dateiname>")
 def serve_sound(dateiname):

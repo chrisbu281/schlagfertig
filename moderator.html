@@ -70,6 +70,47 @@ body{display:flex;flex-direction:column}
 .start-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 .start-info{font-size:13px;color:rgba(255,255,255,.35);text-align:center;margin-top:10px}
 
+/* ── Buzzer-Status ── */
+.buzzer-status-karte{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+  border-radius:16px;padding:18px 20px;width:100%;max-width:500px;margin-top:12px;
+}
+.bsk-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;
+}
+.bsk-titel{font-size:13px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.5)}
+.bsk-reset{
+  padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05);color:rgba(255,255,255,.45);
+  font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;
+}
+.bsk-reset:hover{background:rgba(255,255,255,.1);color:#fff}
+.bsk-liste{display:flex;flex-direction:column;gap:6px}
+.bsk-item{
+  display:flex;align-items:center;gap:10px;padding:9px 13px;
+  border-radius:10px;background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.05);
+}
+.bsk-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+  background:rgba(255,255,255,.15);transition:.4s;
+}
+.bsk-dot.ok{background:#2d8a4e;box-shadow:0 0 8px rgba(45,138,78,.5)}
+.bsk-name{flex:1;font-size:13px;font-weight:600;color:rgba(255,255,255,.6)}
+.bsk-status{font-size:11px;font-weight:700;transition:.3s}
+.bsk-status.ok{color:#4ade80}
+.bsk-status.warten{color:rgba(255,255,255,.2)}
+.bsk-gpio{
+  font-size:10px;color:rgba(255,255,255,.18);
+  font-family:monospace;letter-spacing:.3px;
+}
+@keyframes bsk-ping{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.6);opacity:.5}
+  100%{transform:scale(1)}
+}
+.bsk-dot.ping{animation:bsk-ping .4s ease}
+
 /* ═══════════ SPIEL-SCREEN ═══════════ */
 #s-spiel{display:none;flex-direction:row;gap:0}
 #s-spiel.aktiv{display:flex}
@@ -275,6 +316,15 @@ body{display:flex;flex-direction:column}
   </div>
 </div>
 
+<!-- ══ BUZZER-STATUS ══ -->
+<div class="buzzer-status-karte" id="buzzer-status-karte" style="display:none">
+  <div class="bsk-header">
+    <div class="bsk-titel">🎛 BUZZER-STATUS</div>
+    <button class="bsk-reset" onclick="buzzer_test_reset()">↺ Test zurücksetzen</button>
+  </div>
+  <div class="bsk-liste" id="bsk-liste"></div>
+</div>
+
 <!-- ══ SPIEL-SCREEN ══ -->
 <div class="screen" id="s-spiel">
 
@@ -406,6 +456,55 @@ socket.on('zeige_ergebnis', d => {
 
 socket.on('zeige_sieger', d => zeige_sieger(d.punkte, d.spieler));
 
+// ══ BUZZER-STATUS ══
+let buzzerStatus = {};  // { nr: timestamp }
+
+socket.on('buzzer_status_update', d => {
+  buzzerStatus[d.nr] = d.ts;
+  aktualisiere_bsk(d.nr);  // Einzelnen Buzzer updaten + Animation
+});
+
+socket.on('buzzer_status_reset', () => {
+  buzzerStatus = {};
+  rendere_bsk();
+});
+
+function rendere_bsk() {
+  if (!config.spieler || !config.spieler.length) return;
+  const karte = document.getElementById('buzzer-status-karte');
+  const liste  = document.getElementById('bsk-liste');
+  karte.style.display = '';
+  liste.innerHTML = config.spieler.map(s => {
+    const nr = s.nr ?? s.nummer;
+    const ok = buzzerStatus[nr] !== undefined;
+    return `
+      <div class="bsk-item" id="bsk-${nr}">
+        <div class="bsk-dot${ok ? ' ok' : ''}" id="bsk-dot-${nr}"></div>
+        <div class="bsk-name">${esc(s.name)}</div>
+        <div class="bsk-status ${ok ? 'ok' : 'warten'}" id="bsk-st-${nr}">
+          ${ok ? '✓ Verbunden' : 'Warte…'}
+        </div>
+        ${s.gpio !== undefined ? `<div class="bsk-gpio">GPIO${s.gpio}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function aktualisiere_bsk(nr) {
+  const dot = document.getElementById('bsk-dot-' + nr);
+  const st  = document.getElementById('bsk-st-'  + nr);
+  if (!dot || !st) { rendere_bsk(); return; }
+  dot.classList.add('ok', 'ping');
+  st.className = 'bsk-status ok';
+  st.textContent = '✓ Verbunden';
+  dot.addEventListener('animationend', () => dot.classList.remove('ping'), { once: true });
+}
+
+function buzzer_test_reset() {
+  socket.emit('buzzer_reset_test');
+  buzzerStatus = {};
+  rendere_bsk();
+}
+
 // ══ INIT ══
 window.addEventListener('DOMContentLoaded', async () => {
   try {
@@ -413,13 +512,24 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (r.ok) {
       config = await r.json();
       lade_team_auswahl();
+      rendere_bsk();
     }
   } catch(e) {}
 
+  // Aktuellen Buzzer-Status vom Server laden
+  try {
+    const r = await fetch('/api/buzzer/status');
+    const d = await r.json();
+    buzzerStatus = {};
+    for (const [nr, info] of Object.entries(d.buzzer || {})) {
+      buzzerStatus[nr] = info.ts;
+    }
+    rendere_bsk();
+  } catch(_) {}
+
   // Prüfen ob bereits ein Spiel läuft
   try {
-    const r = await fetch('/api/spiel/status');
-    const d = await r.json();
+    await fetch('/api/spiel/status');
     // state_update kommt via socket on connect
   } catch(_) {}
 });
