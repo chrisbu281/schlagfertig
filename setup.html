@@ -341,8 +341,11 @@ body{
         <div style="font-size:13px;color:rgba(255,255,255,.4)">Moderator-App</div>
       </div>
     </div>
-    <div style="margin-top:32px">
+    <div style="margin-top:32px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
       <button class="btn primaer gross" onclick="goto_schritt(1)">Los geht's →</button>
+      <button class="btn glas" onclick="offline_start()" style="font-size:17px;padding:20px 32px;border-radius:16px">
+        📴 Ohne Internet starten
+      </button>
     </div>
   </div>
 
@@ -511,7 +514,7 @@ body{
     ← Zurück
   </button>
   <span class="spacer"></span>
-  <button class="btn glas" id="ueberspringen-btn" onclick="ueberspringen()">
+  <button class="btn glas" id="ueberspringen-btn" onclick="ueberspringen()" style="display:none">
     Überspringen →
   </button>
 </div>
@@ -593,8 +596,24 @@ function zurueck() {
   if (aktSchritt > 0) goto_schritt(aktSchritt - 1);
 }
 
-function ueberspringen() {
+async function ueberspringen() {
+  // Konto-Schritt übersprungen → automatisch Gastmodus setzen
+  if (aktSchritt === 2 && !status.cloud.modus) {
+    try {
+      await fetch('/api/cloud/gast', {method:'POST'});
+      status.cloud = {modus:'gast', name:'Gast', email:''};
+    } catch(_) {}
+  }
   goto_schritt(aktSchritt + 1);
+}
+
+async function offline_start() {
+  // Direkt Gastmodus + Setup abschliessen – kein Internet nötig
+  try {
+    await fetch('/api/cloud/gast', {method:'POST'});
+    await fetch('/api/setup/abschliessen', {method:'POST'});
+  } catch(_) {}
+  window.location.href = '/editor';
 }
 
 // ═══════════════════════ WLAN ═══════════════════════
