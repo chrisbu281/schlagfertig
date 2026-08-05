@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schlagfertig</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#08080f;color:#fff;
+  font-family:system-ui,-apple-system,sans-serif;user-select:none}
+
+/* ═══ SCREENS ═══ */
+.screen{position:fixed;inset:0;display:none;flex-direction:column}
+.screen.aktiv{display:flex}
+
+/* ═══════════════ WARTEN ═══════════════ */
+#s-warten{align-items:center;justify-content:center;text-align:center;
+  background:radial-gradient(ellipse at 50% 40%,#1a0d1a 0%,#08080f 70%)}
+.wl{font-size:96px;font-weight:900;letter-spacing:-4px;line-height:1;
+  text-shadow:0 0 100px rgba(226,75,74,.2)}
+.wl .ak{color:#E24B4A}
+.ws{font-size:24px;color:rgba(255,255,255,.28);margin-top:22px;letter-spacing:.5px;
+  animation:atem 2.5s ease-in-out infinite}
+@keyframes atem{0%,100%{opacity:.28}50%{opacity:.65}}
+.wdots{display:flex;gap:14px;margin-top:40px;justify-content:center}
+.wd{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.12);
+  animation:db 1.4s ease-in-out infinite}
+.wd:nth-child(2){animation-delay:.22s}.wd:nth-child(3){animation-delay:.44s}
+@keyframes db{0%,80%,100%{transform:scale(1);opacity:.12}40%{transform:scale(1.5);opacity:.6}}
+
+/* ═══════════════ FRAGE ═══════════════ */
+#s-frage{}
+
+.fh{
+  display:flex;align-items:center;padding:18px 44px;
+  border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;gap:24px;
+  background:rgba(0,0,0,.2);
+}
+.fh-logo{font-size:15px;font-weight:900;color:rgba(255,255,255,.5);letter-spacing:-.3px}
+.fh-logo .ak{color:#E24B4A}
+.fh-nr{font-size:13px;font-weight:700;letter-spacing:1.5px;
+  color:rgba(255,255,255,.25);text-transform:uppercase}
+.fh-scores{margin-left:auto;display:flex;gap:24px;align-items:center}
+.fhs{display:flex;align-items:center;gap:8px}
+.fhs-dot{width:8px;height:8px;border-radius:50%}
+.fhs-name{font-size:13px;font-weight:600;color:rgba(255,255,255,.45)}
+.fhs-pts{font-size:19px;font-weight:900;color:#fff}
+
+.fm{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:36px 64px;text-align:center;overflow:hidden;
+}
+.fm-kat{
+  font-size:11px;font-weight:800;letter-spacing:3px;color:#E24B4A;
+  text-transform:uppercase;margin-bottom:18px;opacity:.9;
+}
+.fm-frage{font-size:60px;font-weight:800;line-height:1.2;max-width:1100px}
+.fm-frage.lang{font-size:44px}
+.fm-frage.xl{font-size:34px}
+
+/* MC */
+.mc-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:16px;
+  margin-top:32px;width:100%;max-width:1060px;
+}
+.mco{
+  display:flex;align-items:center;gap:16px;
+  padding:22px 28px;border-radius:20px;
+  border:2px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.03);
+  font-size:24px;font-weight:600;transition:all .35s;
+  text-align:left;
+}
+.mco-lbl{
+  width:44px;height:44px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:900;
+}
+.mco.ausgewaehlt{
+  border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.08);
+}
+.mco.richtig{
+  border-color:#2d8a4e;background:rgba(45,138,78,.18);
+  animation:aufleuchten .5s ease;
+}
+.mco.falsch{border-color:rgba(226,75,74,.25);opacity:.35}
+@keyframes aufleuchten{
+  0%{transform:scale(1)}50%{transform:scale(1.025)}100%{transform:scale(1)}
+}
+
+/* BUZZER */
+.bl{
+  display:flex;gap:10px;padding:14px 44px;flex-shrink:0;
+  border-top:1px solid rgba(255,255,255,.05);min-height:68px;
+  align-items:center;background:rgba(0,0,0,.25);flex-wrap:wrap;
+}
+.bl-leer{color:rgba(255,255,255,.18);font-size:14px}
+.be{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 18px;border-radius:30px;font-weight:700;
+  animation:b-rein .3s cubic-bezier(.34,1.56,.64,1);
+}
+.be:first-child{
+  font-size:17px;
+  background:rgba(226,75,74,.18);border:1.5px solid rgba(226,75,74,.4);
+}
+.be:not(:first-child){
+  font-size:14px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.4);
+}
+.be-ms{font-size:11px;color:rgba(255,255,255,.22);font-variant-numeric:tabular-nums}
+@keyframes b-rein{
+  from{transform:scale(.7) translateY(8px);opacity:0}
+  to{transform:none;opacity:1}
+}
+
+/* ═══════════════ ERGEBNIS-FLASH ═══════════════ */
+#flash{
+  position:fixed;inset:0;z-index:200;pointer-events:none;display:none;
+  flex-direction:column;align-items:center;justify-content:center;text-align:center;
+}
+#flash.richtig{
+  background:linear-gradient(135deg,rgba(30,100,60,.92),rgba(45,138,78,.88));
+}
+#flash.falsch{
+  background:linear-gradient(135deg,rgba(120,20,20,.92),rgba(180,40,40,.88));
+}
+#flash.sicht{display:flex;animation:flash-aus .4s ease 1.4s forwards}
+.f-icon{font-size:140px;margin-bottom:10px;animation:f-pop .4s cubic-bezier(.34,1.56,.64,1)}
+.f-text{font-size:72px;font-weight:900}
+.f-delta{font-size:32px;opacity:.7;margin-top:10px;font-weight:700}
+@keyframes flash-aus{to{opacity:0}}
+@keyframes f-pop{from{transform:scale(.4)}to{transform:scale(1)}}
+
+/* ═══════════════ PUNKTE-OVERLAY ═══════════════ */
+#po{
+  position:fixed;inset:0;z-index:100;display:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.84);backdrop-filter:blur(12px);
+}
+#po.sicht{display:flex;animation:po-rein .4s ease}
+@keyframes po-rein{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.po-h{
+  font-size:13px;font-weight:800;letter-spacing:4px;
+  color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:32px;
+}
+.po-liste{display:flex;flex-direction:column;gap:12px;width:100%;max-width:500px}
+.poi{
+  display:flex;align-items:center;gap:16px;padding:18px 26px;
+  border-radius:16px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);transition:.3s;
+}
+.poi:first-child{
+  background:rgba(226,75,74,.1);border-color:rgba(226,75,74,.25);
+  transform:scale(1.04);
+}
+.poi-rang{
+  font-size:22px;font-weight:900;color:rgba(255,255,255,.2);
+  width:32px;text-align:center;
+}
+.g1{color:#f59e0b}.g2{color:#94a3b8}.g3{color:#b45309}
+.poi-name{flex:1;font-size:20px;font-weight:700}
+.poi-pts{font-size:28px;font-weight:900;color:#E24B4A}
+
+/* ═══════════════ SIEGER ═══════════════ */
+#s-sieger{
+  align-items:center;justify-content:center;text-align:center;
+  background:radial-gradient(ellipse at 50% 35%,#200a20 0%,#08080f 65%);
+  overflow:hidden;
+}
+#konfetti{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.sg-wrap{position:relative;z-index:1}
+.sg-pokal{font-size:80px;margin-bottom:12px;animation:pokal-bounce 1s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pokal-bounce{from{transform:scale(0) rotate(-20deg)}to{transform:none}}
+.sg-label{font-size:13px;font-weight:800;letter-spacing:4px;
+  color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:10px}
+.sg-name{
+  font-size:100px;font-weight:900;line-height:1;
+  background:linear-gradient(135deg,#E24B4A 0%,#f59e0b 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;animation:sg-rein .6s .3s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes sg-rein{from{transform:scale(.5);opacity:0}to{transform:none;opacity:1}}
+.sg-pts{font-size:28px;color:rgba(255,255,255,.3);margin:6px 0 44px;font-weight:700}
+.sg-rest{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.sgr{
+  padding:14px 24px;border-radius:16px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+}
+.sgr-rang{font-size:20px;font-weight:900;color:rgba(255,255,255,.2)}
+.sgr-name{font-size:18px;font-weight:700;margin:4px 0}
+.sgr-pts{font-size:22px;font-weight:900;color:rgba(255,255,255,.4)}
+</style>
+</head>
+<body>
+
+<!-- ══ WARTEN ══ -->
+<div class="screen aktiv" id="s-warten">
+  <div class="wl">SCHLAG<span class="ak">FERTIG</span></div>
+  <div class="ws">Warte auf Moderator…</div>
+  <div class="wdots">
+    <div class="wd"></div><div class="wd"></div><div class="wd"></div>
+  </div>
+</div>
+
+<!-- ══ FRAGE ══ -->
+<div class="screen" id="s-frage">
+  <div class="fh">
+    <div class="fh-logo">Schlag<span class="ak">fertig</span></div>
+    <div class="fh-nr" id="fh-nr">Frage 1 / 1</div>
+    <div class="fh-scores" id="fh-scores"></div>
+  </div>
+  <div class="fm">
+    <div class="fm-kat" id="fm-kat"></div>
+    <div class="fm-frage" id="fm-text"></div>
+    <div class="mc-grid" id="mc-grid" style="display:none">
+      <div class="mco" id="mco-0"><div class="mco-lbl" style="background:#4361ee">A</div><span id="mco-t-0"></span></div>
+      <div class="mco" id="mco-1"><div class="mco-lbl" style="background:#f72585">B</div><span id="mco-t-1"></span></div>
+      <div class="mco" id="mco-2"><div class="mco-lbl" style="background:#f4a261;color:#333">C</div><span id="mco-t-2"></span></div>
+      <div class="mco" id="mco-3"><div class="mco-lbl" style="background:#2ec4b6">D</div><span id="mco-t-3"></span></div>
+    </div>
+  </div>
+  <div class="bl" id="buzzer-leiste">
+    <div class="bl-leer">Noch kein Buzzer gedrückt</div>
+  </div>
+</div>
+
+<!-- ══ SIEGER ══ -->
+<div class="screen" id="s-sieger">
+  <div id="konfetti"></div>
+  <div class="sg-wrap">
+    <div class="sg-pokal">🏆</div>
+    <div class="sg-label">Sieger</div>
+    <div class="sg-name" id="sg-name">–</div>
+    <div class="sg-pts"  id="sg-pts">–</div>
+    <div class="sg-rest" id="sg-rest"></div>
+  </div>
+</div>
+
+<!-- ══ FLASH OVERLAY ══ -->
+<div id="flash">
+  <div class="f-icon"  id="f-icon">✓</div>
+  <div class="f-text"  id="f-text">Richtig!</div>
+  <div class="f-delta" id="f-delta"></div>
+</div>
+
+<!-- ══ PUNKTE OVERLAY ══ -->
+<div id="po">
+  <div class="po-h">🏆 Punktestand</div>
+  <div class="po-liste" id="po-liste"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// Konfetti-Animation CSS
+document.head.insertAdjacentHTML('beforeend', `<style>
+@keyframes kfall{from{top:-20px;opacity:1}to{top:110vh;opacity:.2;transform:rotate(540deg) scale(.6)}}
+</style>`);
+
+// ── STATE ──
+let zustand = {modus:'warten',punkte:{},warteschlange:[],spielmodus:'frei'};
+let aktiveSpiler = [];
+let flashTimer   = null;
+
+// ── SOCKET ──
+const socket = io();
+
+socket.on('state_update', d => {
+  zustand = d;
+  if (d.modus === 'warten') zeige_screen('s-warten');
+  else if (d.modus === 'sieger') { /* handled by zeige_sieger event */ }
+  aktualisiere_buzzer(d.warteschlange || []);
+  aktualisiere_scores(d.punkte || {});
+});
+
+socket.on('zeige_frage', d => {
+  aktiveSpiler = d.aktive_spieler || [];
+  zustand.punkte = zustand.punkte || {};
+  zeige_frage(d.frage, d.idx, d.gesamt, d.spielmodus);
+  zeige_screen('s-frage');
+});
+
+socket.on('zeige_ergebnis', d => {
+  flash(d.richtig, d.richtig ? `+${d.delta} Punkt${d.delta!==1?'e':''}` : '');
+  if (d.punkte) { zustand.punkte = d.punkte; aktualisiere_scores(d.punkte); }
+  if (!d.richtig && d.warteschlange) aktualisiere_buzzer(d.warteschlange);
+});
+
+socket.on('zeige_mc_auswahl', d => {
+  document.querySelectorAll('.mco').forEach(e => e.classList.remove('ausgewaehlt'));
+  const el = document.getElementById('mco-' + d.idx);
+  if (el) el.classList.add('ausgewaehlt');
+});
+
+socket.on('zeige_mc_aufloesen', d => {
+  document.querySelectorAll('.mco').forEach((el, i) => {
+    el.classList.remove('ausgewaehlt','richtig','falsch');
+    if (i === d.richtig_idx) el.classList.add('richtig');
+    else if (i === d.gewaehlt && !d.richtig) el.classList.add('falsch');
+  });
+  if (d.punkte) { zustand.punkte = d.punkte; aktualisiere_scores(d.punkte); }
+  flash(d.richtig, d.richtig ? `+${d.delta} Punkt${d.delta!==1?'e':''}` : '');
+});
+
+socket.on('buzzer_freigeben', () => aktualisiere_buzzer([]));
+
+socket.on('zeige_punktestand', d => {
+  const el = document.getElementById('po');
+  if (d.sichtbar) {
+    zeige_punkte_overlay(d.punkte, d.spieler);
+    el.classList.add('sicht');
+  } else {
+    el.classList.remove('sicht');
+  }
+});
+
+socket.on('zeige_sieger', d => zeige_sieger(d.punkte, d.spieler));
+
+// ── FUNKTIONEN ──
+function zeige_screen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('aktiv'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('aktiv');
+}
+
+function zeige_frage(frage, idx, gesamt, modus) {
+  if (!frage) return;
+  document.getElementById('fh-nr').textContent =
+    `Frage ${(idx||0)+1} / ${gesamt||1}`;
+
+  document.getElementById('fm-kat').textContent = frage.kategorie || '';
+
+  const text = frage.frage || '';
+  const el   = document.getElementById('fm-text');
+  el.textContent = text;
+  el.className = 'fm-frage' +
+    (text.length > 130 ? ' xl' : text.length > 85 ? ' lang' : '');
+
+  const mc = document.getElementById('mc-grid');
+  if (modus === 'mc' && frage.antworten_mc && frage.antworten_mc.length) {
+    mc.style.display = '';
+    frage.antworten_mc.forEach((a, i) => {
+      document.getElementById(`mco-t-${i}`).textContent = a;
+      document.getElementById(`mco-${i}`).classList.remove('ausgewaehlt','richtig','falsch');
+    });
+  } else {
+    mc.style.display = 'none';
+  }
+
+  aktualisiere_buzzer([]);
+}
+
+function aktualisiere_buzzer(q) {
+  const bl = document.getElementById('buzzer-leiste');
+  if (!q || !q.length) {
+    bl.innerHTML = '<div class="bl-leer">Noch kein Buzzer gedrückt</div>';
+    return;
+  }
+  bl.innerHTML = q.map((e, i) =>
+    `<div class="be">
+      ${esc(e.nr || '?')}
+      ${e.ms ? `<span class="be-ms">(${e.ms}ms)</span>` : ''}
+    </div>`
+  ).join('');
+}
+
+function aktualisiere_scores(punkte) {
+  const spieler = aktiveSpiler.length
+    ? aktiveSpiler
+    : Object.keys(punkte).map(n => ({name:n}));
+  const el = document.getElementById('fh-scores');
+  const farben = ['#E24B4A','#4361ee','#2d8a4e','#f59e0b','#8b5cf6','#06b6d4'];
+  el.innerHTML = spieler.slice(0, 6).map((s, i) => {
+    const name = typeof s === 'string' ? s : s.name;
+    const pts  = punkte[name] ?? 0;
+    const col  = (typeof s === 'object' && s.farbe) || farben[i % farben.length];
+    return `<div class="fhs">
+      <div class="fhs-dot" style="background:${esc(col)}"></div>
+      <span class="fhs-name">${esc(name)}</span>
+      <span class="fhs-pts">${pts}</span>
+    </div>`;
+  }).join('');
+}
+
+function flash(richtig, extra) {
+  clearTimeout(flashTimer);
+  const el = document.getElementById('flash');
+  el.style.display = '';
+  el.className = (richtig ? 'richtig' : 'falsch') + ' sicht';
+  document.getElementById('f-icon').textContent  = richtig ? '✓' : '✗';
+  document.getElementById('f-text').textContent  = richtig ? 'Richtig!' : 'Falsch!';
+  document.getElementById('f-delta').textContent = extra || '';
+  flashTimer = setTimeout(() => { el.className = ''; el.style.display = 'none'; }, 2100);
+}
+
+function zeige_punkte_overlay(punkte, spieler) {
+  const liste   = document.getElementById('po-liste');
+  const spielerArr = spieler || Object.keys(punkte).map(n => ({name:n}));
+  const sorted  = spielerArr
+    .map(s => ({name: typeof s==='string'?s:s.name, pts: punkte[typeof s==='string'?s:s.name] ?? 0}))
+    .sort((a,b) => b.pts - a.pts);
+  const rnk = ['g1','g2','g3'];
+  const sym = ['🥇','🥈','🥉'];
+  liste.innerHTML = sorted.map((s, i) => `
+    <div class="poi">
+      <div class="poi-rang ${rnk[i]||''}">${sym[i]||'#'+(i+1)}</div>
+      <div class="poi-name">${esc(s.name)}</div>
+      <div class="poi-pts">${s.pts}</div>
+    </div>`).join('');
+}
+
+function zeige_sieger(punkte, spieler) {
+  zeige_screen('s-sieger');
+  const spielerArr = spieler || Object.keys(punkte).map(n => ({name:n}));
+  const sorted = spielerArr
+    .map(s => ({name: typeof s==='string'?s:s.name, pts: punkte[typeof s==='string'?s:s.name]??0}))
+    .sort((a,b) => b.pts - a.pts);
+  if (!sorted.length) return;
+
+  document.getElementById('sg-name').textContent = sorted[0].name;
+  document.getElementById('sg-pts').textContent  = `${sorted[0].pts} Punkte`;
+  const sym = ['🥈','🥉'];
+  document.getElementById('sg-rest').innerHTML = sorted.slice(1).map((s, i) => `
+    <div class="sgr">
+      <div class="sgr-rang">${sym[i]||'#'+(i+2)}</div>
+      <div class="sgr-name">${esc(s.name)}</div>
+      <div class="sgr-pts">${s.pts}</div>
+    </div>`).join('');
+
+  start_konfetti();
+}
+
+function start_konfetti() {
+  const c = document.getElementById('konfetti');
+  c.innerHTML = '';
+  const farben = ['#E24B4A','#f59e0b','#4361ee','#2d8a4e','#f72585','#2ec4b6','#fff'];
+  for (let i = 0; i < 90; i++) {
+    const el = document.createElement('div');
+    const size = 6 + Math.random() * 8;
+    el.style.cssText = `
+      position:absolute;left:${Math.random()*100}%;top:-20px;
+      width:${size}px;height:${size * 1.6}px;
+      background:${farben[i%farben.length]};border-radius:2px;
+      animation:kfall ${2.5+Math.random()*2.5}s ${Math.random()*2.5}s linear forwards;
+      transform:rotate(${Math.random()*360}deg);
+    `;
+    c.appendChild(el);
+  }
+}
+
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

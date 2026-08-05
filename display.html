@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Schlagfertig – Display</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  height:100%;background:#08080f;color:#fff;
+  font-family:system-ui,-apple-system,sans-serif;
+  overflow:hidden;user-select:none;
+}
+
+/* ══ SCREENS ══ */
+.screen{position:fixed;inset:0;display:none;flex-direction:column}
+.screen.aktiv{display:flex}
+
+/* ═══════════════════════════════════════
+   IDLE-SCREEN  (kein Spiel aktiv)
+═══════════════════════════════════════ */
+#s-idle{
+  flex-direction:column;
+  background:radial-gradient(ellipse at 30% 50%,#130a1a 0%,#08080f 65%);
+}
+
+/* Header-Leiste */
+.idle-header{
+  display:flex;align-items:center;padding:18px 28px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  background:rgba(0,0,0,.3);flex-shrink:0;gap:14px;
+}
+.idle-logo{font-size:22px;font-weight:900;letter-spacing:-.5px}
+.idle-logo span{color:#E24B4A}
+.idle-badge{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  color:rgba(255,255,255,.3);padding:3px 10px;border-radius:20px;
+  border:1px solid rgba(255,255,255,.1);text-transform:uppercase;
+}
+.idle-status{
+  margin-left:auto;display:flex;align-items:center;gap:8px;
+  font-size:12px;color:rgba(255,255,255,.4);
+}
+.status-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:#2d8a4e;box-shadow:0 0 8px #2d8a4e;
+}
+.status-dot.offline{background:#c0392b;box-shadow:0 0 8px #c0392b}
+
+/* Body: links QR / rechts Infos */
+.idle-body{
+  flex:1;display:flex;align-items:center;
+  padding:28px 36px;gap:48px;overflow:hidden;
+}
+
+/* QR-Bereich */
+.qr-sektion{
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  flex-shrink:0;
+}
+.qr-rahmen{
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;padding:20px;display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.qr-rahmen svg,.qr-rahmen img{
+  width:180px;height:180px;border-radius:6px;
+}
+.qr-fallback{
+  width:180px;height:180px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;
+  background:rgba(255,255,255,.04);border-radius:12px;
+}
+.qr-fallback-icon{font-size:36px;opacity:.4}
+.qr-url{
+  font-size:12px;font-weight:700;color:rgba(255,255,255,.35);
+  text-align:center;letter-spacing:.5px;max-width:220px;word-break:break-all;
+}
+.qr-label{
+  font-size:13px;font-weight:700;color:rgba(255,255,255,.5);
+  text-align:center;letter-spacing:.3px;
+}
+.qr-sub{
+  font-size:11px;color:rgba(255,255,255,.25);text-align:center;
+}
+
+/* Info-Bereich */
+.info-sektion{
+  flex:1;display:flex;flex-direction:column;gap:18px;
+}
+
+.info-zeile{
+  display:flex;flex-direction:column;gap:4px;
+}
+.info-label{
+  font-size:10px;font-weight:700;letter-spacing:2px;
+  color:rgba(255,255,255,.25);text-transform:uppercase;
+}
+.info-wert{
+  font-size:16px;font-weight:700;color:rgba(255,255,255,.8);
+}
+.info-wert.gross{font-size:22px;color:#fff;letter-spacing:-.3px}
+.info-wert.dim{font-size:13px;color:rgba(255,255,255,.4)}
+
+.trennlinie{
+  height:1px;background:rgba(255,255,255,.06);margin:4px 0;
+}
+
+/* Warte-Animation */
+.pulse-ring{
+  width:50px;height:50px;border-radius:50%;
+  border:2px solid rgba(226,75,74,.3);
+  display:flex;align-items:center;justify-content:center;
+  animation:pulsieren 2s ease-in-out infinite;
+}
+.pulse-ring::before{
+  content:'';position:absolute;
+  width:64px;height:64px;border-radius:50%;
+  border:1px solid rgba(226,75,74,.1);
+  animation:pulsieren 2s ease-in-out infinite .5s;
+}
+@keyframes pulsieren{
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.1);opacity:.6}
+}
+.bereit-text{
+  font-size:13px;color:rgba(255,255,255,.3);
+  animation:blinken 2.5s ease-in-out infinite;
+}
+@keyframes blinken{0%,100%{opacity:.3}50%{opacity:.7}}
+
+/* Fußzeile */
+.idle-footer{
+  padding:12px 28px;border-top:1px solid rgba(255,255,255,.04);
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(0,0,0,.2);flex-shrink:0;
+}
+.footer-left{font-size:11px;color:rgba(255,255,255,.2)}
+.footer-right{
+  display:flex;gap:16px;align-items:center;
+}
+.footer-btn{
+  padding:6px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);
+  font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:.15s;letter-spacing:.3px;
+}
+.footer-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.footer-btn.primary{
+  background:rgba(226,75,74,.15);border-color:rgba(226,75,74,.3);
+  color:#E24B4A;
+}
+.footer-btn.primary:hover{background:rgba(226,75,74,.25)}
+
+/* ═══════════════════════════════════════
+   SPIEL-SCREEN  (Spiel läuft)
+═══════════════════════════════════════ */
+#s-spiel{
+  background:#08080f;
+}
+
+/* Spiel-Header */
+.spiel-header{
+  display:flex;align-items:center;padding:14px 24px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  background:rgba(0,0,0,.3);flex-shrink:0;gap:16px;
+}
+.sh-logo{font-size:16px;font-weight:900;letter-spacing:-.3px;flex-shrink:0}
+.sh-logo span{color:#E24B4A}
+.sh-frage-nr{
+  font-size:11px;font-weight:700;letter-spacing:2px;
+  color:rgba(255,255,255,.3);text-transform:uppercase;
+}
+.sh-kat{
+  font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;
+  background:rgba(226,75,74,.1);border:1px solid rgba(226,75,74,.2);
+  color:#E24B4A;letter-spacing:.5px;
+}
+.sh-rechts{margin-left:auto;display:flex;gap:10px;align-items:center}
+
+/* Scores im Header */
+.sh-score{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 10px;border-radius:8px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);
+}
+.sh-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sh-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.55)}
+.sh-pts{font-size:16px;font-weight:900}
+
+/* Frage-Karte */
+.frage-sektion{
+  flex:1;display:flex;flex-direction:column;
+  padding:28px 36px 20px;overflow:hidden;
+  gap:16px;
+}
+.frage-text{
+  font-size:28px;font-weight:800;line-height:1.35;
+  color:#fff;flex:1;display:flex;align-items:center;
+}
+
+/* MC Optionen */
+.mc-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+}
+.mc-opt{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px;border-radius:14px;
+  background:rgba(255,255,255,.05);
+  border:1.5px solid rgba(255,255,255,.08);
+  font-size:15px;font-weight:700;color:rgba(255,255,255,.7);
+  transition:.3s;
+}
+.mc-opt.gewaehlt{
+  border-color:rgba(255,255,255,.3);
+  background:rgba(255,255,255,.08);color:#fff;
+}
+.mc-opt.richtig{
+  border-color:#2d8a4e;
+  background:rgba(45,138,78,.15);color:#4ade80;
+}
+.mc-opt.falsch{
+  border-color:rgba(226,75,74,.2);opacity:.35;
+}
+.mc-opt-lbl{
+  width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:900;flex-shrink:0;color:#fff;
+}
+
+/* Buzzer-Bereich */
+.buzzer-sektion{
+  padding:0 36px 16px;flex-shrink:0;
+}
+.buzzer-reihe{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.buz-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 16px;border-radius:24px;
+  font-size:14px;font-weight:700;
+  animation:buz-pop .4s cubic-bezier(.34,1.56,.64,1);
+}
+.buz-item:first-child{
+  background:rgba(226,75,74,.15);
+  border:1.5px solid rgba(226,75,74,.3);color:#fff;
+  font-size:16px;padding:10px 20px;
+}
+.buz-item:not(:first-child){
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.07);
+  color:rgba(255,255,255,.4);
+}
+.buz-rang{
+  font-size:10px;font-weight:700;
+  color:rgba(255,255,255,.3);
+}
+.buz-leer{
+  font-size:14px;color:rgba(255,255,255,.2);
+  padding:8px 0;
+  animation:blinken 2.5s ease-in-out infinite;
+}
+@keyframes buz-pop{
+  from{transform:scale(.7);opacity:0}
+  to{transform:none;opacity:1}
+}
+
+/* ═══════════════════════════════════════
+   ERGEBNIS-OVERLAY
+═══════════════════════════════════════ */
+#ergebnis-overlay{
+  position:fixed;inset:0;z-index:100;
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;
+  animation:einblenden .4s ease;
+}
+#ergebnis-overlay.sicht{display:flex}
+@keyframes einblenden{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+.erg-icon{font-size:80px;margin-bottom:8px}
+.erg-text{
+  font-size:42px;font-weight:900;letter-spacing:-.5px;
+}
+.erg-delta{
+  font-size:22px;font-weight:700;margin-top:8px;
+  opacity:.6;
+}
+
+/* ═══════════════════════════════════════
+   SIEGER-SCREEN
+═══════════════════════════════════════ */
+#s-sieger{
+  flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:40px;
+  background:radial-gradient(ellipse at 50% 40%,#1a0d08 0%,#08080f 65%);
+}
+.sieg-trophee{font-size:80px;margin-bottom:12px;animation:aufspringen 1s cubic-bezier(.34,1.56,.64,1)}
+@keyframes aufspringen{from{transform:scale(0) rotate(-20deg)}to{transform:none}}
+.sieg-name{
+  font-size:52px;font-weight:900;letter-spacing:-.5px;
+  background:linear-gradient(135deg,#E24B4A,#f59e0b);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.sieg-pts{font-size:20px;color:rgba(255,255,255,.35);margin-top:6px}
+.sieg-tabelle{margin-top:36px;display:flex;flex-direction:column;gap:8px;min-width:280px}
+.sieg-zeile{
+  display:flex;align-items:center;gap:14px;
+  padding:10px 18px;border-radius:12px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+}
+.sieg-rang{font-size:11px;font-weight:700;color:rgba(255,255,255,.25);width:18px}
+.sieg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.sieg-tname{flex:1;font-size:15px;font-weight:700;text-align:left}
+.sieg-tpts{font-size:18px;font-weight:900}
+
+/* Transition-Animation Idle→Spiel */
+@keyframes slide-in{
+  from{transform:translateX(100%);opacity:0}
+  to{transform:none;opacity:1}
+}
+.screen.aktiv{animation:slide-in .4s ease}
+#s-idle.aktiv{animation:none}
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     IDLE-SCREEN  (Warten / Setup)
+══════════════════════════════════════ -->
+<div class="screen aktiv" id="s-idle">
+
+  <div class="idle-header">
+    <div class="idle-logo">Schlag<span>fertig</span></div>
+    <div class="idle-badge">Display</div>
+    <div class="idle-status">
+      <div class="status-dot" id="netz-dot"></div>
+      <span id="netz-text">Verbinde…</span>
+    </div>
+  </div>
+
+  <div class="idle-body">
+
+    <!-- QR-Code -->
+    <div class="qr-sektion">
+      <div class="qr-rahmen">
+        <img id="qr-img" src="/api/setup/qr" alt="QR" onerror="qr_fallback()">
+      </div>
+      <div class="qr-label">📱 Moderator-Handy verbinden</div>
+      <div class="qr-sub" id="qr-url-text">Lade…</div>
+    </div>
+
+    <!-- Infos -->
+    <div class="info-sektion">
+
+      <div class="info-zeile">
+        <div class="info-label">IP-Adresse</div>
+        <div class="info-wert gross" id="info-ip">–</div>
+      </div>
+
+      <div class="info-zeile">
+        <div class="info-label">WLAN-Netzwerk</div>
+        <div class="info-wert" id="info-wlan">–</div>
+      </div>
+
+      <div class="trennlinie"></div>
+
+      <div class="info-zeile">
+        <div class="info-label">Moderator-URL</div>
+        <div class="info-wert dim" id="info-url">–</div>
+      </div>
+
+      <div class="info-zeile">
+        <div class="info-label">Spieler-Anzeige</div>
+        <div class="info-wert dim" id="info-game-url">–</div>
+      </div>
+
+      <div class="trennlinie"></div>
+
+      <div style="display:flex;align-items:center;gap:16px;margin-top:4px">
+        <div class="pulse-ring">
+          <span style="font-size:20px">🎮</span>
+        </div>
+        <div class="bereit-text">Warte auf Spielstart…</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="idle-footer">
+    <div class="footer-left" id="system-info">–</div>
+    <div class="footer-right">
+      <button class="footer-btn" onclick="window.location='/setup'">⚙ Einstellungen</button>
+      <button class="footer-btn primary" onclick="window.location='/moderator'">Moderator-Panel →</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════
+     SPIEL-SCREEN  (Spiel läuft)
+══════════════════════════════════════ -->
+<div class="screen" id="s-spiel">
+
+  <div class="spiel-header">
+    <div class="sh-logo">Schlag<span>fertig</span></div>
+    <div class="sh-frage-nr" id="sh-frage-nr">FRAGE – / –</div>
+    <div class="sh-kat" id="sh-kat">–</div>
+    <div class="sh-rechts" id="sh-scores"></div>
+  </div>
+
+  <div class="frage-sektion">
+    <div class="frage-text" id="frage-text">–</div>
+    <div class="mc-grid" id="mc-grid" style="display:none"></div>
+  </div>
+
+  <div class="buzzer-sektion">
+    <div class="buzzer-reihe" id="buz-reihe">
+      <div class="buz-leer">Buzzer bereit…</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════
+     SIEGER-SCREEN
+══════════════════════════════════════ -->
+<div class="screen" id="s-sieger">
+  <div class="sieg-trophee">🏆</div>
+  <div class="sieg-name" id="sieg-name">–</div>
+  <div class="sieg-pts" id="sieg-pts">–</div>
+  <div class="sieg-tabelle" id="sieg-tabelle"></div>
+</div>
+
+<!-- ══════════════════════════════════
+     ERGEBNIS-OVERLAY
+══════════════════════════════════════ -->
+<div id="ergebnis-overlay">
+  <div class="erg-icon" id="erg-icon">✓</div>
+  <div class="erg-text" id="erg-text" style="color:#4ade80">Richtig!</div>
+  <div class="erg-delta" id="erg-delta">+10 Punkte</div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ══ STATE ══
+const FARBEN = ['#E24B4A','#4361ee','#2d8a4e','#f59e0b','#8b5cf6','#06b6d4'];
+let spielPunkte   = {};
+let spielSpieler  = [];
+let aktuelleIdx   = 0;
+let aktuelleGes   = 1;
+let ergebnisTimer = null;
+
+// ══ SOCKET ══
+const socket = io();
+
+socket.on('connect', () => {
+  document.getElementById('netz-dot').classList.remove('offline');
+  document.getElementById('netz-text').textContent = 'Verbunden';
+});
+
+socket.on('disconnect', () => {
+  document.getElementById('netz-dot').classList.add('offline');
+  document.getElementById('netz-text').textContent = 'Getrennt';
+});
+
+socket.on('state_update', d => {
+  if (d.punkte)       { spielPunkte = d.punkte; }
+  if (d.aktive_spieler) spielSpieler = d.aktive_spieler;
+  if (d.warteschlange !== undefined) zeige_buzzer(d.warteschlange);
+  aktualisiere_header_scores();
+
+  if (d.modus === 'spiel') {
+    zeige_screen('s-spiel');
+  } else if (d.modus === 'warten') {
+    zeige_screen('s-idle');
+  }
+});
+
+socket.on('zeige_frage', d => {
+  const f   = d.frage || {};
+  aktuelleIdx = d.idx ?? 0;
+  aktuelleGes = d.gesamt ?? 1;
+  if (d.aktive_spieler) spielSpieler = d.aktive_spieler;
+
+  document.getElementById('sh-frage-nr').textContent =
+    `FRAGE ${aktuelleIdx + 1} / ${aktuelleGes}`;
+  document.getElementById('sh-kat').textContent = f.kategorie || 'Allgemein';
+  document.getElementById('frage-text').textContent = f.frage || '';
+
+  // MC
+  const mc = document.getElementById('mc-grid');
+  if (f.modus === 'mc' && f.antworten_mc) {
+    const lbls = ['A','B','C','D'];
+    const bgs  = ['#4361ee','#f72585','#f4a261','#2ec4b6'];
+    mc.innerHTML = f.antworten_mc.map((a, i) => `
+      <div class="mc-opt" id="mco-${i}">
+        <div class="mc-opt-lbl" style="background:${bgs[i]}">${lbls[i]}</div>
+        <span>${esc(a)}</span>
+      </div>`).join('');
+    mc.style.display = 'grid';
+  } else {
+    mc.innerHTML = '';
+    mc.style.display = 'none';
+  }
+
+  zeige_buzzer([]);
+  verstecke_ergebnis();
+  zeige_screen('s-spiel');
+});
+
+socket.on('zeige_mc_auswahl', d => {
+  document.querySelectorAll('.mc-opt').forEach(e => e.classList.remove('gewaehlt'));
+  const el = document.getElementById('mco-' + d.idx);
+  if (el) el.classList.add('gewaehlt');
+});
+
+socket.on('zeige_mc_aufloesen', d => {
+  document.querySelectorAll('.mc-opt').forEach((el, i) => {
+    el.classList.remove('gewaehlt');
+    if (i === d.richtig_idx) el.classList.add('richtig');
+    else if (i === d.gewaehlt && !d.richtig) el.classList.add('falsch');
+  });
+  zeige_ergebnis(d.richtig, d.delta);
+});
+
+socket.on('zeige_ergebnis', d => {
+  if (d.punkte) spielPunkte = d.punkte;
+  aktualisiere_header_scores();
+  zeige_ergebnis(d.richtig, d.delta);
+});
+
+socket.on('zeige_sieger', d => {
+  spielPunkte  = d.punkte  || {};
+  spielSpieler = d.spieler || [];
+  zeige_sieger_screen();
+});
+
+socket.on('buzzer_freigeben', () => {
+  zeige_buzzer([]);
+});
+
+socket.on('zeige_punktestand', d => {
+  if (d.punkte)  spielPunkte  = d.punkte;
+  if (d.spieler) spielSpieler = d.spieler;
+  aktualisiere_header_scores();
+});
+
+// ══ INIT ══
+window.addEventListener('DOMContentLoaded', lade_status);
+
+async function lade_status() {
+  try {
+    const r = await fetch('/api/setup/ip');
+    const d = await r.json();
+    const ip = d.ip || '';
+    document.getElementById('info-ip').textContent   = ip || 'Nicht verbunden';
+    document.getElementById('info-wlan').textContent = d.ssid || '–';
+    document.getElementById('info-url').textContent  = ip ? `http://${ip}:5000/moderator` : '–';
+    document.getElementById('info-game-url').textContent = ip ? `http://${ip}:5000/game` : '–';
+    document.getElementById('qr-url-text').textContent   = ip ? `http://${ip}:5000` : '–';
+    if (!ip) {
+      document.getElementById('netz-dot').classList.add('offline');
+      document.getElementById('netz-text').textContent = 'Kein WLAN';
+    } else {
+      document.getElementById('netz-text').textContent = ip;
+    }
+  } catch(e) {
+    document.getElementById('netz-dot').classList.add('offline');
+  }
+
+  try {
+    const r2 = await fetch('/api/system/info');
+    const d2 = await r2.json();
+    let info = [];
+    if (d2.temperatur) info.push('🌡 ' + d2.temperatur);
+    if (d2.speicher)   info.push('💾 ' + d2.speicher);
+    document.getElementById('system-info').textContent = info.join('  ·  ') || '–';
+  } catch(e) {}
+
+  // Alle 60s aktualisieren
+  setTimeout(lade_status, 60000);
+}
+
+// ══ BUZZER ══
+function zeige_buzzer(q) {
+  const el = document.getElementById('buz-reihe');
+  if (!q || !q.length) {
+    el.innerHTML = '<div class="buz-leer">Buzzer bereit…</div>';
+    return;
+  }
+  el.innerHTML = q.map((e, i) => `
+    <div class="buz-item">
+      <span class="buz-rang">${i+1}</span>
+      <span>${esc(e.nr || '?')}</span>
+    </div>`).join('');
+}
+
+// ══ SCORES ══
+function aktualisiere_header_scores() {
+  const el = document.getElementById('sh-scores');
+  const sorted = Object.entries(spielPunkte).sort((a,b) => b[1]-a[1]);
+  el.innerHTML = sorted.map(([name, pts], i) => `
+    <div class="sh-score">
+      <div class="sh-dot" style="background:${FARBEN[i%FARBEN.length]}"></div>
+      <div class="sh-name">${esc(name)}</div>
+      <div class="sh-pts">${pts}</div>
+    </div>`).join('');
+}
+
+// ══ ERGEBNIS ══
+function zeige_ergebnis(richtig, delta) {
+  clearTimeout(ergebnisTimer);
+  const ov = document.getElementById('ergebnis-overlay');
+  ov.style.background = richtig
+    ? 'rgba(5,20,12,.92)'
+    : 'rgba(20,5,5,.92)';
+  document.getElementById('erg-icon').textContent = richtig ? '✓' : '✗';
+  document.getElementById('erg-text').style.color = richtig ? '#4ade80' : '#f87171';
+  document.getElementById('erg-text').textContent = richtig ? 'Richtig!' : 'Falsch!';
+  document.getElementById('erg-delta').textContent = richtig
+    ? `+${delta} Punkte`
+    : `-${delta} Punkte`;
+  ov.classList.add('sicht');
+  ergebnisTimer = setTimeout(verstecke_ergebnis, 2800);
+}
+
+function verstecke_ergebnis() {
+  document.getElementById('ergebnis-overlay').classList.remove('sicht');
+}
+
+// ══ SIEGER ══
+function zeige_sieger_screen() {
+  const sorted = (spielSpieler.length ? spielSpieler : Object.keys(spielPunkte).map(n=>({name:n})))
+    .map(s => {
+      const name = typeof s === 'string' ? s : s.name;
+      return { name, pts: spielPunkte[name] ?? 0, farbe: s.farbe };
+    })
+    .sort((a,b) => b.pts - a.pts);
+
+  if (!sorted.length) return;
+  document.getElementById('sieg-name').textContent = sorted[0].name;
+  document.getElementById('sieg-pts').textContent  = `${sorted[0].pts} Punkte`;
+
+  document.getElementById('sieg-tabelle').innerHTML = sorted.map((s, i) => `
+    <div class="sieg-zeile">
+      <div class="sieg-rang">${i+1}.</div>
+      <div class="sieg-dot" style="background:${s.farbe || FARBEN[i%FARBEN.length]}"></div>
+      <div class="sieg-tname">${esc(s.name)}</div>
+      <div class="sieg-tpts">${s.pts}</div>
+    </div>`).join('');
+
+  zeige_screen('s-sieger');
+}
+
+// ══ SCREENS ══
+function zeige_screen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('aktiv'));
+  document.getElementById(id).classList.add('aktiv');
+}
+
+// ══ QR FALLBACK ══
+function qr_fallback() {
+  const el = document.getElementById('qr-img');
+  el.outerHTML = `
+    <div class="qr-fallback">
+      <div class="qr-fallback-icon">📱</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.3);text-align:center">
+        QR-Code nicht verfügbar
+      </div>
+    </div>`;
+}
+
+// ══ UTILS ══
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

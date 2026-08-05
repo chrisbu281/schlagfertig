@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Schlagfertig Display
+Comment=Schlagfertig Kiosk-Ansicht auf DSI-Display
+Exec=/home/pi/schlagfertig/pi-config/start-display.sh
+X-GNOME-Autostart-enabled=true

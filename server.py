@@ -208,6 +208,18 @@ def setup_abschliessen():
         f.write("fertig")
     return jsonify({"status": "ok"})
 
+@app.route("/display")
+def display_page():
+    return send_from_directory(BASIS, "display.html")
+
+@app.route("/game")
+def game_page():
+    return send_from_directory(BASIS, "game.html")
+
+@app.route("/moderator")
+def moderator_page():
+    return send_from_directory(BASIS, "moderator.html")
+
 @app.route("/editor")
 def editor(): return send_from_directory(BASIS, "quiz_editor.html")
 
