@@ -153,6 +153,62 @@ html,body{
 .footer-btn.primary:hover{background:rgba(226,75,74,.25)}
 
 /* ═══════════════════════════════════════
+   ANSICHT-WECHSLER  (floating, alle Screens)
+═══════════════════════════════════════ */
+#ansicht-btn{
+  position:fixed;bottom:18px;right:18px;z-index:900;
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  color:rgba(255,255,255,.45);font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:.2s;backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+#ansicht-btn:hover,#ansicht-btn.offen{
+  background:rgba(255,255,255,.14);color:#fff;
+  border-color:rgba(255,255,255,.25);
+}
+
+#ansicht-menu{
+  position:fixed;bottom:72px;right:14px;z-index:901;
+  background:#111118;border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;padding:8px;width:230px;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+  display:none;flex-direction:column;gap:4px;
+  animation:slideUp .18s ease;
+}
+#ansicht-menu.sichtbar{display:flex}
+@keyframes slideUp{
+  from{opacity:0;transform:translateY(10px)}
+  to  {opacity:1;transform:translateY(0)}
+}
+
+.am-kopf{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  color:rgba(255,255,255,.25);padding:4px 10px 8px;
+  text-transform:uppercase;
+}
+.am-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:10px;cursor:pointer;
+  transition:.15s;border:1px solid transparent;
+  text-decoration:none;color:#fff;
+}
+.am-item:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.08)}
+.am-item.aktiv{
+  background:rgba(226,75,74,.12);border-color:rgba(226,75,74,.2);
+  pointer-events:none;
+}
+.am-icon{font-size:22px;flex-shrink:0;width:28px;text-align:center}
+.am-label{font-size:13px;font-weight:600}
+.am-sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:1px}
+
+#ansicht-backdrop{
+  position:fixed;inset:0;z-index:899;display:none;
+}
+#ansicht-backdrop.sichtbar{display:block}
+
+/* ═══════════════════════════════════════
    SPIEL-SCREEN  (Spiel läuft)
 ═══════════════════════════════════════ */
 #s-spiel{
@@ -463,6 +519,38 @@ html,body{
   <div class="erg-delta" id="erg-delta">+10 Punkte</div>
 </div>
 
+<!-- ══════════════════════════════════
+     ANSICHT-WECHSLER  (immer sichtbar)
+══════════════════════════════════════ -->
+<div id="ansicht-backdrop" onclick="schliesseMenu()"></div>
+
+<div id="ansicht-menu">
+  <div class="am-kopf">Ansicht wechseln</div>
+  <div class="am-item aktiv">
+    <span class="am-icon">🖥️</span>
+    <div>
+      <div class="am-label">Info-Display</div>
+      <div class="am-sub">Aktuell aktiv</div>
+    </div>
+  </div>
+  <a class="am-item" href="/game">
+    <span class="am-icon">📺</span>
+    <div>
+      <div class="am-label">Spielbildschirm</div>
+      <div class="am-sub">Für TV / Beamer geeignet</div>
+    </div>
+  </a>
+  <a class="am-item" href="/moderator">
+    <span class="am-icon">🎛️</span>
+    <div>
+      <div class="am-label">Moderator-Panel</div>
+      <div class="am-sub">Spiel steuern</div>
+    </div>
+  </a>
+</div>
+
+<button id="ansicht-btn" onclick="toggleMenu()" title="Ansicht wechseln">⊞</button>
+
 <script src="/socket.io/socket.io.js"></script>
 <script>
 // ══ STATE ══
@@ -756,6 +844,32 @@ function qr_fallback() {
 function esc(s) {
   return String(s || '')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ══ ANSICHT-WECHSLER ══
+let menuTimeout = null;
+
+function toggleMenu() {
+  const menu     = document.getElementById('ansicht-menu');
+  const backdrop = document.getElementById('ansicht-backdrop');
+  const btn      = document.getElementById('ansicht-btn');
+  const offen    = menu.classList.contains('sichtbar');
+  if (offen) {
+    schliesseMenu();
+  } else {
+    menu.classList.add('sichtbar');
+    backdrop.classList.add('sichtbar');
+    btn.classList.add('offen');
+    // Auto-close nach 6 Sekunden
+    menuTimeout = setTimeout(schliesseMenu, 6000);
+  }
+}
+
+function schliesseMenu() {
+  clearTimeout(menuTimeout);
+  document.getElementById('ansicht-menu').classList.remove('sichtbar');
+  document.getElementById('ansicht-backdrop').classList.remove('sichtbar');
+  document.getElementById('ansicht-btn').classList.remove('offen');
 }
 </script>
 </body>
