@@ -660,9 +660,10 @@ def system_passwort():
         neues_pw = data.get("passwort","")
         if len(neues_pw) < 6:
             return jsonify({"error": "Zu kurz"}), 400
-        cfg = lese_config()
+        cfg = lese_oder_erstelle_config()
         cfg["admin_passwort"] = neues_pw
-        schreibe_config(cfg)
+        with open(KONFIG, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, ensure_ascii=False, indent=2)
         return jsonify({"status": "ok"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

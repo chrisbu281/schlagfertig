@@ -150,12 +150,6 @@ body{font-family:system-ui,sans-serif;background:#1a1a2e;color:#1a1a1a;font-size
 </div>
 
 <script>
-const CLOUD_KONFIG_KEY = '_sg_cloud';
-
-function lade_konfig() {
-  try { return JSON.parse(localStorage.getItem(CLOUD_KONFIG_KEY) || '{}'); } catch(_) { return {}; }
-}
-
 window.addEventListener('DOMContentLoaded', async () => {
   // Config vom Gerät holen
   try {

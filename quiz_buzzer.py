@@ -779,6 +779,7 @@ def main():
             if puls >= 1.0: puls_richtung = -1
             if puls <= 0.0: puls_richtung = 1
             zeige_wartebildschirm(puls)
+            pygame.display.flip()
 
         elif modus == "frage":
             zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, mc_aufgeloest)
