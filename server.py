@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify, send_from_directory, redirect, Response
 from flask_socketio import SocketIO, emit
-import json, os, csv, io, subprocess, urllib.request, urllib.parse
+import json, os, csv, io, subprocess, urllib.request, urllib.parse, sys
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'schlagfertig2024'
@@ -73,7 +73,7 @@ def starte_quiz():
     global spiel_prozess
     env = {**os.environ, "DISPLAY": ":0"}
     spiel_prozess = subprocess.Popen(
-        ["python3", os.path.join(BASIS, "quiz_buzzer.py")],
+        [sys.executable, os.path.join(BASIS, "quiz_buzzer.py")],
         env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     schreibe_state("warten")
