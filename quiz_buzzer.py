@@ -3,7 +3,7 @@
 Schlagfertig – Quiz Buzzer
 Fixes: MC Antworten, Sieger, Punktestand, schwarzer Übergang
 """
-import RPi.GPIO as GPIO
+import lgpio
 import pygame
 import json, time, sys, os, threading
 import socketio as sio_client
@@ -128,14 +128,20 @@ def spiele_sound(dateiname):
         sounds_cache[dateiname].play()
     except Exception as e:
         print(f"Sound Wiedergabe Fehler: {e}")
+_gpio_handle = None
+
 def gpio_setup(spieler):
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setwarnings(False)
+    global _gpio_handle
+    _gpio_handle = lgpio.gpiochip_open(0)
     for s in spieler:
-        GPIO.setup(s["gpio"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        lgpio.gpio_claim_input(_gpio_handle, s["gpio"], lgpio.SET_PULL_UP)
 
 def gpio_cleanup():
-    try: GPIO.cleanup()
+    global _gpio_handle
+    try:
+        if _gpio_handle is not None:
+            lgpio.gpiochip_close(_gpio_handle)
+            _gpio_handle = None
     except: pass
 
 # ─────────────────────────────────────────────
@@ -526,21 +532,13 @@ buzzer_warteschlange_lokal = []  # Lokale Kopie der Warteschlange
 
 def buzzer_thread(spieler):
     global buzzer_gesperrt, buzzer_start_zeit, buzzer_warteschlange_lokal
-    # Sicherstellen dass GPIO korrekt initialisiert ist
-    try:
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
-        for s in spieler:
-            GPIO.setup(s["gpio"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    except: pass
-
-    letzter = {s["nr"]: GPIO.HIGH for s in spieler}
+    letzter = {s["nr"]: 1 for s in spieler}
     erster_buzz_zeit = None
 
     while buzzer_aktiv:
         for s in spieler:
-            jetzt = GPIO.input(s["gpio"])
-            if jetzt == GPIO.LOW and letzter[s["nr"]] == GPIO.HIGH:
+            jetzt = lgpio.gpio_read(_gpio_handle, s["gpio"])
+            if jetzt == 0 and letzter[s["nr"]] == 1:
                 nr = s["nr"]
                 # Schon in Warteschlange? Ignorieren
                 if any(e['nr'] == nr for e in buzzer_warteschlange_lokal):
