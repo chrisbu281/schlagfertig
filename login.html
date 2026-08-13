@@ -98,51 +98,43 @@ body{font-family:system-ui,sans-serif;background:#1a1a2e;color:#1a1a1a;font-size
 
     <div id="meldung" class="meldung"></div>
 
-    <!-- FORMULAR (Cloud Login) -->
+    <!-- AUSWAHL: Gast oder Account -->
     <div id="login-form">
-      <span class="url-toggle" onclick="toggle_url()">⚙️ Server-URL <span id="url-pfeil">▼</span></span>
-      <div id="url-feld" style="display:none" class="form-gruppe">
-        <label class="form-label">Cloud-Server URL</label>
-        <input id="cloud-url" type="url" class="form-input" placeholder="http://192.168.1.100:5001">
-        <div class="form-hilfe">Adresse deines NAS oder Heimservers</div>
-      </div>
 
-      <div class="form-gruppe">
-        <label class="form-label">E-Mail-Adresse</label>
-        <input id="email" type="email" class="form-input" placeholder="name@beispiel.de" autocomplete="email">
-      </div>
-      <div class="form-gruppe">
-        <label class="form-label">Passwort</label>
-        <input id="passwort" type="password" class="form-input" placeholder="••••••••" autocomplete="current-password">
-      </div>
+      <!-- Gastmodus (Standard) -->
+      <button class="btn primaer" id="gast-btn" onclick="gast_modus()">
+        🎮 Sofort spielen
+        <span style="font-size:12px;font-weight:400;opacity:.7;display:block;margin-top:2px">Standardfragen aus unserer Bibliothek</span>
+      </button>
 
       <div class="fortschritt" id="fortschritt">
         <div class="fortschritt-balken" id="fortschritt-balken" style="width:0%"></div>
       </div>
 
-      <button class="btn primaer" id="login-btn" onclick="do_login()">
-        ☁️ Anmelden & Synchronisieren
-      </button>
-
       <div class="trenner">oder</div>
 
-      <button class="btn gast" onclick="gast_modus()">
-        🎮 Als Gast starten <span style="font-size:12px;opacity:.6">(Standard-Fragen)</span>
-      </button>
+      <!-- Account-Login (kommt bald) -->
+      <div style="background:#f8f8f8;border:1.5px dashed #ddd;border-radius:14px;padding:16px 18px;text-align:center;color:#999">
+        <div style="font-size:20px;margin-bottom:6px">🔐</div>
+        <div style="font-size:13px;font-weight:600;color:#aaa">Event-Account</div>
+        <div style="font-size:12px;margin-top:4px;line-height:1.5">
+          Eigene Fragen & Events –<br>kommt bald auf <strong style="color:#888">schlagfertig.de</strong>
+        </div>
+      </div>
     </div>
 
-    <!-- BEREITS ANGEMELDET: NUR SYNC-BTN -->
+    <!-- BEREITS GESTARTET: Sync oder weiter -->
     <div id="sync-bereich" style="display:none">
       <button class="btn sync" id="sync-btn" onclick="nochmal_sync()">
-        🔄 Fragen jetzt synchronisieren
+        🔄 Fragen aktualisieren
       </button>
       <div class="trenner">oder</div>
       <button class="btn primaer" onclick="weiter()">
-        ▶️ Spiel starten (zuletzt synchronisiert)
+        ▶️ Direkt spielen
       </button>
       <div class="trenner"></div>
-      <button class="btn gast" onclick="gast_modus()">
-        🎮 Als Gast starten
+      <button class="btn gast" style="font-size:13px;opacity:.7" onclick="abmelden()">
+        Gerät zurücksetzen / abmelden
       </button>
     </div>
 
@@ -151,121 +143,78 @@ body{font-family:system-ui,sans-serif;background:#1a1a2e;color:#1a1a1a;font-size
 
 <script>
 window.addEventListener('DOMContentLoaded', async () => {
-  // Config vom Gerät holen
   try {
     const r = await fetch('/api/cloud/config');
     const cfg = await r.json();
-    if (cfg.modus === 'cloud' && cfg.name) {
-      zeige_vorhanden(cfg);
-    } else if (cfg.cloud_url) {
-      document.getElementById('cloud-url').value = cfg.cloud_url;
-      document.getElementById('url-feld').style.display='block';
-      document.getElementById('url-pfeil').textContent='▲';
+    if (cfg.modus === 'gast' || cfg.modus === 'cloud') {
+      zeige_bereits_gestartet();
     }
   } catch(_) {}
-
-  // Enter-Taste
-  ['email','passwort'].forEach(id => {
-    document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') do_login(); });
-  });
 });
 
-function zeige_vorhanden(cfg) {
-  document.getElementById('status-banner').classList.add('sichtbar');
-  document.getElementById('sb-name').textContent = cfg.name || '–';
-  document.getElementById('sb-info').textContent = cfg.email || '';
+function zeige_bereits_gestartet() {
   document.getElementById('login-form').style.display = 'none';
   document.getElementById('sync-bereich').style.display = 'block';
 }
 
-function toggle_url() {
-  const feld = document.getElementById('url-feld');
-  const pfeil = document.getElementById('url-pfeil');
-  const sichtbar = feld.style.display !== 'none';
-  feld.style.display = sichtbar ? 'none' : 'block';
-  pfeil.textContent = sichtbar ? '▼' : '▲';
-}
-
-async function do_login() {
-  const url  = (document.getElementById('cloud-url').value || '').trim().replace(/\/$/,'');
-  const email= document.getElementById('email').value.trim();
-  const pw   = document.getElementById('passwort').value;
-
-  if (!email || !pw) { zeige_fehler('Bitte E-Mail und Passwort eingeben.'); return; }
-  if (!url)          { zeige_fehler('Bitte die Cloud-Server-URL eingeben.'); toggle_url(); return; }
-
-  const btn = document.getElementById('login-btn');
+async function gast_modus() {
+  const btn = document.getElementById('gast-btn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Verbinde…';
-  zeige_fortschritt(20);
-
+  btn.innerHTML = '<span class="spinner"></span> Fragen werden geladen…';
+  zeige_fortschritt(30);
   try {
-    const r = await fetch('/api/cloud/sync', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({cloud_url: url, email, passwort: pw})
-    });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error || 'Fehler');
-
+    const r = await fetch('/api/cloud/gast', { method:'POST' });
+    const d = await r.json();
     zeige_fortschritt(100);
-    zeige_meldung('erfolg', `✅ ${data.anzahl} Fragen von ${data.name} geladen!`);
-    setTimeout(() => { window.location.href = '/editor'; }, 1200);
+    if (d.offline) {
+      zeige_meldung('erfolg', '▶️ Kein Internet – starte mit zuletzt gespeicherten Fragen.');
+    } else {
+      zeige_meldung('erfolg', `✅ ${d.anzahl} Fragen geladen!`);
+    }
+    setTimeout(() => { window.location.href = '/editor'; }, 900);
   } catch(e) {
     zeige_fortschritt(0);
-    zeige_fehler(e.message || 'Verbindung fehlgeschlagen. Prüfe URL und Zugangsdaten.');
+    zeige_fehler('Laden fehlgeschlagen – bitte erneut versuchen.');
     btn.disabled = false;
-    btn.innerHTML = '☁️ Anmelden & Synchronisieren';
+    btn.innerHTML = '🎮 Sofort spielen<span style="font-size:12px;font-weight:400;opacity:.7;display:block;margin-top:2px">Standardfragen aus unserer Bibliothek</span>';
   }
 }
 
 async function nochmal_sync() {
   const btn = document.getElementById('sync-btn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Synchronisiere…';
+  btn.innerHTML = '<span class="spinner"></span> Aktualisiere…';
   try {
     const r = await fetch('/api/cloud/sync-refresh', { method:'POST' });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error || 'Fehler');
-    zeige_meldung('erfolg', `✅ ${data.anzahl} Fragen synchronisiert!`);
-    setTimeout(() => { window.location.href = '/editor'; }, 1200);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Fehler');
+    zeige_meldung('erfolg', `✅ ${d.anzahl} Fragen aktualisiert!`);
+    setTimeout(() => { window.location.href = '/editor'; }, 900);
   } catch(e) {
-    zeige_fehler(e.message || 'Sync fehlgeschlagen. Prüfe die Verbindung.');
+    zeige_fehler(e.message || 'Sync fehlgeschlagen.');
     btn.disabled = false;
-    btn.innerHTML = '🔄 Fragen jetzt synchronisieren';
+    btn.innerHTML = '🔄 Fragen aktualisieren';
   }
 }
 
-async function gast_modus() {
-  try {
-    await fetch('/api/cloud/gast', { method:'POST' });
-  } catch(_) {}
-  window.location.href = '/editor';
-}
-
-function weiter() {
-  window.location.href = '/editor';
-}
+function weiter() { window.location.href = '/editor'; }
 
 async function abmelden() {
-  try { await fetch('/api/cloud/abmelden', {method:'POST'}); } catch(_) {}
-  document.getElementById('status-banner').classList.remove('sichtbar');
+  try { await fetch('/api/cloud/abmelden', { method:'POST' }); } catch(_) {}
   document.getElementById('login-form').style.display = 'block';
   document.getElementById('sync-bereich').style.display = 'none';
 }
 
 function zeige_fehler(msg) {
   const el = document.getElementById('meldung');
-  el.className = 'meldung fehler';
-  el.textContent = msg;
+  el.className = 'meldung fehler'; el.textContent = msg;
 }
 function zeige_meldung(typ, msg) {
   const el = document.getElementById('meldung');
-  el.className = 'meldung ' + typ;
-  el.textContent = msg;
+  el.className = 'meldung ' + typ; el.textContent = msg;
 }
 function zeige_fortschritt(pct) {
-  const bar = document.getElementById('fortschritt');
+  const bar   = document.getElementById('fortschritt');
   const inner = document.getElementById('fortschritt-balken');
   bar.classList.toggle('sichtbar', pct > 0 && pct < 100);
   inner.style.width = pct + '%';

@@ -13,6 +13,10 @@ STATE_DATEI  = os.path.join(BASIS, ".spiel_state")
 CLOUD_KONFIG = os.path.join(BASIS, ".cloud_config.json")
 GAST_FRAGEN  = os.path.join(BASIS, "fragen_default.json")
 SETUP_DATEI  = os.path.join(BASIS, ".setup_fertig")
+
+# Supabase
+SUPABASE_BASE = "https://drjdushdhzgkfkigocxd.supabase.co"
+SUPABASE_SYNC = f"{SUPABASE_BASE}/storage/v1/object/public/sync/fragen.json"
 spiel_prozess = None
 
 spiel_state = {
@@ -305,114 +309,79 @@ def cloud_config_get():
         "modus":      cfg.get("modus", ""),
     })
 
+def lade_supabase_fragen(url=None):
+    """Lädt Fragen vom öffentlichen Supabase-Bucket und konvertiert ins lokale Format."""
+    ziel = url or SUPABASE_SYNC
+    req  = urllib.request.Request(ziel, headers={"User-Agent": "Schlagfertig/1.0"})
+    with urllib.request.urlopen(req, timeout=15) as r:
+        raw = json.loads(r.read().decode())
+    roh = raw if isinstance(raw, list) else raw.get("fragen", raw.get("data", []))
+    fragen = []
+    for f in roh:
+        fragen.append({
+            "_gewaehlt":              False,
+            "id":                     f.get("id"),
+            "frage":                  f.get("frage", ""),
+            "antwort":                f.get("antwort", ""),
+            "kategorie":              f.get("kategorie"),
+            "schwierigkeit":          f.get("schwierigkeit"),
+            "modus":                  f.get("modus", "frei"),
+            "antworten_mc":           f.get("antworten_mc"),
+            "richtige_antwort_index": f.get("richtige_antwort_index"),
+            "bild_url":               f.get("bild_url"),
+            "audio_url":              f.get("audio_url"),
+            "video_url":              f.get("video_url"),
+        })
+    return fragen
+
 @app.route("/api/cloud/sync", methods=["POST"])
 def cloud_sync():
-    """Anmelden am Cloud-Server und Fragen auf das Gerät laden."""
+    """Konto-Login und personalisierte Fragen laden (Supabase-Auth – kommt bald)."""
+    # TODO: Supabase User-Auth implementieren wenn Accounts aktiv sind.
+    # Bis dahin: gleicher Ablauf wie Gastmodus (öffentliche Bibliothek).
     try:
-        data       = request.get_json() or {}
-        cloud_url  = data.get("cloud_url", "").rstrip("/")
-        email      = data.get("email", "")
-        passwort   = data.get("passwort", "")
-        kategorien = data.get("kategorien", [])
-        schwierigkeit = data.get("schwierigkeit", "")
-
-        if not cloud_url or not email or not passwort:
-            return jsonify({"error": "cloud_url, email und passwort erforderlich"}), 400
-
-        # 1. Login beim Cloud-Server
-        login_result = cloud_request(
-            "POST", f"{cloud_url}/api/auth/login",
-            daten={"email": email, "passwort": passwort}
-        )
-        token = login_result.get("token")
-        name  = login_result.get("name")
-        if not token:
-            return jsonify({"error": "Anmeldung fehlgeschlagen"}), 401
-
-        # 2. Fragen-Export laden (mit optionalen Filtern)
-        params = []
-        for kat in kategorien:
-            params.append("kategorie=" + urllib.parse.quote(kat))
-        if schwierigkeit:
-            params.append("schwierigkeit=" + schwierigkeit)
-        query = "?" + "&".join(params) if params else ""
-
-        profil = cloud_request(
-            "GET", f"{cloud_url}/api/profil/export{query}",
-            token=token
-        )
-
-        # 3. Lokale Config aktualisieren (Einstellungen + Spieler beibehalten)
+        fragen = lade_supabase_fragen()
         config = lese_oder_erstelle_config()
-        config["fragen"] = profil.get("fragen", [])
+        config["fragen"] = fragen
         with open(KONFIG, "w", encoding="utf-8") as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
-
-        # 4. Cloud-Konfiguration speichern
-        schreibe_cloud_config({
-            "cloud_url":     cloud_url,
-            "token":         token,
-            "benutzer_name": name,
-            "email":         email,
-            "modus":         "cloud",
-        })
-
-        return jsonify({"status": "ok", "name": name, "anzahl": len(profil.get("fragen", []))})
-
-    except urllib.error.HTTPError as e:
-        try:
-            err = json.loads(e.read()).get("error", str(e))
-        except Exception:
-            err = str(e)
-        return jsonify({"error": err}), e.code
+        schreibe_cloud_config({"modus": "gast"})
+        return jsonify({"status": "ok", "name": "Gast", "anzahl": len(fragen)})
     except urllib.error.URLError as e:
-        return jsonify({"error": f"Server nicht erreichbar: {e.reason}"}), 503
+        return jsonify({"error": f"Supabase nicht erreichbar: {e.reason}"}), 503
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/cloud/sync-refresh", methods=["POST"])
 def cloud_sync_refresh():
-    """Erneuter Sync mit gespeichertem Token (kein Passwort nötig)."""
+    """Fragen erneut von Supabase laden."""
     try:
-        cfg = lese_cloud_config()
-        cloud_url = cfg.get("cloud_url", "").rstrip("/")
-        token     = cfg.get("token", "")
-        if not cloud_url or not token:
-            return jsonify({"error": "Kein gespeichertes Konto – bitte neu anmelden."}), 400
-
-        profil = cloud_request("GET", f"{cloud_url}/api/profil/export", token=token)
-
+        fragen = lade_supabase_fragen()
         config = lese_oder_erstelle_config()
-        config["fragen"] = profil.get("fragen", [])
+        config["fragen"] = fragen
         with open(KONFIG, "w", encoding="utf-8") as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
-
-        return jsonify({"status": "ok", "name": cfg.get("benutzer_name", ""), "anzahl": len(profil.get("fragen", []))})
-
-    except urllib.error.HTTPError as e:
-        if e.code == 401:
-            # Token abgelaufen – zur Login-Seite
-            schreibe_cloud_config({**lese_cloud_config(), "modus": ""})
-            return jsonify({"error": "Sitzung abgelaufen – bitte neu anmelden."}), 401
-        return jsonify({"error": str(e)}), e.code
+        return jsonify({"status": "ok", "anzahl": len(fragen)})
     except urllib.error.URLError as e:
-        return jsonify({"error": f"Server nicht erreichbar: {e.reason}"}), 503
+        return jsonify({"error": f"Supabase nicht erreichbar: {e.reason}"}), 503
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/cloud/gast", methods=["POST"])
 def cloud_gast():
-    """Gastmodus aktivieren – lokale Standardfragen laden."""
+    """Gastmodus: Fragen von Supabase laden, kein Account nötig."""
     try:
-        if os.path.exists(GAST_FRAGEN):
-            with open(GAST_FRAGEN, "r", encoding="utf-8") as f:
-                gast = json.load(f)
-            config = lese_oder_erstelle_config()
-            config["fragen"] = gast.get("fragen", [])
-            with open(KONFIG, "w", encoding="utf-8") as f:
-                json.dump(config, f, ensure_ascii=False, indent=2)
+        fragen = lade_supabase_fragen()
+        config = lese_oder_erstelle_config()
+        config["fragen"] = fragen
+        with open(KONFIG, "w", encoding="utf-8") as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
         schreibe_cloud_config({"modus": "gast"})
-        return jsonify({"status": "ok"})
+        return jsonify({"status": "ok", "anzahl": len(fragen)})
+    except urllib.error.URLError:
+        # Kein Internet: lokale Fragen nutzen (Fallback)
+        schreibe_cloud_config({"modus": "gast"})
+        return jsonify({"status": "ok", "anzahl": 0, "offline": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
