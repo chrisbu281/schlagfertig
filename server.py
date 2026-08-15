@@ -2,6 +2,7 @@
 from flask import Flask, request, jsonify, send_from_directory, redirect, Response
 from flask_socketio import SocketIO, emit
 import json, os, csv, io, subprocess, urllib.request, urllib.parse, sys
+import spiel_100leute
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'schlagfertig2024'
@@ -81,6 +82,18 @@ def starte_quiz():
         env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     schreibe_state("warten")
+
+def stoppe_pygame():
+    """Beendet quiz_buzzer.py (für 100-Leute-Modus, der Chromium statt pygame nutzt)."""
+    global spiel_prozess
+    schreibe_state("stoppen")
+    if spiel_laeuft():
+        spiel_prozess.terminate()
+        try:
+            spiel_prozess.wait(timeout=3)
+        except Exception:
+            spiel_prozess.kill()
+        spiel_prozess = None
 
 # ── ROUTES ──
 @app.route("/")
@@ -654,6 +667,9 @@ def system_reboot():
         os.system("sudo reboot")
     threading.Thread(target=do_reboot, daemon=True).start()
     return jsonify({"status": "ok"})
+
+# ── 100-LEUTE-MODUL REGISTRIEREN ──────────────────────────────────────────────
+spiel_100leute.init_app(app, socketio, stop_pygame=stoppe_pygame, start_pygame=starte_quiz)
 
 if __name__ == "__main__":
     print("Schlagfertig Server startet...")

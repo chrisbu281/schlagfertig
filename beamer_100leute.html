@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>100 Leute gefragt</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100vw;height:100vh;overflow:hidden;background:#05050f;
+  color:#fff;font-family:'Arial Black','Arial Bold',Arial,sans-serif;
+  user-select:none}
+
+/* ══ SCREENS ══ */
+.screen{position:fixed;inset:0;display:none;flex-direction:column}
+.screen.aktiv{display:flex}
+
+/* ══════════════════════ SETUP / WARTEN ══════════════════════ */
+#s-warten{align-items:center;justify-content:center;text-align:center;
+  background:radial-gradient(ellipse at 50% 40%,#1a0a2e 0%,#05050f 70%)}
+.wl{font-size:88px;font-weight:900;letter-spacing:-4px;line-height:1;
+  text-shadow:0 0 80px rgba(226,75,74,.3)}
+.wl span{color:#E24B4A}
+.w-sub{font-size:22px;color:rgba(255,255,255,.3);margin-top:18px;letter-spacing:2px;
+  text-transform:uppercase;animation:atem 2.5s ease-in-out infinite}
+@keyframes atem{0%,100%{opacity:.3}50%{opacity:.7}}
+
+/* ══════════════════════ HAUPTLAYOUT ══════════════════════ */
+#s-spiel{background:#08080f}
+.topbar{
+  display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:center;padding:12px 32px;
+  background:rgba(0,0,0,.4);border-bottom:2px solid rgba(255,255,255,.06);
+  flex-shrink:0;gap:12px;min-height:72px;
+}
+.team-box{
+  display:flex;align-items:center;gap:14px;
+  padding:8px 16px;border-radius:14px;
+  border:2px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);min-width:0;
+}
+.team-box.A{border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.07)}
+.team-box.B{border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.07);justify-content:flex-end}
+.team-box.aktiv{box-shadow:0 0 0 2px #f59e0b,0 0 20px rgba(245,158,11,.3)}
+.tb-name{font-size:22px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.tb-punkte{font-size:36px;font-weight:900;letter-spacing:-1px;white-space:nowrap}
+.tb-punkte.A{color:#60a5fa}
+.tb-punkte.B{color:#fb923c}
+.topbar-mitte{text-align:center;line-height:1.2}
+.tb-runde{font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.3);text-transform:uppercase}
+.tb-logo{font-size:18px;font-weight:900;letter-spacing:-0.5px;color:rgba(255,255,255,.5)}
+.tb-logo span{color:#E24B4A}
+
+/* ══ SPIELBEREICH ══ */
+.spielbereich{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:20px 40px;gap:16px;overflow:hidden;
+}
+
+/* ══ FRAGE ══ */
+.frage-wrapper{text-align:center;max-width:1100px;width:100%}
+.frage-label{font-size:11px;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(255,255,255,.3);margin-bottom:10px}
+.frage-text{
+  font-size:48px;font-weight:900;line-height:1.2;
+  text-shadow:0 2px 20px rgba(0,0,0,.5);
+}
+.frage-text.lang{font-size:36px}
+.frage-text.xl{font-size:28px}
+
+/* ══ ANTWORT-BOARD ══ */
+.board{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  width:100%;max-width:960px;
+}
+.tile{
+  position:relative;height:64px;
+  perspective:800px;cursor:default;
+}
+.tile-inner{
+  position:absolute;inset:0;
+  transform-style:preserve-3d;
+  transition:transform .55s cubic-bezier(.4,0,.2,1);
+}
+.tile.auf .tile-inner{transform:rotateX(180deg)}
+.tile-front,.tile-back{
+  position:absolute;inset:0;
+  border-radius:12px;
+  display:flex;align-items:center;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  overflow:hidden;
+}
+.tile-front{
+  background:linear-gradient(135deg,#1a2a4a 0%,#0d1b33 100%);
+  border:2px solid rgba(59,130,246,.25);
+  justify-content:center;gap:10px;
+}
+.tile-nr{font-size:28px;font-weight:900;color:rgba(255,255,255,.35)}
+.tile-back{
+  background:linear-gradient(135deg,#b45309 0%,#92400e 100%);
+  border:2px solid rgba(245,158,11,.5);
+  transform:rotateX(180deg);
+  padding:0 20px;justify-content:space-between;
+}
+.tile-text{font-size:22px;font-weight:800;letter-spacing:-.3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.tile-pkt{font-size:26px;font-weight:900;color:#fde68a;flex-shrink:0;margin-left:12px}
+
+/* von-team indicator (duell) */
+.tile-back.von-a{background:linear-gradient(135deg,#1e40af 0%,#1e3a8a 100%);
+  border-color:rgba(59,130,246,.6)}
+.tile-back.von-b{background:linear-gradient(135deg,#c2410c 0%,#9a3412 100%);
+  border-color:rgba(249,115,22,.6)}
+
+/* ══ STRIKES ══ */
+.strikes-bar{display:flex;align-items:center;justify-content:center;gap:16px}
+.strike-x{
+  width:56px;height:56px;border-radius:50%;
+  border:3px solid rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:900;color:transparent;
+  transition:all .3s;
+}
+.strike-x.aktiv{
+  border-color:#E24B4A;background:rgba(226,75,74,.2);
+  color:#E24B4A;text-shadow:0 0 20px rgba(226,75,74,.6);
+  animation:xpop .4s cubic-bezier(.17,.67,.27,1.45);
+}
+@keyframes xpop{0%{transform:scale(0.4)}100%{transform:scale(1)}}
+
+/* ══ TOPF ══ */
+.topf-badge{
+  background:linear-gradient(135deg,#1a1a2e,#0d0d20);
+  border:2px solid rgba(245,158,11,.3);
+  border-radius:50px;padding:8px 24px;
+  display:flex;align-items:center;gap:10px;
+}
+.topf-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.topf-val{font-size:28px;font-weight:900;color:#fde68a}
+
+/* ══ PHASEN-BADGE ══ */
+.phasen-badge{
+  border-radius:50px;padding:6px 20px;font-size:13px;font-weight:900;
+  letter-spacing:2px;text-transform:uppercase;
+}
+.pb-duell{background:rgba(139,92,246,.2);border:1.5px solid rgba(139,92,246,.5);color:#c4b5fd}
+.pb-haupt{background:rgba(16,185,129,.15);border:1.5px solid rgba(16,185,129,.4);color:#6ee7b7}
+.pb-stehlen{background:rgba(226,75,74,.15);border:1.5px solid rgba(226,75,74,.5);color:#fca5a5}
+
+/* ══ DUELL-ANZEIGE ══ */
+.duell-status{
+  display:flex;align-items:center;justify-content:center;gap:24px;
+  padding:8px 0;
+}
+.duell-team{
+  display:flex;align-items:center;gap:8px;padding:6px 16px;
+  border-radius:10px;border:2px solid transparent;
+  font-size:16px;font-weight:800;
+  transition:all .3s;
+  opacity:.35;
+}
+.duell-team.erster{
+  border-color:#f59e0b;background:rgba(245,158,11,.15);
+  color:#fde68a;opacity:1;
+}
+.duell-team.buzz-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:#f59e0b;animation:pulse 1s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+
+/* ══ AKTIVES TEAM INDIKATOR ══ */
+.aktiv-indikator{
+  font-size:24px;font-weight:900;letter-spacing:1px;
+  padding:8px 28px;border-radius:50px;
+  background:rgba(245,158,11,.15);
+  border:2px solid rgba(245,158,11,.4);
+  color:#fde68a;
+  animation:glow 2s ease-in-out infinite;
+}
+@keyframes glow{0%,100%{box-shadow:0 0 10px rgba(245,158,11,.2)}50%{box-shadow:0 0 30px rgba(245,158,11,.5)}}
+
+/* ══ STEHLEN-BANNER ══ */
+.stehlen-banner{
+  font-size:52px;font-weight:900;letter-spacing:4px;
+  color:#E24B4A;text-shadow:0 0 40px rgba(226,75,74,.6);
+  animation:stehlen-pulse 1.5s ease-in-out infinite;
+}
+@keyframes stehlen-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.04);opacity:.85}}
+
+/* ══════════════════════ RUNDENENDE ══════════════════════ */
+#s-rundenende{
+  align-items:center;justify-content:center;text-align:center;
+  background:radial-gradient(ellipse at 50% 40%,#1a1a0a 0%,#05050f 70%);
+}
+.re-label{font-size:14px;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(255,255,255,.3);margin-bottom:16px}
+.re-gewinner{font-size:80px;font-weight:900;color:#fde68a;
+  text-shadow:0 0 60px rgba(253,230,138,.4);
+  animation:gewinner-in .6s cubic-bezier(.17,.67,.27,1.45)}
+@keyframes gewinner-in{0%{transform:scale(0.3);opacity:0}100%{transform:scale(1);opacity:1}}
+.re-punkte{font-size:42px;font-weight:700;color:rgba(255,255,255,.6);margin-top:12px}
+.re-punkte span{color:#f59e0b;font-weight:900}
+.re-scores{display:flex;gap:80px;margin-top:40px;justify-content:center}
+.res-item{text-align:center}
+.res-name{font-size:18px;color:rgba(255,255,255,.4);margin-bottom:8px}
+.res-pts{font-size:56px;font-weight:900}
+.res-pts.A{color:#60a5fa}
+.res-pts.B{color:#fb923c}
+
+/* ══════════════════════ FAST FIVE ══════════════════════ */
+#s-fastfive{background:#05050f;align-items:center;justify-content:center;padding:20px 40px}
+.ff-header{text-align:center;margin-bottom:20px}
+.ff-title{font-size:52px;font-weight:900;color:#f59e0b;
+  text-shadow:0 0 40px rgba(245,158,11,.4);letter-spacing:2px}
+.ff-dran{font-size:20px;color:rgba(255,255,255,.5);margin-top:6px}
+.ff-dran span{font-weight:900}
+.ff-dran span.A{color:#60a5fa}
+.ff-dran span.B{color:#fb923c}
+.ff-main{display:flex;gap:32px;width:100%;max-width:1200px;align-items:flex-start}
+.ff-left{flex:1;display:flex;flex-direction:column;gap:10px}
+.ff-frage-box{
+  background:rgba(255,255,255,.04);border:2px solid rgba(245,158,11,.2);
+  border-radius:16px;padding:16px 20px;
+}
+.ff-frage-nr{font-size:11px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(255,255,255,.3);margin-bottom:6px}
+.ff-frage-text{font-size:32px;font-weight:800;line-height:1.3}
+.ff-board{display:flex;flex-direction:column;gap:8px}
+.ff-tile{
+  border-radius:10px;padding:10px 16px;
+  display:flex;align-items:center;gap:12px;
+  border:2px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  transition:all .4s;
+  min-height:50px;
+}
+.ff-tile.auf.von-a{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.4)}
+.ff-tile.auf.von-b{background:rgba(249,115,22,.15);border-color:rgba(249,115,22,.4)}
+.ff-tile-nr{font-size:16px;color:rgba(255,255,255,.25);font-weight:700;width:20px;flex-shrink:0}
+.ff-tile-text{font-size:20px;font-weight:700;flex:1}
+.ff-tile-pkt{font-size:18px;font-weight:900;color:#fde68a;flex-shrink:0}
+.ff-right{display:flex;flex-direction:column;gap:16px;align-items:center;min-width:220px}
+.ff-timer{
+  width:180px;height:180px;border-radius:50%;
+  border:6px solid rgba(245,158,11,.2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;
+}
+.ff-timer-ring{
+  position:absolute;inset:-6px;border-radius:50%;
+  border:6px solid transparent;
+  border-top-color:#f59e0b;
+  transition:transform .9s linear;
+}
+.ff-timer-zahl{font-size:72px;font-weight:900;color:#fde68a;line-height:1}
+.ff-timer-label{font-size:12px;letter-spacing:2px;color:rgba(255,255,255,.3);text-transform:uppercase}
+.ff-scores{display:flex;gap:20px}
+.ffs{text-align:center;padding:16px 24px;border-radius:14px;border:2px solid rgba(255,255,255,.1)}
+.ffs.A{border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.08)}
+.ffs.B{border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.08)}
+.ffs-name{font-size:13px;color:rgba(255,255,255,.4);margin-bottom:4px}
+.ffs-pts{font-size:40px;font-weight:900}
+.ffs-pts.A{color:#60a5fa}
+.ffs-pts.B{color:#fb923c}
+.ff-fortschritt{display:flex;gap:6px;margin-top:8px}
+.ff-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.15)}
+.ff-dot.aktiv{background:#f59e0b}
+.ff-dot.fertig{background:#6ee7b7}
+
+/* ══════════════════════ ENDE ══════════════════════ */
+#s-ende{
+  align-items:center;justify-content:center;text-align:center;
+  background:radial-gradient(ellipse at 50% 30%,#1a1200 0%,#05050f 70%);
+}
+.ende-konfetti{font-size:60px;margin-bottom:20px;animation:bounce 1s ease-in-out infinite alternate}
+@keyframes bounce{0%{transform:translateY(0)}100%{transform:translateY(-16px)}}
+.ende-title{font-size:28px;letter-spacing:6px;text-transform:uppercase;
+  color:rgba(255,255,255,.3);margin-bottom:16px}
+.ende-gewinner{font-size:88px;font-weight:900;
+  background:linear-gradient(135deg,#fde68a,#f59e0b);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:none;line-height:1;margin-bottom:8px}
+.ende-scores{display:flex;gap:60px;margin-top:32px;justify-content:center}
+.es{text-align:center;padding:24px 40px;border-radius:20px;
+  border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)}
+.es.A{border-color:rgba(59,130,246,.4)}
+.es.B{border-color:rgba(249,115,22,.4)}
+.es.sieger{border-color:#f59e0b;background:rgba(245,158,11,.08);
+  box-shadow:0 0 40px rgba(245,158,11,.2)}
+.es-name{font-size:20px;color:rgba(255,255,255,.5);margin-bottom:12px}
+.es-pts{font-size:72px;font-weight:900}
+.es-pts.A{color:#60a5fa}
+.es-pts.B{color:#fb923c}
+</style>
+</head>
+<body>
+
+<!-- ══ WARTEN / SETUP ══ -->
+<div class="screen aktiv" id="s-warten">
+  <div>
+    <div class="wl">100 <span>LEUTE</span></div>
+    <div class="w-sub">Warte auf Spielstart …</div>
+  </div>
+</div>
+
+<!-- ══ HAUPTSPIEL (buzzerduell / hauptrunde / stehlen) ══ -->
+<div class="screen" id="s-spiel">
+  <div class="topbar">
+    <!-- Team A -->
+    <div class="team-box A" id="tb-a">
+      <div class="tb-punkte A" id="tb-punkte-a">0</div>
+      <div class="tb-name" id="tb-name-a">Team A</div>
+    </div>
+    <!-- Mitte -->
+    <div class="topbar-mitte">
+      <div class="tb-runde" id="tb-runde">Runde 1 / 3</div>
+      <div class="tb-logo">100 <span>LEUTE</span></div>
+    </div>
+    <!-- Team B -->
+    <div class="team-box B" id="tb-b">
+      <div class="tb-name" id="tb-name-b">Team B</div>
+      <div class="tb-punkte B" id="tb-punkte-b">0</div>
+    </div>
+  </div>
+
+  <div class="spielbereich">
+    <!-- Phase-Badge -->
+    <div id="phasen-badge" class="phasen-badge pb-duell" style="display:none">BUZZER DUELL</div>
+
+    <!-- Aktives Team (Hauptrunde/Stehlen) -->
+    <div id="aktiv-indikator" class="aktiv-indikator" style="display:none">Team A ist dran</div>
+
+    <!-- Stehlen-Banner -->
+    <div id="stehlen-banner" class="stehlen-banner" style="display:none">STEHLEN!</div>
+
+    <!-- Frage -->
+    <div class="frage-wrapper">
+      <div class="frage-label">100 Leute gefragt …</div>
+      <div class="frage-text" id="frage-text">–</div>
+    </div>
+
+    <!-- Duell-Status (wer buzzed hat) -->
+    <div class="duell-status" id="duell-status" style="display:none">
+      <div class="duell-team A" id="duell-a">A buzzed</div>
+      <div class="duell-team B" id="duell-b">B buzzed</div>
+    </div>
+
+    <!-- Antwort-Board (2-spaltig) -->
+    <div class="board" id="board"></div>
+
+    <!-- Unten: Strikes + Topf -->
+    <div style="display:flex;align-items:center;gap:28px;flex-wrap:wrap;justify-content:center">
+      <div class="strikes-bar" id="strikes-bar" style="display:none">
+        <div class="strike-x" id="sx1">✕</div>
+        <div class="strike-x" id="sx2">✕</div>
+        <div class="strike-x" id="sx3">✕</div>
+      </div>
+      <div class="topf-badge" id="topf-badge" style="display:none">
+        <span class="topf-label">Topf</span>
+        <span class="topf-val" id="topf-val">0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RUNDENENDE ══ -->
+<div class="screen" id="s-rundenende">
+  <div class="re-label">Diese Runde geht an …</div>
+  <div class="re-gewinner" id="re-gewinner">Team A</div>
+  <div class="re-punkte" id="re-punkte">+ <span>0</span> Punkte</div>
+  <div class="re-scores">
+    <div class="res-item">
+      <div class="res-name" id="re-name-a">Team A</div>
+      <div class="res-pts A" id="re-pts-a">0</div>
+    </div>
+    <div class="res-item">
+      <div class="res-name" id="re-name-b">Team B</div>
+      <div class="res-pts B" id="re-pts-b">0</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FAST FIVE ══ -->
+<div class="screen" id="s-fastfive">
+  <div class="ff-header">
+    <div class="ff-title">⚡ FAST FIVE</div>
+    <div class="ff-dran" id="ff-dran-label">Warte …</div>
+  </div>
+  <div class="ff-main">
+    <div class="ff-left">
+      <div class="ff-frage-box">
+        <div class="ff-frage-nr" id="ff-frage-nr">Frage 1 von 5</div>
+        <div class="ff-frage-text" id="ff-frage-text">–</div>
+      </div>
+      <div class="ff-board" id="ff-board"></div>
+    </div>
+    <div class="ff-right">
+      <div class="ff-timer" id="ff-timer" style="display:none">
+        <div class="ff-timer-zahl" id="ff-timer-zahl">20</div>
+        <div class="ff-timer-label">Sekunden</div>
+      </div>
+      <div class="ff-scores">
+        <div class="ffs A">
+          <div class="ffs-name" id="ff-name-a">Team A</div>
+          <div class="ffs-pts A" id="ff-pts-a">0</div>
+        </div>
+        <div class="ffs B">
+          <div class="ffs-name" id="ff-name-b">Team B</div>
+          <div class="ffs-pts B" id="ff-pts-b">0</div>
+        </div>
+      </div>
+      <div class="ff-fortschritt" id="ff-fortschritt"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ENDE ══ -->
+<div class="screen" id="s-ende">
+  <div class="ende-konfetti">🏆</div>
+  <div class="ende-title">Gesamtsieger</div>
+  <div class="ende-gewinner" id="ende-gewinner">–</div>
+  <div class="ende-scores">
+    <div class="es A" id="ende-card-a">
+      <div class="es-name" id="ende-name-a">Team A</div>
+      <div class="es-pts A" id="ende-pts-a">0</div>
+    </div>
+    <div class="es B" id="ende-card-b">
+      <div class="es-name" id="ende-name-b">Team B</div>
+      <div class="es-pts B" id="ende-pts-b">0</div>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io('/100leute');
+let letzterState = null;
+
+socket.on('connect', () => console.log('100leute beamer verbunden'));
+socket.on('state', s => renderState(s));
+
+function zeige(id) {
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('aktiv'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('aktiv');
+}
+
+function sichtbar(id, v) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = v ? '' : 'none';
+}
+
+function text(id, t) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = t;
+}
+
+// ── Frage-Textgröße anpassen ──
+function passeFrageGroesse(el, t) {
+  el.textContent = t;
+  el.classList.remove('lang','xl');
+  if (t.length > 100) el.classList.add('xl');
+  else if (t.length > 60) el.classList.add('lang');
+}
+
+// ── Board rendern ──
+function renderBoard(af, phase) {
+  const board = document.getElementById('board');
+  if (!af) { board.innerHTML = ''; return; }
+  const antworten = af.antworten || [];
+  // Immer max 6 Slots zeigen (ggf. leere Slots für kürzere Listen)
+  const anzahl = Math.max(antworten.length, 1);
+  board.innerHTML = '';
+  for (let i = 0; i < anzahl; i++) {
+    const a = antworten[i] || {};
+    const tile = document.createElement('div');
+    tile.className = 'tile' + (a.auf ? ' auf' : '');
+    // Bestimme Team-Farbe für aufgedeckte Tiles im Duell
+    let backClass = '';
+    if (phase === 'buzzerduell' && a.auf) {
+      // Herausfinden ob Tile von Team A oder B aufgedeckt wurde
+      // (vereinfacht: a.von-Feld nicht im State → neutrale Farbe)
+    }
+    tile.innerHTML = `
+      <div class="tile-inner">
+        <div class="tile-front"><span class="tile-nr">${i+1}</span></div>
+        <div class="tile-back ${backClass}">
+          <span class="tile-text">${escHtml(a.text||'')}</span>
+          <span class="tile-pkt">${a.punkte||0}</span>
+        </div>
+      </div>`;
+    board.appendChild(tile);
+  }
+}
+
+// ── Fast-Five-Board ──
+function renderFFBoard(ff) {
+  const board = document.getElementById('ff-board');
+  if (!ff || !ff.fragen || ff.aktuell >= ff.fragen.length) { board.innerHTML=''; return; }
+  const frage = ff.fragen[ff.aktuell];
+  board.innerHTML = '';
+  (frage.antworten||[]).forEach((a,i) => {
+    const tile = document.createElement('div');
+    tile.className = 'ff-tile' + (a.auf ? ' auf von-'+(a.von||'').toLowerCase() : '');
+    tile.innerHTML = `
+      <span class="ff-tile-nr">${i+1}</span>
+      <span class="ff-tile-text">${a.auf ? escHtml(a.text||'') : '─ ─ ─ ─ ─ ─'}</span>
+      ${a.auf ? `<span class="ff-tile-pkt">${a.punkte}</span>` : ''}`;
+    board.appendChild(tile);
+  });
+}
+
+// ── Fortschritt-Punkte (FF) ──
+function renderFFDots(ff) {
+  const el = document.getElementById('ff-fortschritt');
+  if (!ff || !ff.fragen) { el.innerHTML=''; return; }
+  const total = ff.fragen.length;
+  let html = '';
+  for (let i=0; i<total; i++) {
+    const cls = i < ff.aktuell ? 'fertig' : i === ff.aktuell ? 'aktiv' : '';
+    html += `<div class="ff-dot ${cls}"></div>`;
+  }
+  el.innerHTML = html;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Haupt-Render-Funktion ──
+function renderState(s) {
+  letzterState = s;
+  const phase = s.phase || 'setup';
+  const teams = s.teams || {A:{name:'Team A',punkte:0},B:{name:'Team B',punkte:0}};
+  const af = s.aktive_frage;
+  const d  = s.duell || {};
+  const ff = s.ff;
+
+  // Topbar (Spielphasen)
+  text('tb-name-a', teams.A.name);
+  text('tb-name-b', teams.B.name);
+  text('tb-punkte-a', teams.A.punkte);
+  text('tb-punkte-b', teams.B.punkte);
+  text('tb-runde', `Runde ${s.runde||0} / ${(s.config||{}).runden||3}`);
+
+  // Team-Highlight (aktives Team)
+  document.getElementById('tb-a').classList.toggle('aktiv', s.aktives_team === 'A');
+  document.getElementById('tb-b').classList.toggle('aktiv', s.aktives_team === 'B');
+
+  // Screens schalten
+  if (phase === 'setup') {
+    zeige('s-warten');
+    return;
+  }
+  if (phase === 'rundenende') {
+    zeige('s-rundenende');
+    const re = s.rundenende || {};
+    const gw = re.gewinner;
+    const teamName = gw && teams[gw] ? teams[gw].name : '?';
+    text('re-gewinner', teamName);
+    const topfEl = document.getElementById('re-punkte');
+    topfEl.innerHTML = `+ <span>${re.topf||0}</span> Punkte`;
+    text('re-name-a', teams.A.name);
+    text('re-name-b', teams.B.name);
+    text('re-pts-a', teams.A.punkte);
+    text('re-pts-b', teams.B.punkte);
+    return;
+  }
+  if (phase === 'fastfive') {
+    zeige('s-fastfive');
+    text('ff-name-a', teams.A.name);
+    text('ff-name-b', teams.B.name);
+    if (!ff) { text('ff-frage-text','Wird vorbereitet …'); return; }
+    const dran = ff.dran || 'A';
+    const dranTeam = teams[dran] || {};
+    document.getElementById('ff-dran-label').innerHTML =
+      `<span class="${dran}">${escHtml(dranTeam.name||dran)}</span> ist dran`;
+    // Frage
+    const ak = ff.aktuell||0;
+    if (ff.fragen && ff.fragen[ak]) {
+      text('ff-frage-nr', `Frage ${ak+1} von ${ff.fragen.length}`);
+      text('ff-frage-text', ff.fragen[ak].frage || '–');
+    }
+    // Board
+    renderFFBoard(ff);
+    // Timer
+    const timerEl = document.getElementById('ff-timer');
+    if (s.config && s.config.ff_timer && ff.timer_rest > 0) {
+      timerEl.style.display = '';
+      text('ff-timer-zahl', ff.timer_rest);
+    } else {
+      timerEl.style.display = 'none';
+    }
+    // Punkte
+    text('ff-pts-a', ff.punkte_a || 0);
+    text('ff-pts-b', ff.punkte_b || 0);
+    // Fortschritt
+    renderFFDots(ff);
+    return;
+  }
+  if (phase === 'ende') {
+    zeige('s-ende');
+    text('ende-name-a', teams.A.name);
+    text('ende-name-b', teams.B.name);
+    text('ende-pts-a', teams.A.punkte);
+    text('ende-pts-b', teams.B.punkte);
+    const sieger = teams.A.punkte >= teams.B.punkte ? 'A' : 'B';
+    text('ende-gewinner', teams[sieger].name);
+    document.getElementById('ende-card-a').classList.toggle('sieger', sieger==='A');
+    document.getElementById('ende-card-b').classList.toggle('sieger', sieger==='B');
+    return;
+  }
+
+  // Spielphasen: buzzerduell, hauptrunde, stehlen
+  zeige('s-spiel');
+
+  // Frage
+  const fragetEl = document.getElementById('frage-text');
+  passeFrageGroesse(fragetEl, af ? af.frage : '–');
+
+  // Board
+  renderBoard(af, phase);
+
+  // Phasen-Badge
+  const badge = document.getElementById('phasen-badge');
+  badge.style.display = '';
+  if (phase === 'buzzerduell') {
+    badge.className = 'phasen-badge pb-duell';
+    badge.textContent = 'BUZZER DUELL';
+  } else if (phase === 'hauptrunde') {
+    badge.className = 'phasen-badge pb-haupt';
+    badge.textContent = 'HAUPTRUNDE';
+  } else if (phase === 'stehlen') {
+    badge.className = 'phasen-badge pb-stehlen';
+    badge.textContent = 'STEHLEN';
+  }
+
+  // Aktiv-Indikator
+  const aktEl = document.getElementById('aktiv-indikator');
+  if (phase === 'hauptrunde' && s.aktives_team) {
+    aktEl.style.display = '';
+    aktEl.textContent = (teams[s.aktives_team]||{}).name + ' ist dran';
+    sichtbar('stehlen-banner', false);
+  } else if (phase === 'stehlen') {
+    aktEl.style.display = 'none';
+    sichtbar('stehlen-banner', true);
+  } else {
+    aktEl.style.display = 'none';
+    sichtbar('stehlen-banner', false);
+  }
+
+  // Duell-Status
+  const duellEl = document.getElementById('duell-status');
+  if (phase === 'buzzerduell') {
+    duellEl.style.display = '';
+    const dA = document.getElementById('duell-a');
+    const dB = document.getElementById('duell-b');
+    dA.textContent = teams.A.name + (d.erster_team==='A' ? ' 🔔' : '');
+    dB.textContent = teams.B.name + (d.erster_team==='B' ? ' 🔔' : '');
+    dA.classList.toggle('erster', d.erster_team==='A');
+    dB.classList.toggle('erster', d.erster_team==='B');
+  } else {
+    duellEl.style.display = 'none';
+  }
+
+  // Strikes
+  const strBar = document.getElementById('strikes-bar');
+  if (phase === 'hauptrunde' || phase === 'stehlen') {
+    strBar.style.display = '';
+    for (let i=1; i<=3; i++) {
+      document.getElementById(`sx${i}`).classList.toggle('aktiv', (s.strikes||0) >= i);
+    }
+  } else {
+    strBar.style.display = 'none';
+  }
+
+  // Topf
+  const topfEl = document.getElementById('topf-badge');
+  if ((phase === 'hauptrunde' || phase === 'stehlen') && (s.rundentopf||0) > 0) {
+    topfEl.style.display = '';
+    text('topf-val', s.rundentopf + ' Pts');
+  } else {
+    topfEl.style.display = 'none';
+  }
+}
+</script>
+</body>
+</html>
