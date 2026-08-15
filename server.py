@@ -85,13 +85,11 @@ def starte_quiz():
 # ── ROUTES ──
 @app.route("/")
 def index():
-    # Ersteinrichtung noch nicht abgeschlossen?
+    # WLAN noch nicht eingerichtet? → Setup-Assistent (einmalig)
     if not os.path.exists(SETUP_DATEI):
         return redirect("/setup")
-    cfg = lese_cloud_config()
-    if not cfg.get("modus"):
-        return redirect("/login")
-    return redirect("/editor")
+    # Sonst: bei jedem Boot zur Anmelde-/Modusauswahl
+    return redirect("/login")
 
 @app.route("/setup")
 def setup_page():

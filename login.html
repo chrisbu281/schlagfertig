@@ -81,82 +81,38 @@ body{font-family:system-ui,sans-serif;background:#1a1a2e;color:#1a1a1a;font-size
 
 <div class="karte">
   <div class="karte-header">
-    <h2>Willkommen zurück 👋</h2>
-    <p>Fragen aktualisieren oder direkt losspielen.</p>
+    <h2>Bereit zum Spielen 🎯</h2>
+    <p>Wie möchtest du starten?</p>
   </div>
   <div class="karte-body">
 
-    <!-- VORHANDENE SESSION -->
-    <div id="status-banner" class="status-banner">
-      <span class="sb-icon">✅</span>
-      <div class="sb-text">
-        <strong id="sb-name">–</strong>
-        <span id="sb-info">–</span>
-      </div>
-      <button class="sb-ab" onclick="abmelden()">Abmelden</button>
-    </div>
-
     <div id="meldung" class="meldung"></div>
 
-    <!-- AUSWAHL: Gast oder Account -->
-    <div id="login-form">
+    <!-- Gastmodus -->
+    <button class="btn primaer" id="gast-btn" onclick="gast_modus()">
+      🎮 Sofort spielen
+      <span style="font-size:12px;font-weight:400;opacity:.7;display:block;margin-top:2px">Standardfragen aus unserer Bibliothek</span>
+    </button>
 
-      <!-- Gastmodus (Standard) -->
-      <button class="btn primaer" id="gast-btn" onclick="gast_modus()">
-        🎮 Sofort spielen
-        <span style="font-size:12px;font-weight:400;opacity:.7;display:block;margin-top:2px">Standardfragen aus unserer Bibliothek</span>
-      </button>
-
-      <div class="fortschritt" id="fortschritt">
-        <div class="fortschritt-balken" id="fortschritt-balken" style="width:0%"></div>
-      </div>
-
-      <div class="trenner">oder</div>
-
-      <!-- Account-Login (kommt bald) -->
-      <div style="background:#f8f8f8;border:1.5px dashed #ddd;border-radius:14px;padding:16px 18px;text-align:center;color:#999">
-        <div style="font-size:20px;margin-bottom:6px">🔐</div>
-        <div style="font-size:13px;font-weight:600;color:#aaa">Event-Account</div>
-        <div style="font-size:12px;margin-top:4px;line-height:1.5">
-          Eigene Fragen & Events –<br>kommt bald auf <strong style="color:#888">schlagfertig.de</strong>
-        </div>
-      </div>
+    <div class="fortschritt" id="fortschritt">
+      <div class="fortschritt-balken" id="fortschritt-balken" style="width:0%"></div>
     </div>
 
-    <!-- BEREITS GESTARTET: Sync oder weiter -->
-    <div id="sync-bereich" style="display:none">
-      <button class="btn sync" id="sync-btn" onclick="nochmal_sync()">
-        🔄 Fragen aktualisieren
-      </button>
-      <div class="trenner">oder</div>
-      <button class="btn primaer" onclick="weiter()">
-        ▶️ Direkt spielen
-      </button>
-      <div class="trenner"></div>
-      <button class="btn gast" style="font-size:13px;opacity:.7" onclick="abmelden()">
-        Gerät zurücksetzen / abmelden
-      </button>
+    <div class="trenner">oder</div>
+
+    <!-- Account-Login (kommt bald) -->
+    <div style="background:#f8f8f8;border:1.5px dashed #ddd;border-radius:14px;padding:16px 18px;text-align:center;color:#999">
+      <div style="font-size:20px;margin-bottom:6px">🔐</div>
+      <div style="font-size:13px;font-weight:600;color:#aaa">Mit Event-Account anmelden</div>
+      <div style="font-size:12px;margin-top:4px;line-height:1.5">
+        Eigene Fragen &amp; Events –<br>kommt bald auf <strong style="color:#888">schlagfertig.de</strong>
+      </div>
     </div>
 
   </div><!-- karte-body -->
 </div>
 
 <script>
-window.addEventListener('DOMContentLoaded', async () => {
-  try {
-    const r = await fetch('/api/cloud/config');
-    const cfg = await r.json();
-    if (cfg.modus === 'gast' || cfg.modus === 'cloud') {
-      zeige_bereits_gestartet();
-    }
-  } catch(_) {}
-});
-
-function zeige_bereits_gestartet() {
-  document.getElementById('login-form').style.display = 'none';
-  document.getElementById('sync-bereich').style.display = 'block';
-}
-
 async function gast_modus() {
   const btn = document.getElementById('gast-btn');
   btn.disabled = true;
@@ -167,7 +123,7 @@ async function gast_modus() {
     const d = await r.json();
     zeige_fortschritt(100);
     if (d.offline) {
-      zeige_meldung('erfolg', '▶️ Kein Internet – starte mit zuletzt gespeicherten Fragen.');
+      zeige_meldung('erfolg', '▶️ Kein Internet – starte mit gespeicherten Fragen.');
     } else {
       zeige_meldung('erfolg', `✅ ${d.anzahl} Fragen geladen!`);
     }
@@ -178,31 +134,6 @@ async function gast_modus() {
     btn.disabled = false;
     btn.innerHTML = '🎮 Sofort spielen<span style="font-size:12px;font-weight:400;opacity:.7;display:block;margin-top:2px">Standardfragen aus unserer Bibliothek</span>';
   }
-}
-
-async function nochmal_sync() {
-  const btn = document.getElementById('sync-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Aktualisiere…';
-  try {
-    const r = await fetch('/api/cloud/sync-refresh', { method:'POST' });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error || 'Fehler');
-    zeige_meldung('erfolg', `✅ ${d.anzahl} Fragen aktualisiert!`);
-    setTimeout(() => { window.location.href = '/editor'; }, 900);
-  } catch(e) {
-    zeige_fehler(e.message || 'Sync fehlgeschlagen.');
-    btn.disabled = false;
-    btn.innerHTML = '🔄 Fragen aktualisieren';
-  }
-}
-
-function weiter() { window.location.href = '/editor'; }
-
-async function abmelden() {
-  try { await fetch('/api/cloud/abmelden', { method:'POST' }); } catch(_) {}
-  document.getElementById('login-form').style.display = 'block';
-  document.getElementById('sync-bereich').style.display = 'none';
 }
 
 function zeige_fehler(msg) {
