@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schlagfertig – Spielmodus</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#1a1a2e;color:#fff;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:24px}
+
+.logo{text-align:center;margin-bottom:36px}
+.logo .gross{font-size:38px;font-weight:900;color:#fff;letter-spacing:-1px}
+.logo .gross span{color:#E24B4A}
+.logo .sub{color:#888;font-size:13px;margin-top:4px}
+
+h2{font-size:20px;font-weight:800;text-align:center;margin-bottom:6px;color:#fff}
+.unter{font-size:14px;color:#888;text-align:center;margin-bottom:28px}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:14px;width:100%;max-width:920px;
+}
+
+.modus-karte{
+  background:#fff;border-radius:20px;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,.25);
+  cursor:pointer;transition:all .2s;
+  text-decoration:none;color:inherit;
+  display:block;
+}
+.modus-karte:hover{transform:translateY(-3px);box-shadow:0 14px 44px rgba(0,0,0,.35)}
+.modus-karte:active{transform:translateY(0)}
+
+.mk-header{
+  padding:28px 24px 20px;display:flex;align-items:center;gap:16px;
+  border-bottom:1px solid #f0f0ec;
+}
+.mk-icon{
+  width:58px;height:58px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;flex-shrink:0;
+}
+.mk-icon.rot   {background:#fef2f2}
+.mk-icon.blau  {background:#eff6ff}
+.mk-icon.gelb  {background:#fffbeb}
+.mk-icon.lila  {background:#f5f3ff}
+.mk-icon.grau  {background:#f8f8f8}
+
+.mk-titel{font-size:18px;font-weight:800;color:#1a1a2e;line-height:1.2}
+.mk-untertitel{font-size:12px;color:#999;margin-top:3px;font-weight:500}
+
+.mk-body{padding:16px 24px 20px}
+.mk-desc{font-size:14px;color:#666;line-height:1.6;margin-bottom:16px}
+
+.mk-btn{
+  width:100%;padding:12px;border-radius:12px;border:none;
+  font-size:14px;font-weight:700;cursor:pointer;
+  transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;
+  font-family:inherit;
+}
+.mk-btn.rot  {background:#E24B4A;color:#fff}
+.mk-btn.blau {background:#3b82f6;color:#fff}
+.mk-btn.gelb {background:#f59e0b;color:#000}
+.mk-btn.lila {background:#8b5cf6;color:#fff}
+.mk-btn.grau {background:#f0f0ec;color:#aaa;cursor:not-allowed}
+.mk-btn:not(.grau):hover{filter:brightness(1.1);transform:translateY(-1px)}
+
+/* Bald-Badge */
+.bald{
+  display:inline-block;background:#f0f0ec;color:#bbb;
+  font-size:10px;font-weight:700;letter-spacing:1px;
+  padding:2px 8px;border-radius:20px;text-transform:uppercase;margin-left:8px;
+  vertical-align:middle;
+}
+
+/* Tags */
+.mk-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tag{
+  font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;
+  border:1px solid transparent;
+}
+.tag.gruen{background:#f0fdf4;border-color:#86efac;color:#166534}
+.tag.blau {background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+.tag.orange{background:#fff7ed;border-color:#fdba74;color:#c2410c}
+</style>
+</head>
+<body>
+
+<div class="logo">
+  <div class="gross">SCHLAG<span>FERTIG</span></div>
+  <div class="sub">Quiz-Buzzer-System</div>
+</div>
+
+<h2>Welchen Spielmodus möchtest du spielen?</h2>
+<p class="unter">Wähle einen Modus und das Spiel startet automatisch.</p>
+
+<div class="grid">
+
+  <!-- FREIE ANTWORT -->
+  <a class="modus-karte" href="/editor?modus=frei">
+    <div class="mk-header">
+      <div class="mk-icon rot">🎯</div>
+      <div>
+        <div class="mk-titel">Freie Antwort</div>
+        <div class="mk-untertitel">Klassisches Quiz</div>
+      </div>
+    </div>
+    <div class="mk-body">
+      <div class="mk-tags">
+        <span class="tag gruen">Alle Altersgruppen</span>
+        <span class="tag blau">Buzzer</span>
+      </div>
+      <div class="mk-desc">
+        Fragen werden gestellt, Spieler buzzern und antworten frei.
+        Moderator bewertet und vergibt Punkte.
+      </div>
+      <button class="mk-btn rot">🎯 Freie Antwort spielen</button>
+    </div>
+  </a>
+
+  <!-- MULTIPLE CHOICE -->
+  <a class="modus-karte" href="/editor?modus=mc">
+    <div class="mk-header">
+      <div class="mk-icon blau">🔤</div>
+      <div>
+        <div class="mk-titel">Multiple Choice</div>
+        <div class="mk-untertitel">4 Antwortmöglichkeiten</div>
+      </div>
+    </div>
+    <div class="mk-body">
+      <div class="mk-tags">
+        <span class="tag gruen">Einsteigerfreundlich</span>
+        <span class="tag blau">Buzzer</span>
+      </div>
+      <div class="mk-desc">
+        Vier Antworten werden angezeigt – Spieler buzzern und wählen die richtige aus.
+        Ideal für große Gruppen.
+      </div>
+      <button class="mk-btn blau">🔤 Multiple Choice spielen</button>
+    </div>
+  </a>
+
+  <!-- 100 LEUTE GEFRAGT -->
+  <a class="modus-karte" href="/moderator/100leute">
+    <div class="mk-header">
+      <div class="mk-icon gelb">👨‍👩‍👧‍👦</div>
+      <div>
+        <div class="mk-titel">100 Leute gefragt</div>
+        <div class="mk-untertitel">Familienduell-Style</div>
+      </div>
+    </div>
+    <div class="mk-body">
+      <div class="mk-tags">
+        <span class="tag orange">2 Teams</span>
+        <span class="tag blau">Buzzer</span>
+        <span class="tag gruen">Fast Five</span>
+      </div>
+      <div class="mk-desc">
+        Zwei Teams treten gegeneinander an. Umfrage-Antworten aufdecken,
+        stehlen und im Fast Five den Sieger küren.
+      </div>
+      <button class="mk-btn gelb">👨‍👩‍👧‍👦 100 Leute spielen</button>
+    </div>
+  </a>
+
+</div>
+
+<div style="margin-top:24px;text-align:center">
+  <a href="/login" style="font-size:13px;color:#666;text-decoration:none">
+    ← Zurück zur Startseite
+  </a>
+</div>
+
+</body>
+</html>

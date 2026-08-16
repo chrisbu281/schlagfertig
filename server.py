@@ -238,6 +238,10 @@ def game_page():
 def moderator_page():
     return send_from_directory(BASIS, "moderator.html")
 
+@app.route("/spielmodus")
+def spielmodus_page():
+    return send_from_directory(BASIS, "spielmodus.html")
+
 @app.route("/editor")
 def editor(): return send_from_directory(BASIS, "quiz_editor.html")
 

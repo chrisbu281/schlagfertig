@@ -127,7 +127,7 @@ async function gast_modus() {
     } else {
       zeige_meldung('erfolg', `✅ ${d.anzahl} Fragen geladen!`);
     }
-    setTimeout(() => { window.location.href = '/editor'; }, 900);
+    setTimeout(() => { window.location.href = '/spielmodus'; }, 900);
   } catch(e) {
     zeige_fortschritt(0);
     zeige_fehler('Laden fehlgeschlagen – bitte erneut versuchen.');
