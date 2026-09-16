@@ -48,6 +48,16 @@ def _sb_fragen(access_token):
         return json.loads(r.read().decode())
 
 def _konvertiere_frage(f):
+    # MC-Antworten aus Einzelspalten (antwort_a/b/c/d) in Liste umwandeln
+    mc_liste = [f.get("antwort_a"), f.get("antwort_b"), f.get("antwort_c"), f.get("antwort_d")]
+    mc_liste = [a for a in mc_liste if a]  # leere rausfiltern
+    richtig_buchstabe = (f.get("richtige_antwort") or "").upper()
+    richtig_idx = {"A": 0, "B": 1, "C": 2, "D": 3}.get(richtig_buchstabe)
+
+    # modus aus modi-Array ableiten (["mc"] → "mc", sonst "frei")
+    modi = f.get("modi") or []
+    modus = "mc" if "mc" in modi else "frei"
+
     return {
         "_gewaehlt": False,
         "id": f.get("id"),
@@ -55,9 +65,9 @@ def _konvertiere_frage(f):
         "antwort": f.get("antwort", ""),
         "kategorie": f.get("kategorie"),
         "schwierigkeit": f.get("schwierigkeit"),
-        "modus": f.get("modus", "frei"),
-        "antworten_mc": f.get("antworten_mc"),
-        "richtige_antwort_index": f.get("richtige_antwort_index"),
+        "modus": modus,
+        "antworten_mc": mc_liste if mc_liste else None,
+        "richtige_antwort_index": richtig_idx,
         "bild_url": f.get("bild_url"),
         "audio_url": f.get("audio_url"),
         "video_url": f.get("video_url"),
