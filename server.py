@@ -238,6 +238,25 @@ def game_page():
 def moderator_page():
     return send_from_directory(BASIS, "moderator.html")
 
+@app.route("/sio.js")
+def sio_js():
+    """Socket.IO client JS – lokal gecacht, einmal vom CDN geholt."""
+    ziel = os.path.join(BASIS, "socket.io.min.js")
+    if not os.path.exists(ziel):
+        # Einmalig herunterladen und cachen
+        try:
+            cdn = "https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"
+            req = urllib.request.Request(cdn, headers={"User-Agent": "Schlagfertig/1.0"})
+            with urllib.request.urlopen(req, timeout=10) as r:
+                with open(ziel, "wb") as f:
+                    f.write(r.read())
+        except Exception:
+            from flask import redirect
+            return redirect("https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js")
+    return send_from_directory(BASIS, "socket.io.min.js",
+                               mimetype="application/javascript",
+                               max_age=604800)
+
 @app.route("/spielmodus")
 def spielmodus_page():
     return send_from_directory(BASIS, "spielmodus.html")
