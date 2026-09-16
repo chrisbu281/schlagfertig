@@ -675,7 +675,7 @@ function start_tv_poll() {
     try {
       const r = await fetch('/api/setup/status');
       const s = await r.json();
-      if (s.setup_fertig) { stop_tv_poll(); window.location.href = '/editor'; }
+      if (s.setup_fertig) { stop_tv_poll(); window.location.href = '/login'; }
     } catch(_) {}
   }, 3000);
 }
@@ -809,7 +809,7 @@ async function offline_start() {
     await fetch('/api/cloud/gast', {method:'POST'});
     await fetch('/api/setup/abschliessen', {method:'POST'});
   } catch(_) {}
-  window.location.href = '/editor';
+  window.location.href = '/login';
 }
 
 // ═══════════════════════ WLAN ═══════════════════════
@@ -1050,7 +1050,7 @@ async function zeige_zusammenfassung() {
 
 async function abschliessen(zuEditor = false) {
   try { await fetch('/api/setup/abschliessen', {method:'POST'}); } catch(_) {}
-  window.location.href = zuEditor ? '/editor' : '/editor';
+  window.location.href = zuEditor ? '/editor' : '/login';
 }
 
 // ═══════════════════════ HILFSFUNKTIONEN ═══════════════════════

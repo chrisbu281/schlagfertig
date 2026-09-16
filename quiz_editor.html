@@ -285,7 +285,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .icon-btn { background: none; border: none; cursor: pointer; font-size: 15px; padding: 4px 6px; border-radius: 6px; }
 .icon-btn:hover { background: #eee; }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<script src="/sio.js"></script>
 </head>
 <body>
 
@@ -329,6 +329,9 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
       </div>
       <button class="btn rot" onclick="resetPunkte()" style="font-size:12px;padding:6px 12px">Zurücksetzen</button>
     </div>
+    <div style="text-align:center;margin-top:16px">
+      <a href="/spielmodus" style="font-size:13px;color:#888;text-decoration:none">← Zurück zur Spielmodus-Auswahl</a>
+    </div>
   </div>
 </div>
 
@@ -337,6 +340,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
   <header>
     <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
+      <a href="/spielmodus" class="btn" style="font-size:13px;text-decoration:none">← Spielmodus</a>
       <button class="btn" onclick="zeigeAnsicht('start')" style="font-size:13px">🏠 Home</button>
       <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
     </div>
@@ -1114,6 +1118,13 @@ async function init() {
   pruefeSpielStatus();
   setInterval(pruefeSpielStatus, 5000);
   verbindeSocket();
+
+  // Wenn ?modus=frei oder ?modus=mc → direkt in Wizard springen
+  const urlModus = new URLSearchParams(window.location.search).get('modus');
+  if (urlModus === 'frei' || urlModus === 'mc') {
+    starteWizard();
+    setzeWizardModus(urlModus);
+  }
 }
 
 // ── ANSICHTEN ──
