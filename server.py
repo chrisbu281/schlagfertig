@@ -16,8 +16,60 @@ GAST_FRAGEN  = os.path.join(BASIS, "fragen_default.json")
 SETUP_DATEI  = os.path.join(BASIS, ".setup_fertig")
 
 # Supabase
-SUPABASE_BASE = "https://drjdushdhzgkfkigocxd.supabase.co"
-SUPABASE_SYNC = f"{SUPABASE_BASE}/storage/v1/object/public/sync/fragen.json"
+SUPABASE_BASE     = "https://drjdushdhzgkfkigocxd.supabase.co"
+SUPABASE_SYNC     = f"{SUPABASE_BASE}/storage/v1/object/public/sync/fragen.json"
+SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
+
+# ── SUPABASE HELPERS ──
+def _sb_headers(token=None):
+    h = {"apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json"}
+    if token:
+        h["Authorization"] = f"Bearer {token}"
+    return h
+
+def _sb_auth(email, passwort):
+    url  = f"{SUPABASE_BASE}/auth/v1/token?grant_type=password"
+    body = json.dumps({"email": email, "password": passwort}).encode()
+    req  = urllib.request.Request(url, data=body, headers=_sb_headers(), method="POST")
+    with urllib.request.urlopen(req, timeout=15) as r:
+        return json.loads(r.read().decode())
+
+def _sb_refresh(refresh_token):
+    url  = f"{SUPABASE_BASE}/auth/v1/token?grant_type=refresh_token"
+    body = json.dumps({"refresh_token": refresh_token}).encode()
+    req  = urllib.request.Request(url, data=body, headers=_sb_headers(), method="POST")
+    with urllib.request.urlopen(req, timeout=15) as r:
+        return json.loads(r.read().decode())
+
+def _sb_fragen(access_token):
+    url = f"{SUPABASE_BASE}/rest/v1/fragen?select=*&order=erstellt_am.asc"
+    req = urllib.request.Request(url, headers=_sb_headers(access_token))
+    with urllib.request.urlopen(req, timeout=15) as r:
+        return json.loads(r.read().decode())
+
+def _konvertiere_frage(f):
+    return {
+        "_gewaehlt": False,
+        "id": f.get("id"),
+        "frage": f.get("frage", ""),
+        "antwort": f.get("antwort", ""),
+        "kategorie": f.get("kategorie"),
+        "schwierigkeit": f.get("schwierigkeit"),
+        "modus": f.get("modus", "frei"),
+        "antworten_mc": f.get("antworten_mc"),
+        "richtige_antwort_index": f.get("richtige_antwort_index"),
+        "bild_url": f.get("bild_url"),
+        "audio_url": f.get("audio_url"),
+        "video_url": f.get("video_url"),
+    }
+
+def _speichere_fragen_lokal(roh):
+    fragen = [_konvertiere_frage(f) for f in roh]
+    config = lese_oder_erstelle_config()
+    config["fragen"] = fragen
+    with open(KONFIG, "w", encoding="utf-8") as fh:
+        json.dump(config, fh, ensure_ascii=False, indent=2)
+    return fragen
 spiel_prozess = None
 
 spiel_state = {
@@ -424,6 +476,71 @@ def cloud_abmelden():
     """Cloud-Konto vom Gerät abmelden."""
     schreibe_cloud_config({})
     return jsonify({"status": "ok"})
+
+@app.route("/api/cloud/login", methods=["POST"])
+def cloud_login():
+    """Supabase-Login mit E-Mail + Passwort – lädt Fragen des Benutzers."""
+    if not SUPABASE_ANON_KEY:
+        return jsonify({"error": "SUPABASE_ANON_KEY nicht gesetzt (siehe /etc/environment auf dem Pi)"}), 503
+    d        = request.get_json() or {}
+    email    = d.get("email", "").strip()
+    passwort = d.get("passwort", "")
+    if not email or not passwort:
+        return jsonify({"error": "E-Mail und Passwort erforderlich"}), 400
+    try:
+        sess  = _sb_auth(email, passwort)
+        at    = sess["access_token"]
+        rt    = sess.get("refresh_token", "")
+        user  = sess.get("user", {})
+        name  = (user.get("user_metadata") or {}).get("name") or email.split("@")[0]
+        roh   = _sb_fragen(at)
+        fragen = _speichere_fragen_lokal(roh)
+        schreibe_cloud_config({
+            "modus": "konto", "email": email,
+            "benutzer_name": name, "user_id": user.get("id", ""),
+            "access_token": at, "refresh_token": rt,
+        })
+        return jsonify({"status": "ok", "name": name, "anzahl": len(fragen)})
+    except urllib.error.HTTPError as e:
+        if e.code == 400:
+            return jsonify({"error": "E-Mail oder Passwort falsch"}), 401
+        return jsonify({"error": f"Supabase-Fehler {e.code}"}), e.code
+    except urllib.error.URLError:
+        return jsonify({"error": "Supabase nicht erreichbar – WLAN prüfen"}), 503
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/cloud/auto-refresh", methods=["POST"])
+def cloud_auto_refresh():
+    """Erneuert Token und lädt Fragen neu – für automatischen Login nach Neustart."""
+    cfg = lese_cloud_config()
+    if cfg.get("modus") != "konto":
+        return jsonify({"error": "Kein gespeichertes Konto"}), 400
+    at  = cfg.get("access_token", "")
+    rt  = cfg.get("refresh_token", "")
+    name  = cfg.get("benutzer_name", "")
+    email = cfg.get("email", "")
+    # Erst mit bestehendem Token versuchen
+    try:
+        roh    = _sb_fragen(at)
+        fragen = _speichere_fragen_lokal(roh)
+        return jsonify({"status": "ok", "name": name, "email": email, "anzahl": len(fragen)})
+    except urllib.error.HTTPError as e:
+        if e.code not in (401, 403) or not rt:
+            return jsonify({"error": f"Fehler {e.code}"}), e.code
+    # Token abgelaufen → erneuern
+    try:
+        sess    = _sb_refresh(rt)
+        new_at  = sess["access_token"]
+        new_rt  = sess.get("refresh_token", rt)
+        roh     = _sb_fragen(new_at)
+        fragen  = _speichere_fragen_lokal(roh)
+        cfg["access_token"]  = new_at
+        cfg["refresh_token"] = new_rt
+        schreibe_cloud_config(cfg)
+        return jsonify({"status": "ok", "name": name, "email": email, "anzahl": len(fragen)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 401
 
 @app.route("/api/csv-upload", methods=["POST"])
 def csv_upload():

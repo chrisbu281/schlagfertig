@@ -6,70 +6,77 @@
 <title>Schlagfertig – Anmelden</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;background:#1a1a2e;color:#1a1a1a;font-size:15px;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+body{font-family:system-ui,sans-serif;background:#1a1a2e;color:#1a1a1a;font-size:15px;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:24px}
 
-.logo{text-align:center;margin-bottom:40px}
+.logo{text-align:center;margin-bottom:32px}
 .logo .gross{font-size:42px;font-weight:900;color:#fff;letter-spacing:-1px}
 .logo .gross span{color:#E24B4A}
 .logo .sub{color:#888;font-size:14px;margin-top:6px}
 
-.karte{background:#fff;border-radius:20px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.3)}
-.karte-header{padding:24px 28px 0}
-.karte-header h2{font-size:18px;font-weight:700;color:#1a1a2e}
-.karte-header p{font-size:13px;color:#888;margin-top:4px}
+.karte{background:#fff;border-radius:20px;width:100%;max-width:420px;
+  box-shadow:0 12px 40px rgba(0,0,0,.3);overflow:hidden}
+.karte-header{padding:22px 24px 0}
+.karte-header h2{font-size:17px;font-weight:700;color:#1a1a2e}
+.karte-header p{font-size:13px;color:#888;margin-top:3px}
+.karte-body{padding:20px 24px 24px}
 
-.karte-body{padding:24px 28px 28px}
-
-/* STATUS-BANNER (bei vorhandenem Account) */
-.status-banner{background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:14px 16px;margin-bottom:20px;display:none}
-.status-banner.sichtbar{display:flex;align-items:center;gap:10px}
-.sb-icon{font-size:22px}
-.sb-text strong{display:block;font-size:14px;color:#166534}
-.sb-text span{font-size:12px;color:#555}
-.sb-ab{margin-left:auto;background:transparent;border:1px solid #86efac;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;color:#166534;font-weight:600}
-.sb-ab:hover{background:#dcfce7}
+/* KONTO-BANNER (nach erfolgreichem Auto-Login) */
+.konto-banner{background:#f0fdf4;border:1px solid #86efac;border-radius:12px;
+  padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.kb-icon{font-size:22px}
+.kb-text strong{display:block;font-size:14px;color:#166534}
+.kb-text span{font-size:12px;color:#555}
+.kb-ab{margin-left:auto;background:transparent;border:1px solid #86efac;
+  border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;
+  color:#166534;font-weight:600;white-space:nowrap}
+.kb-ab:hover{background:#dcfce7}
 
 /* FORM */
-.form-gruppe{margin-bottom:14px}
-.form-label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:5px}
-.form-input{width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid #ddd;font-size:14px;font-family:inherit;transition:.15s}
+.form-gruppe{margin-bottom:12px}
+.form-label{display:block;font-size:12px;font-weight:600;color:#555;
+  text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.form-input{width:100%;padding:10px 14px;border-radius:10px;
+  border:1.5px solid #ddd;font-size:14px;font-family:inherit;transition:.15s}
 .form-input:focus{outline:none;border-color:#1a1a2e}
-.form-hilfe{font-size:12px;color:#999;margin-top:4px}
 
 /* BUTTONS */
-.btn{width:100%;padding:13px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
-.btn.primaer{background:#1a1a2e;color:#fff}
-.btn.primaer:hover{background:#2a2a4e;transform:translateY(-1px)}
+.btn{width:100%;padding:12px;border-radius:12px;border:none;
+  font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:8px;font-family:inherit}
+.btn.konto{background:#1a1a2e;color:#fff}
+.btn.konto:hover{background:#2a2a4e;transform:translateY(-1px)}
 .btn.gast{background:#f0f0ec;color:#444;border:1.5px solid #ddd}
 .btn.gast:hover{background:#e8e8e4}
+.btn.gruen{background:#2d8a4e;color:#fff}
+.btn.gruen:hover{background:#237a40;transform:translateY(-1px)}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
 
-/* SYNC-BTN (nach Login vorhanden) */
-.btn.sync{background:#2d8a4e;color:#fff}
-.btn.sync:hover{background:#237a40;transform:translateY(-1px)}
-
-/* TRENNLINIE */
-.trenner{display:flex;align-items:center;gap:12px;color:#ccc;font-size:12px;margin:6px 0 16px}
+/* TRENNER */
+.trenner{display:flex;align-items:center;gap:12px;color:#ccc;
+  font-size:12px;margin:12px 0}
 .trenner::before,.trenner::after{content:'';flex:1;height:1px;background:#eee}
 
 /* MELDUNG */
-.meldung{padding:11px 14px;border-radius:10px;font-size:13px;font-weight:500;margin-bottom:14px;display:none}
+.meldung{padding:10px 14px;border-radius:10px;font-size:13px;
+  font-weight:500;margin-bottom:12px;display:none}
 .meldung.fehler{background:#fef2f2;border:1px solid #fca5a5;color:#c0392b;display:block}
 .meldung.erfolg{background:#f0fdf4;border:1px solid #86efac;color:#166534;display:block}
 
 /* SPINNER */
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
-.spinner.dunkel{border-color:rgba(0,0,0,.1);border-top-color:#444}
+.spinner{display:inline-block;width:15px;height:15px;
+  border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .7s linear infinite}
+.spinner.dunkel{border-color:rgba(0,0,0,.12);border-top-color:#555}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* FORTSCHRITT */
-.fortschritt{background:#f5f5f5;border-radius:20px;height:6px;margin-top:8px;overflow:hidden;display:none}
-.fortschritt-balken{height:100%;background:#2d8a4e;border-radius:20px;transition:width .4s}
+.fortschritt{background:#f0f0ec;border-radius:20px;height:5px;
+  margin-top:6px;overflow:hidden;display:none}
+.fortschritt-balken{height:100%;background:#2d8a4e;border-radius:20px;transition:width .5s}
 .fortschritt.sichtbar{display:block}
-
-/* CLOUD-URL TOGGLE */
-.url-toggle{font-size:12px;color:#888;cursor:pointer;text-decoration:underline;display:inline-block;margin-bottom:12px}
-.url-toggle:hover{color:#1a1a2e}
 </style>
 </head>
 <body>
@@ -79,74 +86,211 @@ body{font-family:system-ui,sans-serif;background:#1a1a2e;color:#1a1a1a;font-size
   <div class="sub">Quiz-Buzzer-System</div>
 </div>
 
-<div class="karte">
+<!-- KARTE A: Eingeloggt (wird per JS eingeblendet) -->
+<div class="karte" id="karte-eingeloggt" style="display:none">
+  <div class="karte-body">
+    <div class="konto-banner" id="konto-banner">
+      <span class="kb-icon">🎉</span>
+      <div class="kb-text">
+        <strong id="kb-name">Willkommen!</strong>
+        <span id="kb-email"></span>
+      </div>
+      <button class="kb-ab" onclick="abmelden()">Abmelden</button>
+    </div>
+    <div id="meldung-a" class="meldung"></div>
+    <div class="fortschritt" id="fortschritt-a">
+      <div class="fortschritt-balken" id="fortschritt-balken-a" style="width:0%"></div>
+    </div>
+    <button class="btn gruen" id="weiter-btn" onclick="weiter_spielen()">
+      🎮 Spielen starten
+    </button>
+    <button class="btn gast" onclick="zeige_karte('b')" style="font-size:13px">
+      ↩ Mit anderem Konto anmelden
+    </button>
+  </div>
+</div>
+
+<!-- KARTE B: Login-Form -->
+<div class="karte" id="karte-login">
   <div class="karte-header">
-    <h2>Bereit zum Spielen 🎯</h2>
-    <p>Wie möchtest du starten?</p>
+    <h2>Anmelden 🔐</h2>
+    <p>Mit deinem schlagfertig.de-Konto</p>
   </div>
   <div class="karte-body">
+    <div id="meldung-b" class="meldung"></div>
 
-    <div id="meldung" class="meldung"></div>
+    <div class="form-gruppe">
+      <label class="form-label">E-Mail</label>
+      <input id="inp-email" type="email" class="form-input" placeholder="name@beispiel.de"
+        autocomplete="email" autocapitalize="off" inputmode="email">
+    </div>
+    <div class="form-gruppe">
+      <label class="form-label">Passwort</label>
+      <input id="inp-pw" type="password" class="form-input" placeholder="••••••••"
+        autocomplete="current-password">
+    </div>
 
-    <!-- Gastmodus -->
-    <button class="btn primaer" id="gast-btn" onclick="gast_modus()">
-      🎮 Sofort spielen
-      <span style="font-size:12px;font-weight:400;opacity:.7;display:block;margin-top:2px">Standardfragen aus unserer Bibliothek</span>
+    <button class="btn konto" id="login-btn" onclick="konto_login()">
+      🔐 Anmelden & Fragen laden
     </button>
 
-    <div class="fortschritt" id="fortschritt">
-      <div class="fortschritt-balken" id="fortschritt-balken" style="width:0%"></div>
+    <div class="fortschritt" id="fortschritt-b">
+      <div class="fortschritt-balken" id="fortschritt-balken-b" style="width:0%"></div>
     </div>
 
     <div class="trenner">oder</div>
 
-    <!-- Account-Login (kommt bald) -->
-    <div style="background:#f8f8f8;border:1.5px dashed #ddd;border-radius:14px;padding:16px 18px;text-align:center;color:#999">
-      <div style="font-size:20px;margin-bottom:6px">🔐</div>
-      <div style="font-size:13px;font-weight:600;color:#aaa">Mit Event-Account anmelden</div>
-      <div style="font-size:12px;margin-top:4px;line-height:1.5">
-        Eigene Fragen &amp; Events –<br>kommt bald auf <strong style="color:#888">schlagfertig.de</strong>
-      </div>
-    </div>
+    <button class="btn gast" id="gast-btn" onclick="gast_modus()">
+      🎮 Sofort spielen
+      <span style="font-size:12px;font-weight:400;opacity:.7;margin-left:4px">(Standardfragen)</span>
+    </button>
 
-  </div><!-- karte-body -->
+    <div id="meldung-gast" class="meldung"></div>
+
+  </div>
 </div>
 
 <script>
-async function gast_modus() {
-  const btn = document.getElementById('gast-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Fragen werden geladen…';
-  zeige_fortschritt(30);
+// ── STATE ──────────────────────────────────────────────────────────
+let gespeicherteEmail = '';
+try { gespeicherteEmail = localStorage.getItem('sf_email') || ''; } catch(_) {}
+
+// ── INIT ──────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  // Letzte E-Mail eintragen
+  if (gespeicherteEmail) {
+    document.getElementById('inp-email').value = gespeicherteEmail;
+  }
+
+  // Enter-Taste
+  document.getElementById('inp-pw').addEventListener('keydown', e => {
+    if (e.key === 'Enter') konto_login();
+  });
+
+  // Gespeichertes Konto prüfen → Auto-Refresh
   try {
-    const r = await fetch('/api/cloud/gast', { method:'POST' });
+    const r = await fetch('/api/cloud/config');
     const d = await r.json();
-    zeige_fortschritt(100);
-    if (d.offline) {
-      zeige_meldung('erfolg', '▶️ Kein Internet – starte mit gespeicherten Fragen.');
-    } else {
-      zeige_meldung('erfolg', `✅ ${d.anzahl} Fragen geladen!`);
+    if (d.modus === 'konto' && d.email) {
+      zeige_karte('a');
+      document.getElementById('kb-name').textContent   = d.name || d.email.split('@')[0];
+      document.getElementById('kb-email').textContent  = d.email;
+      // Fragen still im Hintergrund aktualisieren
+      auto_refresh_still(d.name, d.email);
     }
-    setTimeout(() => { window.location.href = '/spielmodus'; }, 900);
+  } catch(_) {}
+});
+
+// ── KARTEN WECHSELN ───────────────────────────────────────────────
+function zeige_karte(karte) {
+  document.getElementById('karte-eingeloggt').style.display = karte === 'a' ? 'block' : 'none';
+  document.getElementById('karte-login').style.display      = karte === 'b' ? 'block' : 'none';
+}
+
+// ── AUTO-REFRESH (stille Hintergrundaktualisierung) ───────────────
+async function auto_refresh_still(name, email) {
+  try {
+    const r = await fetch('/api/cloud/auto-refresh', { method: 'POST' });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      document.getElementById('kb-name').textContent  = d.name || name;
+      document.getElementById('kb-email').textContent = `${d.email} · ${d.anzahl} Fragen`;
+    }
+  } catch(_) {}
+}
+
+// ── WEITER MIT GESPEICHERTEM KONTO ───────────────────────────────
+async function weiter_spielen() {
+  const btn = document.getElementById('weiter-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Fragen werden aktualisiert…';
+  zeige_fortschritt('a', 40);
+  try {
+    const r = await fetch('/api/cloud/auto-refresh', { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Aktualisierung fehlgeschlagen');
+    zeige_fortschritt('a', 100);
+    zeige_meldung_a('erfolg', `✅ ${d.anzahl} Fragen geladen – willkommen, ${d.name}!`);
+    setTimeout(() => { window.location.href = '/spielmodus'; }, 700);
   } catch(e) {
-    zeige_fortschritt(0);
-    zeige_fehler('Laden fehlgeschlagen – bitte erneut versuchen.');
-    btn.disabled = false;
-    btn.innerHTML = '🎮 Sofort spielen<span style="font-size:12px;font-weight:400;opacity:.7;display:block;margin-top:2px">Standardfragen aus unserer Bibliothek</span>';
+    // Offline? Trotzdem spielen mit gecachten Fragen
+    zeige_fortschritt('a', 0);
+    zeige_meldung_a('erfolg', '▶️ Kein Internet – starte mit gespeicherten Fragen.');
+    setTimeout(() => { window.location.href = '/spielmodus'; }, 1200);
   }
 }
 
-function zeige_fehler(msg) {
-  const el = document.getElementById('meldung');
-  el.className = 'meldung fehler'; el.textContent = msg;
+// ── KONTO-LOGIN ───────────────────────────────────────────────────
+async function konto_login() {
+  const email = document.getElementById('inp-email').value.trim();
+  const pw    = document.getElementById('inp-pw').value;
+  if (!email) { zeige_meldung_b('fehler', '⚠️ Bitte E-Mail-Adresse eingeben.'); return; }
+  if (!pw)    { zeige_meldung_b('fehler', '⚠️ Bitte Passwort eingeben.'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Anmelden…';
+  zeige_fortschritt('b', 30);
+  try { localStorage.setItem('sf_email', email); } catch(_) {}
+
+  try {
+    const r = await fetch('/api/cloud/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email, passwort: pw }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Fehler beim Anmelden');
+    zeige_fortschritt('b', 100);
+    zeige_meldung_b('erfolg', `✅ ${d.anzahl} Fragen geladen – willkommen, ${d.name}!`);
+    setTimeout(() => { window.location.href = '/spielmodus'; }, 700);
+  } catch(e) {
+    zeige_fortschritt('b', 0);
+    zeige_meldung_b('fehler', '❌ ' + (e.message || 'Anmeldung fehlgeschlagen'));
+    btn.disabled = false;
+    btn.innerHTML = '🔐 Anmelden & Fragen laden';
+  }
 }
-function zeige_meldung(typ, msg) {
-  const el = document.getElementById('meldung');
+
+// ── GASTMODUS ────────────────────────────────────────────────────
+async function gast_modus() {
+  const btn = document.getElementById('gast-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner dunkel"></span> Lade Fragen…';
+  try {
+    const r = await fetch('/api/cloud/gast', { method: 'POST' });
+    const d = await r.json();
+    if (d.offline) {
+      document.getElementById('meldung-gast').className = 'meldung erfolg';
+      document.getElementById('meldung-gast').textContent = '▶️ Kein Internet – starte mit gespeicherten Fragen.';
+    }
+    setTimeout(() => { window.location.href = '/spielmodus'; }, 600);
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '🎮 Sofort spielen <span style="font-size:12px;font-weight:400;opacity:.7;margin-left:4px">(Standardfragen)</span>';
+    document.getElementById('meldung-gast').className = 'meldung fehler';
+    document.getElementById('meldung-gast').textContent = 'Laden fehlgeschlagen – erneut versuchen.';
+  }
+}
+
+// ── ABMELDEN ────────────────────────────────────────────────────
+async function abmelden() {
+  try { await fetch('/api/cloud/abmelden', { method: 'POST' }); } catch(_) {}
+  zeige_karte('b');
+}
+
+// ── HILFSFUNKTIONEN ─────────────────────────────────────────────
+function zeige_meldung_a(typ, msg) {
+  const el = document.getElementById('meldung-a');
   el.className = 'meldung ' + typ; el.textContent = msg;
 }
-function zeige_fortschritt(pct) {
-  const bar   = document.getElementById('fortschritt');
-  const inner = document.getElementById('fortschritt-balken');
+function zeige_meldung_b(typ, msg) {
+  const el = document.getElementById('meldung-b');
+  el.className = 'meldung ' + typ; el.textContent = msg;
+}
+function zeige_fortschritt(karte, pct) {
+  const bar   = document.getElementById('fortschritt-' + karte);
+  const inner = document.getElementById('fortschritt-balken-' + karte);
   bar.classList.toggle('sichtbar', pct > 0 && pct < 100);
   inner.style.width = pct + '%';
 }
