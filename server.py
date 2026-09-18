@@ -18,7 +18,24 @@ SETUP_DATEI  = os.path.join(BASIS, ".setup_fertig")
 # Supabase
 SUPABASE_BASE     = "https://drjdushdhzgkfkigocxd.supabase.co"
 SUPABASE_SYNC     = f"{SUPABASE_BASE}/storage/v1/object/public/sync/fragen.json"
-SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
+
+# Key aus Umgebungsvariable oder .env-Datei im Projektordner lesen
+def _lade_anon_key():
+    key = os.environ.get("SUPABASE_ANON_KEY", "")
+    if not key:
+        env_pfad = os.path.join(BASIS, ".env")
+        try:
+            with open(env_pfad, encoding="utf-8") as f:
+                for zeile in f:
+                    zeile = zeile.strip()
+                    if zeile.startswith("SUPABASE_ANON_KEY="):
+                        key = zeile.split("=", 1)[1].strip()
+                        break
+        except FileNotFoundError:
+            pass
+    return key
+
+SUPABASE_ANON_KEY = _lade_anon_key()
 
 # ── SUPABASE HELPERS ──
 def _sb_headers(token=None):
