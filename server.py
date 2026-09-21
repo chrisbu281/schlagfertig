@@ -309,6 +309,10 @@ def setup_abschliessen():
 def display_page():
     return send_from_directory(BASIS, "display.html")
 
+@app.route("/qr")
+def qr_seite():
+    return send_from_directory(BASIS, "qr_bild.html")
+
 @app.route("/game")
 def game_page():
     return send_from_directory(BASIS, "game.html")
