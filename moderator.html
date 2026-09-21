@@ -32,6 +32,16 @@ body{display:flex;flex-direction:column}
 .mh-btn.gelb{background:#f59e0b;color:#000}
 .mh-btn.rot{background:#c0392b;color:#fff}
 .mh-btn.grau{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.1)}
+.einst-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
+.einst-overlay.offen{display:flex}
+.einst-modal{background:#fff;border-radius:16px;padding:26px;width:420px;max-width:100%;color:#1a1a1a}
+.einst-modal h2{font-size:17px;font-weight:700;margin-bottom:18px}
+.toggle-switch{position:relative;display:inline-block;width:44px;height:24px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#ddd;border-radius:24px;transition:.2s}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.toggle-slider{background:#2d8a4e}
+input:checked+.toggle-slider:before{transform:translateX(20px)}
 
 /* ═══ SCREENS ═══ */
 .screen{display:none;flex:1;overflow:hidden}
@@ -289,6 +299,54 @@ body{display:flex;flex-direction:column}
 </style>
 </head>
 <body>
+
+<!-- ══ EINSTELLUNGEN MODAL ══ -->
+<div class="einst-overlay" id="einst-overlay" onclick="if(event.target===this)schliesse_einst_modal()">
+  <div class="einst-modal">
+    <h2>⚙️ Einstellungen</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #eee">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:22px">🔊</span>
+        <div>
+          <div style="font-weight:600;font-size:14px">Sound</div>
+          <div style="font-size:12px;color:#888">Buzzer &amp; Effekte</div>
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="einst-sound-toggle" onchange="toggle_sound(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div style="padding:14px 0;border-bottom:1px solid #eee">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <span style="font-size:22px">☁️</span>
+        <div style="flex:1;min-width:0">
+          <div id="einst-konto-name" style="font-weight:600;font-size:14px">Laden…</div>
+          <div id="einst-konto-info" style="font-size:12px;color:#888"></div>
+        </div>
+      </div>
+      <a href="https://schlagfertig-fragen.vercel.app/" target="_blank" rel="noopener"
+         style="font-size:13px;color:#1a1a2e;font-weight:600;text-decoration:none">
+        🌐 Zur Fragenbibliothek →
+      </a>
+    </div>
+    <div style="padding:14px 0 8px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <span style="font-size:22px">🖥️</span>
+        <div>
+          <div style="font-weight:600;font-size:14px">Gerät</div>
+          <div id="einst-ip" style="font-size:12px;color:#888">–</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px">
+      <button onclick="schliesse_einst_modal()"
+              style="padding:8px 18px;border-radius:10px;border:1.5px solid #ddd;background:#fff;cursor:pointer;font-size:14px;font-weight:500">
+        Schließen
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ HEADER ══ -->
 <div class="mh">
@@ -811,13 +869,15 @@ function aktualisiere_fragen_nav() {
 
 function zeige_header_buttons(spiel) {
   const el = document.getElementById('mh-rechts');
+  const zahnrad = `<button class="mh-btn grau" onclick="zeige_einst_modal()" style="font-size:16px;padding:6px 10px" title="Einstellungen">⚙️</button>`;
   if (spiel) {
     el.innerHTML = `
       <button class="mh-btn gelb" onclick="toggle_punkte()">🏆 Punktestand</button>
+      ${zahnrad}
       <button class="mh-btn rot"  onclick="confirm_stoppen()">✕ Stoppen</button>
     `;
   } else {
-    el.innerHTML = '';
+    el.innerHTML = zahnrad;
   }
 }
 
@@ -848,6 +908,35 @@ function toast(msg, dauer = 2500) {
 function esc(s) {
   return String(s||'')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── EINSTELLUNGEN MODAL ──
+async function zeige_einst_modal() {
+  document.getElementById('einst-overlay').classList.add('offen');
+  const soundAn = localStorage.getItem('sf_sound') !== 'aus';
+  document.getElementById('einst-sound-toggle').checked = soundAn;
+  try {
+    const r = await fetch('/api/cloud/config');
+    const d = await r.json();
+    if (d.modus === 'konto' && d.email) {
+      document.getElementById('einst-konto-name').textContent = d.name || d.email.split('@')[0];
+      document.getElementById('einst-konto-info').textContent = `${d.email} · ${d.anzahl ?? 0} Fragen`;
+    } else {
+      document.getElementById('einst-konto-name').textContent = 'Gastmodus';
+      document.getElementById('einst-konto-info').textContent = 'Nicht angemeldet';
+    }
+  } catch(_) {}
+  try {
+    const r = await fetch('/api/setup/ip');
+    const d = await r.json();
+    document.getElementById('einst-ip').textContent = d.ip ? `http://${d.ip}:5000` : 'Keine Verbindung';
+  } catch(_) {}
+}
+function schliesse_einst_modal() {
+  document.getElementById('einst-overlay').classList.remove('offen');
+}
+function toggle_sound(an) {
+  localStorage.setItem('sf_sound', an ? 'an' : 'aus');
 }
 </script>
 </body>

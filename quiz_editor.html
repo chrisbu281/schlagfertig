@@ -276,6 +276,14 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .cam-rahmen { position: absolute; inset: 10px; border-radius: 50%; border: 3px dashed rgba(255,255,255,.4); pointer-events: none; }
 .cam-buttons { display: flex; gap: 8px; margin-top: 10px; }
 
+/* TOGGLE SWITCH */
+.toggle-switch{position:relative;display:inline-block;width:44px;height:24px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#ddd;border-radius:24px;transition:.2s}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.toggle-slider{background:#2d8a4e}
+input:checked+.toggle-slider:before{transform:translateX(20px)}
+
 /* TOAST */
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(70px); background: #1a1a2e; color: #fff; border-radius: 28px; padding: 11px 24px; font-size: 14px; font-weight: 500; z-index: 999; transition: transform .3s, opacity .3s; opacity: 0; white-space: nowrap; }
 .toast.zeig { transform: translateX(-50%) translateY(0); opacity: 1; }
@@ -341,7 +349,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
     <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
       <a href="/spielmodus" class="btn" style="font-size:13px;text-decoration:none">← Spielmodus</a>
-      <button class="btn" onclick="zeigeAnsicht('start')" style="font-size:13px">🏠 Home</button>
+      <button class="btn" onclick="zeigeEinstellungenModal()" style="font-size:16px;padding:6px 12px" title="Einstellungen">⚙️</button>
       <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
     </div>
   </header>
@@ -487,7 +495,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
     <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
       <button class="btn gruen" onclick="speichereAufPi()">💾 Speichern</button>
-      <button class="btn" onclick="zeigeAnsicht('start')" style="font-size:13px">🏠 Home</button>
+      <button class="btn" onclick="zeigeEinstellungenModal()" style="font-size:16px;padding:6px 12px" title="Einstellungen">⚙️</button>
       <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
     </div>
   </header>
@@ -642,7 +650,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
   <header>
     <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
-      <button class="btn" onclick="zeigeAnsicht('start')" style="font-size:13px">🏠 Home</button>
+      <button class="btn" onclick="zeigeEinstellungenModal()" style="font-size:16px;padding:6px 12px" title="Einstellungen">⚙️</button>
       <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
     </div>
   </header>
@@ -749,6 +757,59 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
     <div class="fragen-nav">
       <div class="fragen-nav-kopf">Fragenreihenfolge</div>
       <div id="fragen-nav-liste"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EINSTELLUNGEN MODAL -->
+<div class="overlay" id="einst-overlay" onclick="if(event.target===this)schliesseEinstellungenModal()">
+  <div class="modal" style="max-width:420px">
+    <h2>⚙️ Einstellungen</h2>
+
+    <!-- SOUND -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #eee">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:22px">🔊</span>
+        <div>
+          <div style="font-weight:600;font-size:14px">Sound</div>
+          <div style="font-size:12px;color:#888">Buzzer &amp; Effekte</div>
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="einst-sound-toggle" onchange="toggleSound(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <!-- KONTO -->
+    <div style="padding:14px 0;border-bottom:1px solid #eee">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <span style="font-size:22px">☁️</span>
+        <div style="flex:1;min-width:0">
+          <div id="einst-konto-name" style="font-weight:600;font-size:14px">Laden…</div>
+          <div id="einst-konto-info" style="font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+        </div>
+      </div>
+      <a href="https://schlagfertig-fragen.vercel.app/" target="_blank" rel="noopener"
+         style="font-size:13px;color:#1a1a2e;font-weight:600;text-decoration:none">
+        🌐 Zur Fragenbibliothek →
+      </a>
+    </div>
+
+    <!-- SYSTEM -->
+    <div style="padding:14px 0 8px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <span style="font-size:22px">🖥️</span>
+        <div>
+          <div style="font-weight:600;font-size:14px">Gerät</div>
+          <div id="einst-ip" style="font-size:12px;color:#888">–</div>
+        </div>
+      </div>
+      <button class="btn rot" onclick="systemAusschalten()" style="font-size:12px;padding:6px 14px">⏻ Ausschalten</button>
+    </div>
+
+    <div class="modal-buttons">
+      <button class="btn" onclick="schliesseEinstellungenModal()">Schließen</button>
     </div>
   </div>
 </div>
@@ -996,6 +1057,36 @@ function adminLogoKlick() {
       }
     }
   }
+}
+
+// ── EINSTELLUNGEN MODAL ──
+async function zeigeEinstellungenModal() {
+  document.getElementById('einst-overlay').classList.add('offen');
+  const soundAn = localStorage.getItem('sf_sound') !== 'aus';
+  document.getElementById('einst-sound-toggle').checked = soundAn;
+  try {
+    const r = await fetch('/api/cloud/config');
+    const d = await r.json();
+    if (d.modus === 'konto' && d.email) {
+      document.getElementById('einst-konto-name').textContent = d.name || d.email.split('@')[0];
+      document.getElementById('einst-konto-info').textContent = `${d.email} · ${d.anzahl ?? 0} Fragen`;
+    } else {
+      document.getElementById('einst-konto-name').textContent = 'Gastmodus';
+      document.getElementById('einst-konto-info').textContent = 'Nicht angemeldet';
+    }
+  } catch(_) {}
+  try {
+    const r = await fetch('/api/setup/ip');
+    const d = await r.json();
+    document.getElementById('einst-ip').textContent = d.ip ? `http://${d.ip}:5000` : 'Keine Verbindung';
+  } catch(_) {}
+}
+function schliesseEinstellungenModal() {
+  document.getElementById('einst-overlay').classList.remove('offen');
+}
+function toggleSound(an) {
+  localStorage.setItem('sf_sound', an ? 'an' : 'aus');
+  zeigToast(an ? '🔊 Sound aktiviert' : '🔇 Sound deaktiviert', '');
 }
 
 // ── KONTO MODAL ──
