@@ -468,6 +468,12 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
         <select class="filter-sel" id="wiz-filter-kat" onchange="rendereFragenWizard()">
           <option value="">Alle Kategorien</option>
         </select>
+        <select class="filter-sel" id="wiz-filter-schwer" onchange="rendereFragenWizard()">
+          <option value="">Alle Schwierigkeiten</option>
+          <option value="leicht">Leicht</option>
+          <option value="mittel">Mittel</option>
+          <option value="schwer">Schwer</option>
+        </select>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
         <button class="btn" onclick="alleWaehlenWizard()" style="font-size:12px;padding:6px 12px">Alle</button>
@@ -1523,17 +1529,24 @@ function setzeWizardModus(modus) {
 function rendereFragenWizard() {
   const suche = document.getElementById('wiz-suche').value.toLowerCase();
   const fk = document.getElementById('wiz-filter-kat').value;
+  const fs = document.getElementById('wiz-filter-schwer').value;
 
   // Nur Fragen die zum gewählten Modus passen
-  const gef = config.fragen.filter(f => {
+  let gef = config.fragen.filter(f => {
     const istMC = f.modus === 'mc';
-    // Modus Filter
     if(wizardModus==='mc' && !istMC) return false;
     if(wizardModus==='frei' && istMC) return false;
-    if(!wizardFilterAktiv[f.schwierigkeit]) return false;
-    if(fk && f.kategorie!==fk) return false;
+    if(fs && f.schwierigkeit !== fs) return false;
+    if(fk && f.kategorie !== fk) return false;
     if(suche && !f.frage.toLowerCase().includes(suche)) return false;
     return true;
+  });
+
+  // Gewählte Fragen nach oben
+  gef.sort((a, b) => {
+    const aGew = gewaehlteFragen.has(config.fragen.indexOf(a));
+    const bGew = gewaehlteFragen.has(config.fragen.indexOf(b));
+    return (bGew ? 1 : 0) - (aGew ? 1 : 0);
   });
 
   // Kategorien aktualisieren
@@ -1542,7 +1555,7 @@ function rendereFragenWizard() {
     if(wizardModus==='mc' && !istMC) return false;
     if(wizardModus==='frei' && istMC) return false;
     return true;
-  }).map(f=>f.kategorie))].sort();
+  }).map(f=>f.kategorie).filter(Boolean))].sort();
   const sel = document.getElementById('wiz-filter-kat');
   const ak = sel.value;
   sel.innerHTML = '<option value="">Alle Kategorien</option>' + kats.map(k=>`<option value="${k}" ${k===ak?'selected':''}>${k}</option>`).join('');
@@ -1589,19 +1602,22 @@ function keineWaehlenWizard() {
 }
 
 function zufaelligWaehlenWizard(n) {
+  const fk = document.getElementById('wiz-filter-kat').value;
+  const fs = document.getElementById('wiz-filter-schwer').value;
   const verfuegbar = config.fragen.map((_,i)=>i).filter(i=>{
     const f = config.fragen[i];
     const istMC = f.modus === 'mc';
     if(wizardModus==='mc' && !istMC) return false;
     if(wizardModus==='frei' && istMC) return false;
-    if(!wizardFilterAktiv[f.schwierigkeit]) return false;
+    if(fs && f.schwierigkeit !== fs) return false;
+    if(fk && f.kategorie !== fk) return false;
     return true;
   });
   if(verfuegbar.length === 0) { zeigToast('Keine passenden Fragen!','rot'); return; }
   const gemischt = [...verfuegbar].sort(()=>Math.random()-.5);
   gewaehlteFragen = new Set(gemischt.slice(0, Math.min(n, gemischt.length)));
   rendereFragenWizard();
-  zeigToast(`${gewaehlteFragen.size} Fragen gewählt`,'gruen');
+  zeigToast(`${gewaehlteFragen.size} Fragen zufällig gewählt`,'gruen');
 }
 
 function toggleWizardFilter(typ) {
