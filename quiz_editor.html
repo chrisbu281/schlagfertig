@@ -309,9 +309,9 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
         <span class="icon">🎮</span>
         Spiel starten
       </button>
-      <button class="start-btn fragen" id="btn-eigene-fragen" onclick="zeigeEigeneFragen()">
-        <span class="icon">➕</span>
-        <span id="btn-fragen-text">Eigene Fragen</span>
+      <button class="start-btn fragen" id="btn-konto" onclick="zeigeKontoModal()">
+        <span class="icon">☁️</span>
+        Konto
       </button>
       <!-- Nur im Admin Modus sichtbar -->
       <button class="start-btn einstellungen" id="btn-einstellungen" onclick="zeigeAnsicht('einstellungen');wechsleTab('spieler')" style="display:none">
@@ -753,6 +753,46 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
   </div>
 </div>
 
+<!-- KONTO MODAL -->
+<div class="overlay" id="konto-overlay" onclick="if(event.target===this)schliesseKontoModal()">
+  <div class="modal" style="max-width:400px">
+    <h2>☁️ Konto & Fragenbibliothek</h2>
+    <div id="konto-modal-inhalt">
+      <div style="display:flex;align-items:center;gap:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:14px 16px;margin-bottom:16px">
+        <span style="font-size:28px">👤</span>
+        <div style="flex:1">
+          <div id="km-name" style="font-weight:700;font-size:15px;color:#166534"></div>
+          <div id="km-email" style="font-size:12px;color:#555;margin-top:2px"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#f8f8f8;border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <span style="font-size:13px;color:#555">Geladene Fragen</span>
+        <span id="km-anzahl" style="font-weight:700;font-size:16px;color:#1a1a2e">–</span>
+      </div>
+      <a id="km-link" href="https://schlagfertig.de" target="_blank" rel="noopener"
+         style="display:flex;align-items:center;justify-content:center;gap:8px;
+                background:#1a1a2e;color:#fff;border-radius:12px;padding:12px;
+                text-decoration:none;font-weight:700;font-size:14px;margin-bottom:10px">
+        🌐 Zur Fragenbibliothek
+      </a>
+      <button class="btn" onclick="kontoAbmelden()" style="width:100%;justify-content:center;color:#c0392b;border-color:#fca5a5">
+        ⏻ Abmelden
+      </button>
+    </div>
+    <div id="konto-modal-gast" style="display:none;text-align:center;padding:16px 0">
+      <div style="font-size:32px;margin-bottom:10px">🎮</div>
+      <div style="font-weight:700;margin-bottom:6px">Gastmodus aktiv</div>
+      <div style="font-size:13px;color:#888;margin-bottom:16px">Standardfragen geladen. Melde dich an für deine eigene Fragenbibliothek.</div>
+      <a href="/login" style="display:block;background:#1a1a2e;color:#fff;border-radius:12px;padding:12px;text-decoration:none;font-weight:700;font-size:14px">
+        🔐 Jetzt anmelden
+      </a>
+    </div>
+    <div class="modal-buttons" style="margin-top:16px">
+      <button class="btn" onclick="schliesseKontoModal()">Schließen</button>
+    </div>
+  </div>
+</div>
+
 <!-- FRAGE MODAL -->
 <div class="overlay" id="frage-overlay">
   <div class="modal">
@@ -943,8 +983,6 @@ function adminLogoKlick() {
     if(adminModus) {
       adminModus = false;
       document.getElementById('btn-einstellungen').style.display = 'none';
-      document.getElementById('btn-fragen-text').textContent = 'Eigene Fragen';
-      document.getElementById('btn-eigene-fragen').querySelector('.icon').textContent = '➕';
       zeigToast('Admin Modus beendet', '');
     } else {
       const pw = prompt('🔐 Admin Passwort:');
@@ -952,14 +990,38 @@ function adminLogoKlick() {
       if(pw === adminPw) {
         adminModus = true;
         document.getElementById('btn-einstellungen').style.display = 'flex';
-        document.getElementById('btn-fragen-text').textContent = 'Fragen & CSV';
-        document.getElementById('btn-eigene-fragen').querySelector('.icon').textContent = '📋';
         zeigToast('✅ Admin Modus aktiviert', 'gruen');
       } else if(pw !== null) {
         zeigToast('❌ Falsches Passwort', 'rot');
       }
     }
   }
+}
+
+// ── KONTO MODAL ──
+async function zeigeKontoModal() {
+  document.getElementById('konto-overlay').classList.add('offen');
+  try {
+    const r = await fetch('/api/cloud/config');
+    const d = await r.json();
+    if (d.modus === 'konto' && d.email) {
+      document.getElementById('konto-modal-inhalt').style.display = 'block';
+      document.getElementById('konto-modal-gast').style.display   = 'none';
+      document.getElementById('km-name').textContent   = d.name || d.email.split('@')[0];
+      document.getElementById('km-email').textContent  = d.email;
+      document.getElementById('km-anzahl').textContent = d.anzahl ?? '–';
+    } else {
+      document.getElementById('konto-modal-inhalt').style.display = 'none';
+      document.getElementById('konto-modal-gast').style.display   = 'block';
+    }
+  } catch(_) {}
+}
+function schliesseKontoModal() {
+  document.getElementById('konto-overlay').classList.remove('offen');
+}
+async function kontoAbmelden() {
+  try { await fetch('/api/cloud/abmelden', { method: 'POST' }); } catch(_) {}
+  window.location.href = '/login';
 }
 
 // ── EIGENE FRAGEN ──

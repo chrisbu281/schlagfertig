@@ -415,11 +415,19 @@ def buzzer_reset():
 @app.route("/api/cloud/config", methods=["GET"])
 def cloud_config_get():
     cfg = lese_cloud_config()
+    anzahl = 0
+    try:
+        with open(KONFIG, encoding="utf-8") as f:
+            qcfg = json.load(f)
+            anzahl = len(qcfg.get("fragen", []))
+    except Exception:
+        pass
     return jsonify({
         "cloud_url":  cfg.get("cloud_url", ""),
         "name":       cfg.get("benutzer_name", ""),
         "email":      cfg.get("email", ""),
         "modus":      cfg.get("modus", ""),
+        "anzahl":     anzahl,
     })
 
 def lade_supabase_fragen(url=None):
