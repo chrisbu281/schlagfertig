@@ -401,26 +401,11 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 
     <!-- Schritt 2: Spielmodus + Optionen -->
     <div class="wizard-inhalt" id="wizard-schritt-2" style="display:none">
-      <div class="wizard-titel">🎮 Spielmodus & Optionen</div>
-      <div class="wizard-untertitel">Wähle den Modus und stelle das Spiel ein</div>
-
-      <!-- Modus -->
-      <div class="modus-wizard-grid" style="margin-bottom:20px">
-        <div class="modus-wizard-karte aktiv" id="mwk-frei" onclick="setzeWizardModus('frei')">
-          <div class="mw-icon">🎤</div>
-          <div class="mw-titel">Freie Antwort</div>
-          <div class="mw-desc">Buzzer drücken und frei antworten. Moderator entscheidet richtig/falsch.</div>
-        </div>
-        <div class="modus-wizard-karte" id="mwk-mc" onclick="setzeWizardModus('mc')">
-          <div class="mw-icon">🅰️</div>
-          <div class="mw-titel">Multiple Choice</div>
-          <div class="mw-desc">4 Antworten auf dem Bildschirm. Spieler wählt A, B, C oder D.</div>
-        </div>
-      </div>
+      <div class="wizard-titel">⚙️ Optionen</div>
+      <div class="wizard-untertitel">Stelle das Spiel nach deinen Wünschen ein</div>
 
       <!-- Optionen -->
       <div style="background:#f8f8f8;border-radius:12px;padding:16px;border:1px solid #e8e8e8">
-        <div style="font-size:13px;font-weight:700;color:#555;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">⚙️ Optionen</div>
 
         <div class="toggle-zeile" id="wiz-zeile-warteschlange">
           <div class="toggle-info"><strong>Buzzer-Warteschlange</strong><span>Moderator sieht wer zuerst gedrückt hat</span></div>
@@ -438,12 +423,21 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
           <div class="toggle-info"><strong>Fragen mischen</strong><span>Zufällige Reihenfolge</span></div>
           <label class="toggle"><input type="checkbox" id="wiz-mischen" checked><span class="toggle-slider"></span></label>
         </div>
-
-        <div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:12px;font-weight:600;color:#555">Schwierigkeit:</span>
-          <div class="filter-chip leicht aktiv" id="wfc-leicht" onclick="toggleWizardFilter('leicht')">✓ Leicht</div>
-          <div class="filter-chip mittel aktiv" id="wfc-mittel" onclick="toggleWizardFilter('mittel')">✓ Mittel</div>
-          <div class="filter-chip schwer aktiv" id="wfc-schwer" onclick="toggleWizardFilter('schwer')">✓ Schwer</div>
+        <div class="toggle-zeile">
+          <div class="toggle-info"><strong>Auto-Weiter</strong><span>Nach richtiger Antwort automatisch zur nächsten Frage</span></div>
+          <label class="toggle"><input type="checkbox" id="wiz-auto-weiter"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-zeile">
+          <div class="toggle-info"><strong>Wiederholungen verhindern</strong><span>Bereits gespielte Fragen nicht nochmal zeigen</span></div>
+          <label class="toggle"><input type="checkbox" id="wiz-keine-wiederholung" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-zeile">
+          <div class="toggle-info"><strong>Zeitlimit pro Frage</strong><span>Buzzer sperren nach Ablauf der Zeit</span></div>
+          <label class="toggle"><input type="checkbox" id="wiz-zeitlimit-aktiv" onchange="wizZeitlimitToggle(this.checked)"><span class="toggle-slider"></span></label>
+        </div>
+        <div id="wiz-zeitlimit-zeile" style="display:none;margin-top:8px;margin-left:4px">
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">⏱️ Sekunden pro Frage</label>
+          <input class="num-input" type="number" id="wiz-zeitlimit-sek" value="30" min="5" max="300" style="width:100px">
         </div>
 
         <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -1445,10 +1439,6 @@ function wizardWeiter(schritt) {
   // Immer automatisch speichern beim Weiterklicken
   speichereAufPi();
 
-  if(schritt === 2) {
-    const zeile = document.getElementById('wiz-zeile-zweite-chance');
-    if(zeile) zeile.style.opacity = wizardModus === 'mc' ? '0.4' : '1';
-  }
   if(schritt === 3) {
     const el = id => document.getElementById(id);
     config.einstellungen.spielmodus = wizardModus;
@@ -1456,6 +1446,10 @@ function wizardWeiter(schritt) {
     config.einstellungen.zweite_chance = el('wiz-zweite-chance')?.checked !== false;
     config.einstellungen.reaktionszeit_anzeigen = el('wiz-reaktion')?.checked !== false;
     config.einstellungen.fragen_mischen = el('wiz-mischen')?.checked !== false;
+    config.einstellungen.auto_weiter = el('wiz-auto-weiter')?.checked === true;
+    config.einstellungen.keine_wiederholung = el('wiz-keine-wiederholung')?.checked !== false;
+    config.einstellungen.zeitlimit_aktiv = el('wiz-zeitlimit-aktiv')?.checked === true;
+    config.einstellungen.zeitlimit_sek = parseInt(el('wiz-zeitlimit-sek')?.value) || 30;
     config.einstellungen.punkte_richtig = parseInt(el('wiz-p-richtig')?.value) || 10;
     config.einstellungen.punkte_falsch = parseInt(el('wiz-p-falsch')?.value) || 5;
     const hinweis = document.getElementById('wiz-modus-hinweis');
@@ -1465,6 +1459,11 @@ function wizardWeiter(schritt) {
     rendereFragenWizard();
   }
   wizardSchritt(schritt);
+}
+
+function wizZeitlimitToggle(an) {
+  const zeile = document.getElementById('wiz-zeitlimit-zeile');
+  if(zeile) zeile.style.display = an ? 'block' : 'none';
 }
 
 function wizardZurueck(schritt) {
