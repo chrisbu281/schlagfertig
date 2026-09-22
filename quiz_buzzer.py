@@ -3,14 +3,54 @@
 Schlagfertig – Quiz Buzzer
 Fixes: MC Antworten, Sieger, Punktestand, schwarzer Übergang
 """
-import lgpio
+import RPi.GPIO as GPIO
 import pygame
-import json, time, sys, os, threading
+import json, time, sys, os, threading, atexit
 import socketio as sio_client
 from queue import Queue
 
 KONFIG_DATEI = os.path.join(os.path.dirname(__file__), "quiz_config.json")
 STATE_DATEI  = os.path.join(os.path.dirname(__file__), ".spiel_state")
+PID_DATEI    = os.path.join(os.path.dirname(__file__), ".buzzer.pid")
+
+# ─────────────────────────────────────────────
+#  EINZELINSTANZ (verhindert Doppelstart beim Boot)
+# ─────────────────────────────────────────────
+def _prozess_laeuft(pid):
+    """True, wenn ein Prozess mit dieser PID existiert."""
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False        # Prozess gibt es nicht mehr
+    except PermissionError:
+        return True         # existiert, gehört aber anderem User
+    return True
+
+def pruefe_einzelinstanz():
+    """Beendet sich selbst, wenn bereits eine Instanz läuft.
+    Fängt auch verwaiste PID-Files nach einem Absturz ab."""
+    if os.path.exists(PID_DATEI):
+        try:
+            with open(PID_DATEI) as f:
+                alt_pid = int(f.read().strip())
+        except (ValueError, OSError):
+            alt_pid = None
+        if alt_pid and alt_pid != os.getpid() and _prozess_laeuft(alt_pid):
+            print(f"Schlagfertig läuft bereits (PID {alt_pid}) – Doppelstart verhindert.")
+            sys.exit(0)
+        # verwaiste/ungültige Datei -> wird gleich überschrieben
+    with open(PID_DATEI, "w") as f:
+        f.write(str(os.getpid()))
+    atexit.register(entferne_pid)
+
+def entferne_pid():
+    """PID-File nur entfernen, wenn es uns gehört."""
+    try:
+        with open(PID_DATEI) as f:
+            if int(f.read().strip()) == os.getpid():
+                os.remove(PID_DATEI)
+    except (ValueError, OSError):
+        pass
 
 # ─────────────────────────────────────────────
 #  WEBSOCKET CLIENT
@@ -18,6 +58,7 @@ STATE_DATEI  = os.path.join(os.path.dirname(__file__), ".spiel_state")
 sio = sio_client.Client(reconnection=True, reconnection_attempts=0)
 ws_verbunden = False
 befehle = Queue()
+test_modus = False   # Buzzer-Test: meldet jeden rohen Tastendruck an die App
 
 @sio.event
 def connect():
@@ -52,8 +93,23 @@ def on_sieger(data): befehle.put(('zeige_sieger', data))
 @sio.on('buzzer_freigeben')
 def on_freigeben(): befehle.put(('buzzer_freigeben', {}))
 
+@sio.on('zeige_meme')
+def on_zeige_meme(data): befehle.put(('zeige_meme', data))
+
 @sio.on('state_update')
 def on_state(data): befehle.put(('state_update', data))
+
+@sio.on('test_start')
+def on_test_start():
+    global test_modus
+    test_modus = True
+    print("Buzzer-Test gestartet")
+
+@sio.on('test_stop')
+def on_test_stop():
+    global test_modus
+    test_modus = False
+    print("Buzzer-Test beendet")
 
 def verbinde_websocket():
     while True:
@@ -128,20 +184,14 @@ def spiele_sound(dateiname):
         sounds_cache[dateiname].play()
     except Exception as e:
         print(f"Sound Wiedergabe Fehler: {e}")
-_gpio_handle = None
-
 def gpio_setup(spieler):
-    global _gpio_handle
-    _gpio_handle = lgpio.gpiochip_open(0)
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
     for s in spieler:
-        lgpio.gpio_claim_input(_gpio_handle, s["gpio"], lgpio.SET_PULL_UP)
+        GPIO.setup(s["gpio"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 def gpio_cleanup():
-    global _gpio_handle
-    try:
-        if _gpio_handle is not None:
-            lgpio.gpiochip_close(_gpio_handle)
-            _gpio_handle = None
+    try: GPIO.cleanup()
     except: pass
 
 # ─────────────────────────────────────────────
@@ -152,10 +202,65 @@ DUNKEL = (18,  18,  28)
 ROT    = (230, 57,  70)
 SCHWARZ = (0, 0, 0)
 
+# ═══ THEME SYSTEM ═══
+THEMES = {
+    'frei': {
+        'name': 'Standard',
+        'bg_color': (13, 13, 23),
+        'text_color': (255, 255, 255),
+        'accent_color': (100, 150, 255),
+        'success_color': (30, 200, 90),
+        'error_color': (230, 60, 60),
+        'popup_alpha': 140
+    },
+    'mc': {
+        'name': 'Neon',
+        'bg_color': (8, 8, 18),
+        'text_color': (255, 255, 255),
+        'accent_color': (0, 255, 255),
+        'success_color': (57, 255, 20),
+        'error_color': (255, 0, 150),
+        'popup_alpha': 160,
+        'neon_colors': [
+            (0, 255, 255),      # Cyan
+            (255, 0, 150),      # Pink
+            (57, 255, 20),      # Green
+            (255, 255, 0)       # Yellow
+        ]
+    }
+}
+
+current_theme = None
+current_modus = 'frei'
+
 SF_GR = SF_MI = SF_KL = SF_EMOJI = None
 BR = HO = 0
 screen = None
 spieler_map_global = {}
+frame_counter = 0
+
+def set_modus_theme(modus):
+    """Setzt das Theme basierend auf Spielmodus"""
+    global current_theme, current_modus
+    current_modus = modus
+    current_theme = THEMES.get(modus, THEMES['frei'])
+
+def zeichne_neon_button(x, y, w, h, text, farbe, buchstabe=None, selected=False, pulsing=False):
+    """Zeichnet einen super-simplen Neon-Button ohne teure Effekte"""
+    # Button-Body - direkt gezeichnet
+    pygame.draw.rect(screen, farbe, (x - w//2, y - h//2, w, h), border_radius=12)
+
+    # Dicker Neon-Border
+    border_width = 4 if selected else 2
+    pygame.draw.rect(screen, (255, 255, 255) if selected else farbe, (x - w//2, y - h//2, w, h), border_radius=12, width=border_width)
+
+    # Text
+    txt_color = (0, 0, 0) if farbe == (255, 255, 0) else (255, 255, 255)
+    lbl = SF_KL.render(f"{buchstabe}", True, txt_color)
+    screen.blit(lbl, (x - w//2 + 16, y - lbl.get_height()//2))
+
+    txt = SF_KL.render(text[:18], True, txt_color)
+    screen.blit(txt, (x - w//2 + 60, y - txt.get_height()//2))
 
 def display_setup():
     global SF_GR, SF_MI, SF_KL, SF_EMOJI, BR, HO, screen
@@ -164,9 +269,9 @@ def display_setup():
     BR, HO = info.current_w, info.current_h
     screen = pygame.display.set_mode((BR, HO), pygame.FULLSCREEN)
     pygame.display.set_caption("Schlagfertig")
-    SF_GR = pygame.font.SysFont("DejaVu Sans", 86, bold=True)
-    SF_MI = pygame.font.SysFont("DejaVu Sans", 46)
-    SF_KL = pygame.font.SysFont("DejaVu Sans", 28)
+    SF_GR = pygame.font.SysFont("DejaVu Sans", 96, bold=True)
+    SF_MI = pygame.font.SysFont("DejaVu Sans", 56, bold=True)
+    SF_KL = pygame.font.SysFont("DejaVu Sans", 32)
     # Emoji Schriftart
     try:
         SF_EMOJI = pygame.font.Font("/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf", 48)
@@ -235,7 +340,10 @@ def zeige_startbildschirm(spieler, punkte, highlight_nr=None):
     pygame.display.flip()
 
 def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=None, mc_aufgeloest=False, do_flip=True):
-    screen.fill(DUNKEL)
+    # Theme-basierte Hintergrundfarbe
+    theme = current_theme or THEMES['frei']
+    screen.fill(theme['bg_color'])
+
     if not frage_dict:
         if do_flip: pygame.display.flip()
         return
@@ -243,8 +351,8 @@ def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=No
     # Kategorie + Nummer
     kat_txt = SF_KL.render(
         f"Frage {nr}/{gesamt}  ·  {frage_dict.get('kategorie','')}  ·  {frage_dict.get('schwierigkeit','').capitalize()}",
-        True, (110,110,180))
-    blit_mitte(kat_txt, 46)
+        True, theme['accent_color'])
+    blit_mitte(kat_txt, 40)
 
     # Frage Text
     istMC = spielmodus == 'mc' or frage_dict.get('modus') == 'mc'
@@ -256,55 +364,57 @@ def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=No
         else: z.append(w)
     if z: zeilen.append(" ".join(z))
 
-    y_start = HO//2 - (len(zeilen)*63)//2 - (120 if istMC else 0)
+    y_start = HO//2 - (len(zeilen)*63)//2 - (140 if istMC else 0)
     for line in zeilen:
-        blit_mitte(SF_MI.render(line, True, WEISS), y_start)
+        blit_mitte(SF_MI.render(line, True, theme['text_color']), y_start)
         y_start += 63
 
-    # MC Antworten
+    # MC Antworten - NEON FARBEN
     if istMC and frage_dict.get("antworten_mc") and len(frage_dict["antworten_mc"]) == 4:
         mc = frage_dict["antworten_mc"]
         richtig_idx = frage_dict.get("richtige_antwort_index", 0)
-        farben = [(67,97,238),(247,37,133),(244,162,97),(46,196,182)]
+        # NEON Farben für MC
+        neon_farben = [(0, 255, 255), (255, 0, 150), (57, 255, 20), (255, 255, 0)]  # Cyan, Pink, Green, Yellow
         buchst = ["A","B","C","D"]
-        kw = (BR-120)//2
-        kh = 80
+        kw = (BR-140)//2
+        kh = 100
         positionen = [
-            (60, HO-220), (60+kw+20, HO-220),
-            (60, HO-130), (60+kw+20, HO-130)
+            (70, HO-240), (70+kw+30, HO-240),
+            (70, HO-130), (70+kw+30, HO-130)
         ]
         for i, (ax, ay) in enumerate(positionen):
             if i >= len(mc): break
-            farbe = list(farben[i])
+            farbe = neon_farben[i]
 
             if mc_aufgeloest:
                 if i == richtig_idx:
-                    # Richtige Antwort grün
-                    pygame.draw.rect(screen, (30, 160, 80), (ax,ay,kw,kh), border_radius=14)
-                    pygame.draw.rect(screen, (60, 220, 120), (ax,ay,kw,kh), border_radius=14, width=4)
+                    # Richtige - Neon Green
+                    pygame.draw.rect(screen, (20, 180, 50), (ax, ay, kw, kh), border_radius=14)
+                    pygame.draw.rect(screen, (57, 255, 20), (ax, ay, kw, kh), border_radius=14, width=4)
                 elif i == mc_gewaehlt:
-                    # Falsch gewählte Antwort rot
-                    pygame.draw.rect(screen, (160, 30, 30), (ax,ay,kw,kh), border_radius=14)
-                    pygame.draw.rect(screen, (220, 60, 60), (ax,ay,kw,kh), border_radius=14, width=4)
+                    # Falsch - Neon Red
+                    pygame.draw.rect(screen, (180, 20, 50), (ax, ay, kw, kh), border_radius=14)
+                    pygame.draw.rect(screen, (255, 0, 150), (ax, ay, kw, kh), border_radius=14, width=4)
                 else:
                     # Andere ausgegraut
                     pygame.draw.rect(screen, (40,40,50), (ax,ay,kw,kh), border_radius=14)
             elif mc_gewaehlt == i:
-                # Gewählte Antwort blau umrandet
-                pygame.draw.rect(screen, tuple(farbe), (ax,ay,kw,kh), border_radius=14)
-                pygame.draw.rect(screen, WEISS, (ax,ay,kw,kh), border_radius=14, width=4)
+                # Gewählte - dicker Neon Border
+                pygame.draw.rect(screen, farbe, (ax,ay,kw,kh), border_radius=14)
+                pygame.draw.rect(screen, (255,255,255), (ax,ay,kw,kh), border_radius=14, width=4)
             else:
-                pygame.draw.rect(screen, tuple(farbe), (ax,ay,kw,kh), border_radius=14)
+                # Normal - Neon Farbe
+                pygame.draw.rect(screen, farbe, (ax,ay,kw,kh), border_radius=14)
 
             # Text
-            txt_farbe = WEISS if i != 2 else (30,30,30)
+            txt_farbe = (0,0,0) if farbe == (255, 255, 0) else (255,255,255)
             lbl = SF_MI.render(f"{buchst[i]}", True, txt_farbe)
             ant = SF_KL.render(mc[i], True, txt_farbe)
             screen.blit(lbl, (ax+18, ay+kh//2-lbl.get_height()//2))
             screen.blit(ant, (ax+60, ay+kh//2-ant.get_height()//2))
 
     if not istMC:
-        blit_mitte(SF_KL.render("Buzzer drücken!", True, (80,200,120)), HO-54)
+        blit_mitte(SF_KL.render("🔔 Buzzer drücken!", True, theme['success_color']), HO-54)
 
     if do_flip: pygame.display.flip()
 
@@ -313,56 +423,69 @@ def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", wartesch
     # Erst Frage im Hintergrund zeigen (ohne flip!)
     if frage_dict:
         zeige_frage_screen(frage_dict, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False, do_flip=False)
-    
+
     # Pop-up darüber zeichnen
     farbe = hex_zu_rgb(spieler_obj["farbe"])
-    
+    theme = current_theme or THEMES['frei']
+    istMC = spielmodus == 'mc'
+
     # Halbtransparenter dunkler Hintergrund
     overlay = pygame.Surface((BR, HO), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 140))
+    overlay.fill((0, 0, 0, theme.get('popup_alpha', 140)))
     screen.blit(overlay, (0, 0))
-    
+
     # Pop-up Karte
-    pw, ph = 520, 300
+    pw, ph = 580, 360
     px = BR//2 - pw//2
     py = HO//2 - ph//2
-    
-    # Schatten
-    schatten = pygame.Surface((pw+8, ph+8), pygame.SRCALPHA)
-    schatten.fill((0,0,0,80))
-    screen.blit(schatten, (px+4, py+4))
-    
+
+    # NEON-Border für MC
+    if istMC:
+        pygame.draw.rect(screen, farbe, (px, py, pw, ph), border_radius=26, width=4)
+
+    # Schatten (für Tiefe)
+    schatten = pygame.Surface((pw+12, ph+12), pygame.SRCALPHA)
+    schatten.fill((0,0,0,120))
+    screen.blit(schatten, (px+6, py+6))
+
     # Karte Hintergrund
-    pygame.draw.rect(screen, dunkler(farbe,.3), (px, py, pw, ph), border_radius=24)
-    pygame.draw.rect(screen, farbe, (px+2, py+2, pw-4, ph-4), border_radius=22)
+    if istMC:
+        # Neon-Border für MC
+        pygame.draw.rect(screen, dunkler(farbe,.5), (px, py, pw, ph), border_radius=26)
+        pygame.draw.rect(screen, farbe, (px+2, py+2, pw-4, ph-4), border_radius=24)
+        pygame.draw.rect(screen, farbe, (px, py, pw, ph), border_radius=26, width=3)
+    else:
+        pygame.draw.rect(screen, dunkler(farbe,.3), (px, py, pw, ph), border_radius=24)
+        pygame.draw.rect(screen, farbe, (px+2, py+2, pw-4, ph-4), border_radius=22)
     
     # Foto oder Avatar
-    kr = 60
+    kr = 75
     foto_surf = _foto_cache.get(spieler_obj["nr"])
     if foto_surf is None and spieler_obj.get("foto"):
         foto_surf = lade_foto(spieler_obj, groesse=kr*2)
         _foto_cache[spieler_obj["nr"]] = foto_surf
     if foto_surf:
         fs = pygame.transform.smoothscale(foto_surf, (kr*2, kr*2))
-        screen.blit(fs, (BR//2 - kr, py+55 - kr))
+        screen.blit(fs, (BR//2 - kr, py+70 - kr))
     else:
-        pygame.draw.circle(screen, dunkler(farbe,.5), (BR//2, py+55), kr+3)
-        pygame.draw.circle(screen, farbe, (BR//2, py+55), kr)
+        pygame.draw.circle(screen, dunkler(farbe,.5), (BR//2, py+70), kr+4)
+        pygame.draw.circle(screen, farbe, (BR//2, py+70), kr)
         ini = SF_MI.render(spieler_obj["name"][0].upper(), True, WEISS)
-        screen.blit(ini, (BR//2-ini.get_width()//2, py+55-ini.get_height()//2))
-    
-    # Name
-    name_surf = SF_MI.render(spieler_obj["name"], True, WEISS)
-    screen.blit(name_surf, (BR//2 - name_surf.get_width()//2, py+125))
-    
+        screen.blit(ini, (BR//2-ini.get_width()//2, py+70-ini.get_height()//2))
+
+    # Name (größer)
+    name_font = pygame.font.SysFont("DejaVu Sans", 48, bold=True)
+    name_surf = name_font.render(spieler_obj["name"], True, WEISS)
+    screen.blit(name_surf, (BR//2 - name_surf.get_width()//2, py+155))
+
     # Text
-    txt_surf = SF_KL.render(text, True, (220,220,220))
-    screen.blit(txt_surf, (BR//2 - txt_surf.get_width()//2, py+175))
+    txt_surf = SF_MI.render(text, True, (220,220,220))
+    screen.blit(txt_surf, (BR//2 - txt_surf.get_width()//2, py+225))
     
     # Warteschlange unten
     if len(warteschlange) > 1:
         rang_icons = ["🥇","🥈","🥉","4.","5.","6."]
-        wq_y = py + ph + 16
+        wq_y = py + ph + 24
         for i, e in enumerate(warteschlange):
             if i == 0: continue
             s_nr = e.get('nr')
@@ -372,42 +495,62 @@ def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", wartesch
             ms_txt = f"  +{s_ms} ms" if s_ms else ""
             wq_txt = SF_KL.render(f"{rang_icons[i]} {s_name}{ms_txt}", True, (200,200,200))
             screen.blit(wq_txt, (BR//2 - wq_txt.get_width()//2, wq_y))
-            wq_y += 34
+            wq_y += 38
     
     pygame.display.flip()
 
 def zeige_richtig_screen(delta, frage_dict=None, frage_nr=1, frage_gesamt=1, spielmodus='frei', mc_gewaehlt=None):
+    theme = current_theme or THEMES['frei']
+    istMC = spielmodus == 'mc'
+
     if frage_dict:
         zeige_frage_screen(frage_dict, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False, do_flip=False)
     else:
-        screen.fill(DUNKEL)
+        screen.fill(theme['bg_color'])
+
     overlay = pygame.Surface((BR, HO), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 120))
+    overlay.fill((0, 0, 0, 160))
     screen.blit(overlay, (0, 0))
-    pw, ph = 480, 220
+
+    pw, ph = 560, 280
     px = BR//2 - pw//2
     py = HO//2 - ph//2
-    pygame.draw.rect(screen, (8, 80, 30), (px+4, py+4, pw, ph), border_radius=22)
-    pygame.draw.rect(screen, (20, 160, 60), (px, py, pw, ph), border_radius=22)
-    blit_mitte(SF_GR.render("✓ RICHTIG!", True, WEISS), py+60)
-    blit_mitte(SF_MI.render(f"+{delta} Punkte", True, (180,255,180)), py+155)
+
+    pygame.draw.rect(screen, (10, 120, 40), (px+4, py+4, pw, ph), border_radius=28)
+    pygame.draw.rect(screen, theme['success_color'], (px, py, pw, ph), border_radius=28)
+
+    if istMC:
+        pygame.draw.rect(screen, theme['success_color'], (px, py, pw, ph), border_radius=28, width=3)
+
+    blit_mitte(SF_GR.render("✓ RICHTIG!", True, WEISS), py+75)
+    blit_mitte(SF_MI.render(f"+{delta} Punkte", True, (150,255,150)), py+180)
     pygame.display.flip()
 
 def zeige_falsch_screen(delta, frage_dict=None, frage_nr=1, frage_gesamt=1, spielmodus='frei', mc_gewaehlt=None):
+    theme = current_theme or THEMES['frei']
+    istMC = spielmodus == 'mc'
+
     if frage_dict:
         zeige_frage_screen(frage_dict, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False, do_flip=False)
     else:
-        screen.fill(DUNKEL)
+        screen.fill(theme['bg_color'])
+
     overlay = pygame.Surface((BR, HO), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 120))
+    overlay.fill((0, 0, 0, 160))
     screen.blit(overlay, (0, 0))
-    pw, ph = 480, 220
+
+    pw, ph = 560, 280
     px = BR//2 - pw//2
     py = HO//2 - ph//2
-    pygame.draw.rect(screen, (80, 8, 8), (px+4, py+4, pw, ph), border_radius=22)
-    pygame.draw.rect(screen, (200, 40, 40), (px, py, pw, ph), border_radius=22)
-    blit_mitte(SF_GR.render("✗ FALSCH!", True, WEISS), py+60)
-    blit_mitte(SF_MI.render(f"−{delta} Punkte", True, (255,180,180)), py+155)
+
+    pygame.draw.rect(screen, (140, 20, 20), (px+4, py+4, pw, ph), border_radius=28)
+    pygame.draw.rect(screen, theme['error_color'], (px, py, pw, ph), border_radius=28)
+
+    if istMC:
+        pygame.draw.rect(screen, theme['error_color'], (px, py, pw, ph), border_radius=28, width=3)
+
+    blit_mitte(SF_GR.render("✗ FALSCH!", True, WEISS), py+75)
+    blit_mitte(SF_MI.render(f"−{delta} Punkte", True, (255,150,150)), py+180)
     pygame.display.flip()
 
 def zeige_gewinner_screen(spieler_obj, punkte_wert, warteschlange, spieler_map):
@@ -532,14 +675,29 @@ buzzer_warteschlange_lokal = []  # Lokale Kopie der Warteschlange
 
 def buzzer_thread(spieler):
     global buzzer_gesperrt, buzzer_start_zeit, buzzer_warteschlange_lokal
-    letzter = {s["nr"]: 1 for s in spieler}
+    # Sicherstellen dass GPIO korrekt initialisiert ist
+    try:
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+        for s in spieler:
+            GPIO.setup(s["gpio"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    except: pass
+
+    letzter = {s["nr"]: GPIO.HIGH for s in spieler}
     erster_buzz_zeit = None
 
     while buzzer_aktiv:
         for s in spieler:
-            jetzt = lgpio.gpio_read(_gpio_handle, s["gpio"])
-            if jetzt == 0 and letzter[s["nr"]] == 1:
+            jetzt = GPIO.input(s["gpio"])
+            if jetzt == GPIO.LOW and letzter[s["nr"]] == GPIO.HIGH:
                 nr = s["nr"]
+                # Buzzer-Test: jeden Druck melden, Spiellogik überspringen
+                if test_modus:
+                    try:
+                        sio.emit('buzzer_test_press', {'nr': nr})
+                    except: pass
+                    letzter[s["nr"]] = jetzt
+                    continue
                 # Schon in Warteschlange? Ignorieren
                 if any(e['nr'] == nr for e in buzzer_warteschlange_lokal):
                     letzter[s["nr"]] = jetzt
@@ -568,6 +726,8 @@ def buzzer_thread(spieler):
 # ─────────────────────────────────────────────
 def main():
     global buzzer_aktiv, buzzer_gesperrt, buzzer_start_zeit
+
+    pruefe_einzelinstanz()   # Doppelstart beim Boot abfangen
 
     konfig = lade_konfig()
     spieler = konfig["spieler"]
@@ -620,6 +780,8 @@ def main():
     popup_timer = None  # Timer für Pop-up
     buzzer_fenster_offen = False  # 2 Sek Fenster nach erstem Buzzer
     aktive_spieler_liste = spieler  # Wird vom Editor übernommen
+    meme_surf = None  # Meme-Board: aktuell eingeblendetes GIF (Standbild)
+    meme_bis = 0
 
     schreibe_state("warten")
     clock = pygame.time.Clock()
@@ -648,6 +810,7 @@ def main():
                 frage_nr = data.get('idx', 0) + 1
                 frage_gesamt = data.get('gesamt', 1)
                 spielmodus = data.get('spielmodus', 'frei')
+                set_modus_theme(spielmodus)  # Theme setzen
                 # Aktive Spieler übernehmen und spieler_map aktualisieren!
                 if data.get('aktive_spieler'):
                     aktive_spieler_liste = data.get('aktive_spieler')
@@ -759,6 +922,19 @@ def main():
                 zeige_sieger_screen(spieler_liste, punkte)
                 modus = "sieger"
 
+            elif befehl == 'zeige_meme':
+                dateiname = data.get('gif')
+                if dateiname:
+                    pfad = os.path.join(os.path.dirname(__file__), "gifs", dateiname)
+                    try:
+                        bild = pygame.image.load(pfad).convert_alpha()
+                        ziel_h = int(HO * 0.45)
+                        ziel_w = int(bild.get_width() * ziel_h / bild.get_height())
+                        meme_surf = pygame.transform.smoothscale(bild, (ziel_w, ziel_h))
+                        meme_bis = time.time() + 2.5
+                    except Exception as e:
+                        print(f"Meme-Bild Fehler: {e}")
+
             elif befehl == 'buzzer_local':
                 nr = data.get('nr')
                 ms = data.get('ms', 0)
@@ -777,7 +953,6 @@ def main():
             if puls >= 1.0: puls_richtung = -1
             if puls <= 0.0: puls_richtung = 1
             zeige_wartebildschirm(puls)
-            pygame.display.flip()
 
         elif modus == "frage":
             zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, mc_aufgeloest)
@@ -807,6 +982,20 @@ def main():
 
         elif modus == "sieger":
             pass  # Sieger-Screen bleibt stehen
+
+        # Meme-Board: GIF/Sticker als Standbild kurz einblenden (über allem anderen)
+        if meme_surf and time.time() < meme_bis:
+            abdunklung = pygame.Surface((BR, HO), pygame.SRCALPHA)
+            abdunklung.fill((5, 7, 13, 140))
+            screen.blit(abdunklung, (0, 0))
+            screen.blit(meme_surf, (BR//2 - meme_surf.get_width()//2, HO//2 - meme_surf.get_height()//2))
+            pygame.display.flip()
+        elif meme_surf and time.time() >= meme_bis:
+            meme_surf = None
+
+        # Frame-Counter für Animationen
+        global frame_counter
+        frame_counter = (frame_counter + 1) % 360
 
         clock.tick(30)
 
