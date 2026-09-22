@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify, send_from_directory, redirect, Response
 from flask_socketio import SocketIO, emit
+from werkzeug.utils import secure_filename
 import json, os, csv, io, subprocess, urllib.request, urllib.parse, sys
+try:
+    import requests as _requests
+except ImportError:
+    _requests = None
 import spiel_100leute
 
 app = Flask(__name__)
@@ -14,6 +19,11 @@ STATE_DATEI  = os.path.join(BASIS, ".spiel_state")
 CLOUD_KONFIG = os.path.join(BASIS, ".cloud_config.json")
 GAST_FRAGEN  = os.path.join(BASIS, "fragen_default.json")
 SETUP_DATEI  = os.path.join(BASIS, ".setup_fertig")
+SOUNDS_DIR   = os.path.join(BASIS, "sounds")
+GIFS_DIR     = os.path.join(BASIS, "gifs")
+MEME_KONFIG  = os.path.join(BASIS, "meme_board.json")
+os.makedirs(SOUNDS_DIR, exist_ok=True)
+os.makedirs(GIFS_DIR, exist_ok=True)
 
 # Supabase
 SUPABASE_BASE     = "https://drjdushdhzgkfkigocxd.supabase.co"
@@ -98,6 +108,34 @@ def _speichere_fragen_lokal(roh):
         json.dump(config, fh, ensure_ascii=False, indent=2)
     return fragen
 spiel_prozess = None
+
+# ── MEME-BOARD ──
+STANDARD_MEME_BOARD = {"kacheln": [
+    {"id":"applaus",       "name":"Applaus",         "icon":"👏","kategorie":"reaktion","typ":"sound","sound":None},
+    {"id":"trommelwirbel", "name":"Trommelwirbel",   "icon":"🥁","kategorie":"spannung","typ":"sound","sound":None},
+    {"id":"lacher",        "name":"Lacher",          "icon":"😂","kategorie":"reaktion","typ":"sound","sound":None},
+    {"id":"fail",          "name":"Fail-Sound",      "icon":"💥","kategorie":"ergebnis","typ":"sound","sound":None},
+    {"id":"falsch",        "name":"Falsche Antwort", "icon":"❌","kategorie":"ergebnis","typ":"sound","sound":None},
+    {"id":"signal",        "name":"Signalton",       "icon":"🔔","kategorie":"spannung","typ":"sound","sound":None},
+    {"id":"ticktack",      "name":"Tick-Tack",       "icon":"⏳","kategorie":"spannung","typ":"sound","sound":None},
+    {"id":"fanfare",       "name":"Fanfare",         "icon":"🎺","kategorie":"ergebnis","typ":"gif","sound":None,"gif":None},
+    {"id":"konfetti",      "name":"Konfetti-Sieg",   "icon":"🎉","kategorie":"ergebnis","typ":"gif","sound":None,"gif":None},
+]}
+
+def lade_meme_board():
+    if not os.path.exists(MEME_KONFIG):
+        with open(MEME_KONFIG, "w", encoding="utf-8") as f:
+            json.dump(STANDARD_MEME_BOARD, f, ensure_ascii=False, indent=2)
+        return STANDARD_MEME_BOARD
+    with open(MEME_KONFIG, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def giphy_api_key():
+    if not os.path.exists(KONFIG):
+        return ""
+    with open(KONFIG, "r", encoding="utf-8") as f:
+        cfg = json.load(f)
+    return (cfg.get("einstellungen") or {}).get("giphy_api_key", "")
 
 spiel_state = {
     "modus": "warten",
@@ -729,6 +767,15 @@ def on_freigeben():
     socketio.emit('state_update', spiel_state)
     socketio.emit('buzzer_freigeben')
 
+@socketio.on('mod_meme')
+def on_mod_meme(data):
+    gif = data.get('gif')
+    if not gif:
+        return
+    payload = {'gif': gif}
+    socketio.emit('zeige_meme', payload)
+    socketio.emit('zeige_meme', payload, namespace='/100leute')
+
 @socketio.on('mod_toggle_punktestand')
 def on_toggle_punktestand(data):
     spiel_state['punktestand_sichtbar'] = not spiel_state.get('punktestand_sichtbar', False)
@@ -788,6 +835,90 @@ def sound_upload():
         ziel = os.path.join(BASIS, file.filename)
         file.save(ziel)
         return jsonify({"status": "ok", "dateiname": file.filename})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/meme-sounds/<dateiname>")
+def serve_meme_sound(dateiname):
+    return send_from_directory(SOUNDS_DIR, dateiname)
+
+@app.route("/gifs/<dateiname>")
+def serve_gif(dateiname):
+    return send_from_directory(GIFS_DIR, dateiname)
+
+@app.route("/api/meme-board", methods=["GET"])
+def meme_board_get():
+    return jsonify(lade_meme_board())
+
+@app.route("/api/meme-board", methods=["POST"])
+def meme_board_save():
+    try:
+        data = request.get_json()
+        with open(MEME_KONFIG, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/meme-sound-upload", methods=["POST"])
+def meme_sound_upload():
+    try:
+        if "file" not in request.files:
+            return jsonify({"error": "Keine Datei"}), 400
+        file = request.files["file"]
+        if not file.filename.lower().endswith(('.mp3', '.wav', '.ogg')):
+            return jsonify({"error": "Nur MP3, WAV oder OGG erlaubt"}), 400
+        dateiname = secure_filename(file.filename)
+        file.save(os.path.join(SOUNDS_DIR, dateiname))
+        return jsonify({"status": "ok", "dateiname": dateiname})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/gifs-liste")
+def gifs_liste():
+    dateien = sorted(f for f in os.listdir(GIFS_DIR) if f.lower().endswith(('.gif', '.mp4', '.webp')))
+    return jsonify({"dateien": dateien})
+
+@app.route("/api/giphy-search")
+def giphy_search():
+    q = request.args.get("q", "").strip()
+    key = giphy_api_key()
+    if not key:
+        return jsonify({"error": "Kein Giphy-API-Key hinterlegt (Meme-Board → API-Key)"}), 400
+    if not q:
+        return jsonify({"results": []})
+    if not _requests:
+        return jsonify({"error": "requests-Bibliothek nicht installiert"}), 500
+    try:
+        r = _requests.get("https://api.giphy.com/v1/gifs/search", params={
+            "api_key": key, "q": q, "limit": 15, "rating": "pg-13", "lang": "de"
+        }, timeout=8)
+        d = r.json()
+        ergebnisse = [{
+            "id": g["id"],
+            "titel": g.get("title") or q,
+            "vorschau": g["images"]["fixed_width_small"]["url"],
+            "gif_url": g["images"]["fixed_width"]["url"],
+        } for g in d.get("data", [])]
+        return jsonify({"results": ergebnisse})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/giphy-download", methods=["POST"])
+def giphy_download():
+    try:
+        data = request.get_json()
+        gif_url = data.get("gif_url")
+        gif_id = data.get("id", "gif")
+        if not gif_url:
+            return jsonify({"error": "Keine GIF-URL"}), 400
+        if not _requests:
+            return jsonify({"error": "requests-Bibliothek nicht installiert"}), 500
+        dateiname = secure_filename(f"giphy_{gif_id}.gif")
+        r = _requests.get(gif_url, timeout=15)
+        with open(os.path.join(GIFS_DIR, dateiname), "wb") as f:
+            f.write(r.content)
+        return jsonify({"status": "ok", "dateiname": dateiname})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
