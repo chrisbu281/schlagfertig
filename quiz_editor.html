@@ -307,6 +307,37 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 .meme-loeschen { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: #c0392b; color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; z-index: 2; }
 .meme-kachel-leer { border: 1.5px dashed #bbb; border-radius: 14px; padding: 16px 6px; text-align: center; color: #999; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
 
+/* MEME TABS */
+.meme-tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:2px solid #f0f0ec;padding-bottom:0;overflow-x:auto}
+.meme-tab{padding:10px 14px;font-size:13px;font-weight:600;color:#888;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .15s,border-color .15s;flex-shrink:0}
+.meme-tab.aktiv{color:#1a1a2e;border-bottom-color:#1a1a2e}
+.meme-tab:hover:not(.aktiv){color:#555}
+.chip-leiste{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.meme-chip{padding:5px 12px;border-radius:20px;border:1.5px solid #ddd;background:#fafafa;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.meme-chip.aktiv{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.meme-chip:hover:not(.aktiv){background:#f0f0ec}
+.meme-chip-add{padding:5px 12px;border-radius:20px;border:1.5px dashed #bbb;background:none;font-size:12px;color:#888;cursor:pointer;font-family:inherit}
+.meme-chip-add:hover{background:#f0f0ec}
+.meme-kachel .edit-btn{position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;background:#1a1a2e;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;z-index:2;border:none;cursor:pointer}
+.meme-kachel.sound.playing{background:#fff3cd!important;border-color:#f59e0b!important}
+.meme-kachel.gif img.loop-preview{width:100%;height:60px;object-fit:cover;display:block}
+.pi-gif-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-top:10px}
+.pi-gif-kachel{position:relative;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;aspect-ratio:1}
+.pi-gif-kachel:hover{border-color:#E24B4A}
+.pi-gif-kachel img{width:100%;height:100%;object-fit:cover;display:block}
+.pi-gif-kachel .pi-gif-nm{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:9px;padding:3px 5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.spielsound-gruppe-titel{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px}
+.event-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#fafafa;border:1.5px solid #eee;margin-bottom:8px}
+.event-row.hat-sound{background:#f0fdf4;border-color:#86efac}
+.event-icon{font-size:20px;flex-shrink:0}
+.event-text{flex:1;min-width:0}
+.event-name{font-size:13px;font-weight:600}
+.event-desc{font-size:11px;color:#888}
+.event-controls{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.sound-select{font-size:12px;padding:5px 7px;border-radius:8px;border:1.5px solid #ddd;background:#fff;max-width:130px;font-family:inherit}
+.btn-vorschau{background:none;border:1.5px solid #ddd;border-radius:8px;width:28px;height:28px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.btn-vorschau:hover{background:#f0f0ec}
+
 /* START-BTN VARIANTEN */
 .start-btn.quiz { background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); color: #fff; box-shadow: 0 8px 24px rgba(67,97,238,.3); }
 .start-btn.quiz:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(67,97,238,.5); }
@@ -676,37 +707,53 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
     <!-- MEME-BOARD -->
     <div class="seite" id="seite-memeboard">
       <div class="karte">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-          <span style="font-size:18px">🔊</span><h2 style="font-size:15px;font-weight:600">Nur Sound</h2>
-          <button class="btn primaer" onclick="memeKachelModal(null,'sound')" style="margin-left:auto;font-size:12px;padding:7px 12px">+ Sound-Kachel</button>
+        <div class="meme-tabs">
+          <button class="meme-tab aktiv" id="mtab-sounds" onclick="wechsleMemeTab('sounds')">🔊 Sounds</button>
+          <button class="meme-tab" id="mtab-gifs" onclick="wechsleMemeTab('gifs')">🎬 GIFs &amp; Sticker</button>
+          <button class="meme-tab" id="mtab-giphy" onclick="wechsleMemeTab('giphy')">🔍 Giphy</button>
+          <button class="meme-tab" id="mtab-spielsounds" onclick="wechsleMemeTab('spielsounds')">🎮 Spielsounds</button>
         </div>
-        <p style="font-size:12px;color:#888;margin-bottom:14px">Spielt beim Klick nur beim Moderator ab, das Publikum sieht nichts.</p>
-        <div class="meme-grid" id="meme-grid-sound"></div>
-      </div>
 
-      <div class="karte">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-          <span style="font-size:18px">🎬</span><h2 style="font-size:15px;font-weight:600">Sticker · GIF · Video</h2>
-          <button class="btn primaer" onclick="memeKachelModal(null,'gif')" style="margin-left:auto;font-size:12px;padding:7px 12px">+ Kachel</button>
+        <!-- SOUNDS PANEL -->
+        <div id="meme-panel-sounds">
+          <div class="chip-leiste" id="sound-chips"></div>
+          <div class="meme-grid" id="meme-grid-sounds"></div>
         </div>
-        <p style="font-size:12px;color:#888;margin-bottom:14px">Wird zusätzlich auf dem Beamer fürs Publikum eingeblendet.</p>
-        <div class="meme-grid" id="meme-grid-gif"></div>
-      </div>
 
-      <div class="karte">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-          <span style="font-size:18px">🔍</span><h2 style="font-size:15px;font-weight:600">Giphy durchsuchen</h2>
+        <!-- GIFS & STICKER PANEL -->
+        <div id="meme-panel-gifs" hidden>
+          <div class="chip-leiste" id="gif-chips"></div>
+          <div class="meme-grid" id="meme-grid-gifs"></div>
         </div>
-        <div class="feld" style="margin-bottom:12px">
-          <label>Giphy-API-Key</label>
-          <input id="giphy-key" type="text" placeholder="API-Key von developers.giphy.com" oninput="setGiphyKey(this.value)">
+
+        <!-- GIPHY PANEL -->
+        <div id="meme-panel-giphy" hidden>
+          <div class="feld" style="margin-bottom:12px">
+            <label>Giphy-API-Key</label>
+            <input id="giphy-key" type="text" placeholder="API-Key von developers.giphy.com" oninput="setGiphyKey(this.value)">
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <input id="giphy-suchfeld" type="text" placeholder="z.B. Applaus, Konfetti, Sieger…" style="flex:1;border:1.5px solid #ddd;border-radius:10px;padding:10px 14px;font-size:13px;outline:none;font-family:inherit" onkeydown="if(event.key==='Enter')giphySuche()">
+            <button class="btn primaer" onclick="giphySuche()">Suchen</button>
+          </div>
+          <div id="giphy-ergebnisse" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px"></div>
+          <hr style="margin:18px 0;border:none;border-top:1.5px solid #eee">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:13px;font-weight:600;color:#555">📁 Auf dem Pi gespeichert</span>
+            <button class="btn" style="font-size:11px;padding:4px 10px;margin-left:auto" onclick="ladePiGifs()">↺ Aktualisieren</button>
+          </div>
+          <div class="pi-gif-grid" id="pi-gif-grid"></div>
+          <p style="font-size:11px;color:#999;margin-top:12px;line-height:1.5">GIFs werden dauerhaft auf den Pi heruntergeladen und stehen danach offline zur Verfügung — keine Internetverbindung während der Show nötig.</p>
         </div>
-        <div style="display:flex;gap:8px;margin-bottom:14px">
-          <input id="giphy-suchfeld" type="text" placeholder="z.B. Applaus, Konfetti, Sieger..." style="flex:1;border:1.5px solid #ddd;border-radius:10px;padding:10px 14px;font-size:13px;outline:none">
-          <button class="btn primaer" onclick="giphySuche()">Suchen</button>
+
+        <!-- SPIELSOUNDS PANEL -->
+        <div id="meme-panel-spielsounds" hidden>
+          <p style="font-size:12px;color:#666;margin-bottom:16px">Weise jedem Spielereignis einen Sound zu. Diese Töne werden automatisch abgespielt — unabhängig vom Meme-Board.</p>
+          <div id="spielsound-container"></div>
+          <div style="margin-top:16px">
+            <button class="btn primaer" onclick="spielsoundsSpeichern()">✓ Spielsounds speichern</button>
+          </div>
         </div>
-        <div id="giphy-ergebnisse" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px"></div>
-        <p style="font-size:11px;color:#999;margin-top:12px;line-height:1.5">GIFs werden dauerhaft auf den Pi heruntergeladen und stehen danach offline zur Verfügung — keine Internetverbindung während der Show nötig.</p>
       </div>
     </div>
 
@@ -1044,11 +1091,13 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
     </div>
     <div class="feld">
       <label>Kategorie</label>
-      <select id="mk-kategorie">
-        <option value="reaktion">Reaktion</option>
-        <option value="ergebnis">Ergebnis</option>
-        <option value="spannung">Spannung</option>
+      <select id="mk-kategorie" onchange="memeKatSelChange()">
+        <!-- dynamisch per JS befüllt -->
       </select>
+    </div>
+    <div class="feld" id="mk-neue-kat-feld" hidden>
+      <label>Name der neuen Kategorie</label>
+      <input id="mk-neue-kat" type="text" placeholder="z.B. spannung, humor…" style="text-transform:lowercase">
     </div>
     <div class="feld">
       <label>Sound (optional bei GIF/Sticker/Video, spielt lokal beim Moderator)</label>
@@ -1066,6 +1115,29 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
     <div class="modal-buttons">
       <button class="btn" onclick="schliesseMemeKachelModal()">Abbrechen</button>
       <button class="btn primaer" onclick="speichereMemeKachel()">✓ Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- GIF DETAIL (von Pi-Bibliothek) -->
+<div class="overlay" id="gif-detail-overlay">
+  <div class="modal" style="max-width:420px">
+    <h2>GIF zuordnen</h2>
+    <img id="gd-img" src="" alt="" style="width:100%;border-radius:10px;margin-bottom:14px;max-height:220px;object-fit:contain;background:#f0f0ec">
+    <p id="gd-name" style="font-size:12px;color:#888;margin-bottom:12px;word-break:break-all"></p>
+    <div class="feld">
+      <label>Kategorie</label>
+      <select id="gd-kategorie" onchange="gdKatChanged()">
+        <!-- dynamisch befüllt -->
+      </select>
+    </div>
+    <div class="feld" id="gd-neue-kat-feld" hidden>
+      <label>Name der neuen Kategorie</label>
+      <input id="gd-neue-kat" type="text" placeholder="z.B. reaktion, spannung…" style="text-transform:lowercase">
+    </div>
+    <div class="modal-buttons">
+      <button class="btn" onclick="schliesseGifDetail()">Abbrechen</button>
+      <button class="btn primaer" onclick="gifDetailSpeichern()">✓ Speichern &amp; hinzufügen</button>
     </div>
   </div>
 </div>
@@ -1435,7 +1507,7 @@ function wechsleTab(id) {
   if(id==='punkte') renderePunkte();
   if(id==='sounds') rendereEinstellungen();
   if(id==='optionen') ladeSystemInfo();
-  if(id==='memeboard') rendereMemeVerwaltung();
+  if(id==='memeboard'){ ladeMemeBoard().then(()=>rendereMemeVerwaltung()); }
 }
 
 // ── FLASK API ──
@@ -2524,61 +2596,164 @@ document.getElementById('cam-overlay').addEventListener('click',e=>{if(e.target=
 document.getElementById('frage-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('frage-overlay'))schliesseFrageModal();});
 
 // ── MEME-BOARD ──
-let memeBoard = {kacheln:[]};
+let memeBoard = {kacheln:[], soundKategorien:['reaktion','ergebnis','spannung'], gifKategorien:[], spielSounds:{}};
 let memeBearbeitenId = null;
 let memeGifsBibliothek = [];
+let aktivesMemeTab = 'sounds';
+let aktiveKatSound = 'alle';
+let aktiveKatGif = 'alle';
+
+const SPIELEREIGNISSE = [
+  {gruppe:'🔴 Buzzer', ereignisse:[
+    {id:'buzzer',      icon:'🔴', name:'Buzzer gedrückt',      desc:'Wenn ein Spieler den Buzzer drückt'},
+    {id:'buzzer_locked',icon:'🔒', name:'Buzzer gesperrt',      desc:'Buzzer-Klick außerhalb der Spielphase'},
+  ]},
+  {gruppe:'✅ Antworten', ereignisse:[
+    {id:'richtig',  icon:'✅', name:'Richtige Antwort',  desc:'Kandidat antwortet korrekt'},
+    {id:'falsch',   icon:'❌', name:'Falsche Antwort',   desc:'Kandidat antwortet falsch'},
+    {id:'timeout',  icon:'⏰', name:'Zeit abgelaufen',   desc:'Zeitlimit überschritten'},
+  ]},
+  {gruppe:'🎮 Spielverlauf', ereignisse:[
+    {id:'spiel_start',  icon:'🎮', name:'Spiel startet',          desc:'Zu Beginn einer neuen Spielrunde'},
+    {id:'runde_start',  icon:'▶️', name:'Neue Runde',             desc:'Nächste Runde beginnt'},
+    {id:'spieler_raus', icon:'🚫', name:'Spieler scheidet aus',   desc:'Elimination eines Kandidaten'},
+    {id:'sieger',       icon:'🏆', name:'Gewinner steht fest',    desc:'Spielende – Sieger ermittelt'},
+  ]},
+  {gruppe:'📊 100 Leute', ereignisse:[
+    {id:'hundert_antwort', icon:'📊', name:'Antwort aufgedeckt', desc:'Eine Antwort wird enthüllt'},
+    {id:'hundert_top',     icon:'🥇', name:'Top-Antwort',        desc:'Platz 1 wird aufgedeckt'},
+    {id:'hundert_strike',  icon:'💢', name:'Strike!',            desc:'Antwort nicht auf der Liste'},
+  ]},
+];
 
 async function ladeMemeBoard(){
   try{
     const r = await fetch('/api/meme-board');
-    if(r.ok) memeBoard = await r.json();
+    if(r.ok){
+      const d = await r.json();
+      memeBoard = Object.assign({kacheln:[], soundKategorien:['reaktion','ergebnis','spannung'], gifKategorien:[], spielSounds:{}}, d);
+    }
   }catch(e){ console.log('Meme-Board offline'); }
+  // Rückwärtskompatibilität: gespeicherte Spielsounds aus config laden
+  if(config.einstellungen.sounds && Object.keys(config.einstellungen.sounds).length){
+    memeBoard.spielSounds = Object.assign({}, config.einstellungen.sounds, memeBoard.spielSounds);
+  }
 }
 
+// ── TAB WECHSELN ──
+function wechsleMemeTab(tab){
+  aktivesMemeTab = tab;
+  ['sounds','gifs','giphy','spielsounds'].forEach(t=>{
+    document.getElementById('mtab-'+t).classList.toggle('aktiv', t===tab);
+    document.getElementById('meme-panel-'+t).hidden = t!==tab;
+  });
+  if(tab==='sounds')       rendereSoundTab();
+  else if(tab==='gifs')    rendereGifTab();
+  else if(tab==='giphy')   rendereGiphyTab();
+  else if(tab==='spielsounds') rendereSpielSoundsTab();
+}
+
+function rendereMemeVerwaltung(){
+  if(aktivesMemeTab==='sounds')       rendereSoundTab();
+  else if(aktivesMemeTab==='gifs')    rendereGifTab();
+  else if(aktivesMemeTab==='giphy')   rendereGiphyTab();
+  else if(aktivesMemeTab==='spielsounds') rendereSpielSoundsTab();
+  else rendereSoundTab();
+}
+
+// ── SOUNDS TAB ──
+function rendereSoundTab(){
+  rendereSoundChips();
+  rendereSoundGrid();
+}
+function rendereSoundChips(){
+  const el = document.getElementById('sound-chips'); if(!el) return;
+  const kats = memeBoard.soundKategorien || [];
+  el.innerHTML =
+    `<button class="meme-chip${aktiveKatSound==='alle'?' aktiv':''}" onclick="filterSoundKat('alle')">Alle</button>`
+    + kats.map(k=>`<button class="meme-chip${aktiveKatSound===k?' aktiv':''}" onclick="filterSoundKat('${k}')">${k}</button>`).join('')
+    + `<button class="meme-chip-add" onclick="memeKachelModal(null,'sound')">＋ Sound</button>`;
+}
+function filterSoundKat(kat){ aktiveKatSound=kat; rendereSoundTab(); }
+function rendereSoundGrid(){
+  const el = document.getElementById('meme-grid-sounds'); if(!el) return;
+  let kacheln = memeKachelnNachTyp('sound');
+  if(aktiveKatSound!=='alle') kacheln = kacheln.filter(k=>k.kategorie===aktiveKatSound);
+  el.innerHTML = kacheln.map(k=>memeKachelHTML(k,true)).join('')
+    + `<div class="meme-kachel-leer" onclick="memeKachelModal(null,'sound')"><div style="font-size:20px">＋</div><div style="font-size:11px;font-weight:600">Sound</div></div>`;
+}
+
+// ── GIFS TAB ──
+function rendereGifTab(){
+  rendereGifChips();
+  rendereGifGrid();
+}
+function rendereGifChips(){
+  const el = document.getElementById('gif-chips'); if(!el) return;
+  const kats = memeBoard.gifKategorien || [];
+  el.innerHTML =
+    `<button class="meme-chip${aktiveKatGif==='alle'?' aktiv':''}" onclick="filterGifKat('alle')">Alle</button>`
+    + kats.map(k=>`<button class="meme-chip${aktiveKatGif===k?' aktiv':''}" onclick="filterGifKat('${k}')">${k}</button>`).join('')
+    + `<button class="meme-chip-add" onclick="memeKachelModal(null,'gif')">＋ Kachel</button>`;
+}
+function filterGifKat(kat){ aktiveKatGif=kat; rendereGifTab(); }
+function rendereGifGrid(){
+  const el = document.getElementById('meme-grid-gifs'); if(!el) return;
+  let kacheln = memeKachelnNachTyp('gif');
+  if(aktiveKatGif!=='alle') kacheln = kacheln.filter(k=>k.kategorie===aktiveKatGif);
+  el.innerHTML = kacheln.map(k=>memeKachelHTML(k,true)).join('')
+    + `<div class="meme-kachel-leer" onclick="memeKachelModal(null,'gif')"><div style="font-size:20px">＋</div><div style="font-size:11px;font-weight:600">GIF/Sticker</div></div>`;
+}
+
+// ── KACHEL HTML ──
 function memeKachelnNachTyp(typ){ return (memeBoard.kacheln||[]).filter(k=>k.typ===typ); }
 
 function memeKachelHTML(k, bearbeiten){
-  const klick = bearbeiten ? `memeKachelModal('${k.id}','${k.typ}')` : `spieleMemeKachel('${k.id}')`;
   const loeschen = bearbeiten ? `<div class="meme-loeschen" onclick="event.stopPropagation();memeKachelLoeschen('${k.id}')">✕</div>` : '';
   if(k.typ==='sound'){
-    return `<div class="meme-kachel sound" onclick="${klick}">${loeschen}
+    const editBtn = bearbeiten ? `<button class="edit-btn" onclick="event.stopPropagation();memeKachelModal('${k.id}','sound')">✎</button>` : '';
+    const klick = bearbeiten ? `spieleMemeSoundVorschau('${k.id}')` : `spieleMemeKachel('${k.id}')`;
+    return `<div class="meme-kachel sound" id="mk-${k.id}" onclick="${klick}">${loeschen}${editBtn}
       <div class="icon-sound">${k.icon||'🔊'}</div>
       <div class="name">${k.name}</div>
     </div>`;
   }
+  const klick = bearbeiten ? `memeKachelModal('${k.id}','gif')` : `spieleMemeKachel('${k.id}')`;
   const badge = k.gif ? (k.gif.endsWith('.mp4')?'VIDEO':'GIF') : 'STICKER';
+  const media = k.gif
+    ? `<img class="loop-preview" src="/gifs/${k.gif}" alt="${k.name}" loading="lazy">`
+    : `<div class="icon-flaeche">${k.icon||'🎬'}<div class="typ-badge">${badge}</div></div>`;
   return `<div class="meme-kachel gif" onclick="${klick}">${loeschen}
-    <div class="icon-flaeche">${k.icon||'🎬'}<div class="typ-badge">${badge}</div></div>
+    ${media}
     <div class="name">${k.name}</div>
   </div>`;
 }
 
-function rendereMemeGrids(soundElId, gifElId, bearbeiten){
-  const soundEl = document.getElementById(soundElId);
-  const gifEl = document.getElementById(gifElId);
-  if(soundEl){
-    soundEl.innerHTML = memeKachelnNachTyp('sound').map(k=>memeKachelHTML(k,bearbeiten)).join('')
-      + (bearbeiten? `<div class="meme-kachel-leer" onclick="memeKachelModal(null,'sound')"><div style="font-size:20px">＋</div><div style="font-size:11px;font-weight:600">Sound</div></div>` : '');
-  }
-  if(gifEl){
-    gifEl.innerHTML = memeKachelnNachTyp('gif').map(k=>memeKachelHTML(k,bearbeiten)).join('')
-      + (bearbeiten? `<div class="meme-kachel-leer" onclick="memeKachelModal(null,'gif')"><div style="font-size:20px">＋</div><div style="font-size:11px;font-weight:600">GIF/Sticker</div></div>` : '');
-  }
+// ── SOUND VORSCHAU (Verwaltung) ──
+function spieleMemeSoundVorschau(id){
+  const k = (memeBoard.kacheln||[]).find(x=>x.id===id);
+  if(!k || !k.sound) return;
+  const tile = document.getElementById('mk-'+id);
+  if(tile) tile.classList.add('playing');
+  const audio = new Audio('/meme-sounds/'+k.sound);
+  audio.onended = ()=>{ if(tile) tile.classList.remove('playing'); };
+  audio.play().catch(()=>{ if(tile) tile.classList.remove('playing'); zeigToast('❌ Sound nicht abspielbar','rot'); });
 }
 
-function rendereMemeVerwaltung(){
-  if(config.einstellungen.giphy_api_key) document.getElementById('giphy-key').value = config.einstellungen.giphy_api_key;
-  rendereMemeGrids('meme-grid-sound','meme-grid-gif', true);
-}
-
-function setGiphyKey(v){ config.einstellungen.giphy_api_key = v; }
-
+// ── MEME-OVERLAY (Moderator) ──
 async function oeffneMemeOverlay(){
   await ladeMemeBoard();
   rendereMemeGrids('meme-overlay-sound','meme-overlay-gif', false);
   document.getElementById('meme-overlay').classList.add('offen');
 }
 function schliesseMemeOverlay(){ document.getElementById('meme-overlay').classList.remove('offen'); }
+
+function rendereMemeGrids(soundElId, gifElId, bearbeiten){
+  const soundEl = document.getElementById(soundElId);
+  const gifEl = document.getElementById(gifElId);
+  if(soundEl) soundEl.innerHTML = memeKachelnNachTyp('sound').map(k=>memeKachelHTML(k,bearbeiten)).join('');
+  if(gifEl) gifEl.innerHTML = memeKachelnNachTyp('gif').map(k=>memeKachelHTML(k,bearbeiten)).join('');
+}
 
 function spieleMemeKachel(id){
   const k = (memeBoard.kacheln||[]).find(x=>x.id===id);
@@ -2589,82 +2764,22 @@ function spieleMemeKachel(id){
   }
   if(k.typ==='gif'){
     if(k.gif) socket.emit('mod_meme', {gif:k.gif});
-    else if(!k.sound) zeigToast('⚠️ Keine Datei hinterlegt – in der Verwaltung bearbeiten','rot');
+    else if(!k.sound) zeigToast('⚠️ Keine Datei hinterlegt','rot');
   } else if(!k.sound){
-    zeigToast('⚠️ Kein Sound hinterlegt – in der Verwaltung bearbeiten','rot');
+    zeigToast('⚠️ Kein Sound hinterlegt','rot');
   }
 }
 
-async function memeKachelModal(id, typ){
-  memeBearbeitenId = id;
-  const k = id ? (memeBoard.kacheln||[]).find(x=>x.id===id) : null;
-  document.getElementById('meme-modal-titel').textContent = k ? 'Kachel bearbeiten' : (typ==='gif'?'GIF/Sticker/Video-Kachel':'Sound-Kachel');
-  document.getElementById('mk-icon').value = k?.icon || (typ==='gif'?'🎬':'🔊');
-  document.getElementById('mk-name').value = k?.name || '';
-  document.getElementById('mk-kategorie').value = k?.kategorie || 'reaktion';
-  document.getElementById('mk-sound').value = k?.sound || '';
-  const gifFeld = document.getElementById('mk-gif-feld');
-  const istGif = (k?.typ || typ) === 'gif';
-  gifFeld.style.display = istGif ? 'block' : 'none';
-  if(istGif){
-    try{
-      const r = await fetch('/api/gifs-liste');
-      const d = await r.json();
-      memeGifsBibliothek = d.dateien || [];
-    }catch(e){ memeGifsBibliothek = []; }
-    const sel = document.getElementById('mk-gif');
-    sel.innerHTML = '<option value="">— kein GIF ausgewählt —</option>' + memeGifsBibliothek.map(g=>`<option value="${g}" ${k?.gif===g?'selected':''}>${g}</option>`).join('');
+// ── GIPHY TAB ──
+function rendereGiphyTab(){
+  if(config.einstellungen.giphy_api_key){
+    const el = document.getElementById('giphy-key');
+    if(el) el.value = config.einstellungen.giphy_api_key;
   }
-  document.getElementById('meme-kachel-overlay').dataset.typ = k?.typ || typ;
-  document.getElementById('meme-kachel-overlay').classList.add('offen');
-}
-function schliesseMemeKachelModal(){ document.getElementById('meme-kachel-overlay').classList.remove('offen'); }
-
-async function memeSoundUpload(input){
-  const file = input.files[0]; if(!file) return;
-  const formData = new FormData(); formData.append('file', file);
-  try{
-    const r = await fetch('/api/meme-sound-upload', {method:'POST', body:formData});
-    const d = await r.json();
-    if(d.status==='ok'){ document.getElementById('mk-sound').value = d.dateiname; zeigToast('✅ Sound hochgeladen','gruen'); }
-    else zeigToast('❌ '+d.error,'rot');
-  }catch(e){ zeigToast('❌ Fehler beim Upload','rot'); }
-  input.value='';
+  ladePiGifs();
 }
 
-async function speichereMemeKachel(){
-  const typ = document.getElementById('meme-kachel-overlay').dataset.typ;
-  const name = document.getElementById('mk-name').value.trim();
-  if(!name){ zeigToast('⚠️ Bitte einen Namen eingeben','rot'); return; }
-  const kachel = {
-    id: memeBearbeitenId || ('m'+Date.now()),
-    name,
-    icon: document.getElementById('mk-icon').value.trim() || (typ==='gif'?'🎬':'🔊'),
-    kategorie: document.getElementById('mk-kategorie').value,
-    typ,
-    sound: document.getElementById('mk-sound').value || null,
-  };
-  if(typ==='gif') kachel.gif = document.getElementById('mk-gif').value || null;
-  if(!memeBoard.kacheln) memeBoard.kacheln = [];
-  const idx = memeBoard.kacheln.findIndex(k=>k.id===kachel.id);
-  if(idx>=0) memeBoard.kacheln[idx] = kachel; else memeBoard.kacheln.push(kachel);
-  await speichereMemeBoard();
-  schliesseMemeKachelModal();
-  rendereMemeVerwaltung();
-}
-
-async function memeKachelLoeschen(id){
-  if(!confirm('Diese Kachel wirklich löschen?')) return;
-  memeBoard.kacheln = (memeBoard.kacheln||[]).filter(k=>k.id!==id);
-  await speichereMemeBoard();
-  rendereMemeVerwaltung();
-}
-
-async function speichereMemeBoard(){
-  try{
-    await fetch('/api/meme-board', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(memeBoard)});
-  }catch(e){ zeigToast('❌ Meme-Board konnte nicht gespeichert werden','rot'); }
-}
+function setGiphyKey(v){ config.einstellungen.giphy_api_key = v; }
 
 async function giphySuche(){
   const q = document.getElementById('giphy-suchfeld').value.trim();
@@ -2687,10 +2802,221 @@ async function giphyDownload(g){
   try{
     const r = await fetch('/api/giphy-download', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({gif_url:g.gif_url, id:g.id})});
     const d = await r.json();
-    if(d.status==='ok') zeigToast('✅ Heruntergeladen: '+d.dateiname,'gruen');
-    else zeigToast('❌ '+d.error,'rot');
+    if(d.status==='ok'){
+      zeigToast('✅ Heruntergeladen: '+d.dateiname,'gruen');
+      ladePiGifs();
+    } else zeigToast('❌ '+d.error,'rot');
   }catch(e){ zeigToast('❌ Download fehlgeschlagen','rot'); }
 }
+
+async function ladePiGifs(){
+  const el = document.getElementById('pi-gif-grid'); if(!el) return;
+  el.innerHTML = '<p style="font-size:12px;color:#999">Lade…</p>';
+  try{
+    const r = await fetch('/api/gifs-liste');
+    const d = await r.json();
+    renderePiGifs(d.dateien||[]);
+  }catch(e){ el.innerHTML='<p style="font-size:12px;color:#999">Nicht verfügbar</p>'; }
+}
+
+function renderePiGifs(dateien){
+  const el = document.getElementById('pi-gif-grid'); if(!el) return;
+  if(!dateien.length){ el.innerHTML='<p style="font-size:12px;color:#999">Noch keine GIFs gespeichert.</p>'; return; }
+  el.innerHTML = dateien.map(f=>`
+    <div class="pi-gif-kachel" onclick="oeffneGifDetail('${f}')">
+      <img src="/gifs/${f}" alt="${f}" loading="lazy">
+      <div class="pi-gif-nm">${f}</div>
+    </div>`).join('');
+}
+
+function oeffneGifDetail(datei){
+  document.getElementById('gd-img').src = '/gifs/'+datei;
+  document.getElementById('gd-name').textContent = datei;
+  const sel = document.getElementById('gd-kategorie');
+  const kats = memeBoard.gifKategorien || [];
+  sel.innerHTML = '<option value="">— keine Kategorie —</option>'
+    + kats.map(k=>`<option value="${k}">${k}</option>`).join('')
+    + '<option value="__neu__">＋ Neue Kategorie…</option>';
+  const existing = (memeBoard.kacheln||[]).find(k=>k.typ==='gif'&&k.gif===datei);
+  if(existing && existing.kategorie) sel.value = existing.kategorie;
+  document.getElementById('gd-neue-kat-feld').hidden = true;
+  document.getElementById('gif-detail-overlay').classList.add('offen');
+  document.getElementById('gif-detail-overlay').dataset.datei = datei;
+}
+function gdKatChanged(){
+  document.getElementById('gd-neue-kat-feld').hidden = document.getElementById('gd-kategorie').value!=='__neu__';
+}
+async function gifDetailSpeichern(){
+  const datei = document.getElementById('gif-detail-overlay').dataset.datei;
+  let kat = document.getElementById('gd-kategorie').value;
+  if(kat==='__neu__'){
+    kat = document.getElementById('gd-neue-kat').value.trim().toLowerCase().replace(/\s+/g,'-');
+    if(!kat){ zeigToast('⚠️ Bitte Kategorie eingeben','rot'); return; }
+    if(!(memeBoard.gifKategorien||[]).includes(kat)){
+      if(!memeBoard.gifKategorien) memeBoard.gifKategorien=[];
+      memeBoard.gifKategorien.push(kat);
+    }
+  }
+  if(!memeBoard.kacheln) memeBoard.kacheln=[];
+  let k = memeBoard.kacheln.find(x=>x.typ==='gif'&&x.gif===datei);
+  if(!k){
+    k={id:'m'+Date.now(), name:datei.replace(/\.[^.]+$/,''), icon:'🎬', typ:'gif', gif:datei, sound:null, kategorie:kat||''};
+    memeBoard.kacheln.push(k);
+  } else { k.kategorie = kat||''; }
+  await speichereMemeBoard();
+  schliesseGifDetail();
+  zeigToast('✅ GIF gespeichert','gruen');
+  rendereGifTab();
+}
+function schliesseGifDetail(){ document.getElementById('gif-detail-overlay').classList.remove('offen'); }
+
+// ── SPIELSOUNDS TAB ──
+function rendereSpielSoundsTab(){
+  const container = document.getElementById('spielsound-container'); if(!container) return;
+  const zuweisung = memeBoard.spielSounds || {};
+  container.innerHTML = SPIELEREIGNISSE.map(gruppe=>`
+    <div style="margin-bottom:20px">
+      <div class="spielsound-gruppe-titel">${gruppe.gruppe}</div>
+      ${gruppe.ereignisse.map(e=>{
+        const selVal = zuweisung[e.id]||'';
+        return `<div class="event-row${selVal?' hat-sound':''}" id="er-${e.id}">
+          <div class="event-icon">${e.icon}</div>
+          <div class="event-text">
+            <div class="event-name">${e.name}</div>
+            <div class="event-desc">${e.desc}</div>
+          </div>
+          <div class="event-controls">
+            <select class="sound-select" id="ss-${e.id}" onchange="spielSoundGewaehlt('${e.id}',this)">
+              ${baueSoundOptionen(selVal)}
+            </select>
+            <button class="btn-vorschau" onclick="vorschauSpielSound('${e.id}')" title="Vorschau">▶</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function baueSoundOptionen(selVal){
+  const sounds = memeKachelnNachTyp('sound').filter(k=>k.sound);
+  return '<option value=""'+(selVal===''?' selected':'')+'>— kein Sound —</option>'
+    + sounds.map(k=>`<option value="${k.sound}"${k.sound===selVal?' selected':''}>${k.icon||'🔊'} ${k.name}</option>`).join('');
+}
+
+function spielSoundGewaehlt(id, sel){
+  if(!memeBoard.spielSounds) memeBoard.spielSounds={};
+  if(sel.value) memeBoard.spielSounds[id]=sel.value; else delete memeBoard.spielSounds[id];
+  const row = document.getElementById('er-'+id);
+  if(row) row.classList.toggle('hat-sound', !!sel.value);
+}
+
+function vorschauSpielSound(id){
+  const datei = (memeBoard.spielSounds||{})[id];
+  if(!datei){ zeigToast('⚠️ Kein Sound zugewiesen','rot'); return; }
+  const audio = new Audio('/meme-sounds/'+datei);
+  audio.play().catch(()=>zeigToast('❌ Sound nicht abspielbar','rot'));
+}
+
+async function spielsoundsSpeichern(){
+  config.einstellungen.sounds = Object.assign({}, memeBoard.spielSounds);
+  await speichereMemeBoard();
+  await speichereAufPi();
+  zeigToast('✅ Spielsounds gespeichert','gruen');
+}
+
+// ── KACHEL MODAL ──
+async function memeKachelModal(id, typ){
+  memeBearbeitenId = id;
+  const k = id ? (memeBoard.kacheln||[]).find(x=>x.id===id) : null;
+  document.getElementById('meme-modal-titel').textContent = k ? 'Kachel bearbeiten' : (typ==='gif'?'GIF/Sticker/Video-Kachel':'Sound-Kachel');
+  document.getElementById('mk-icon').value = k?.icon || (typ==='gif'?'🎬':'🔊');
+  document.getElementById('mk-name').value = k?.name || '';
+  const selTyp = k?.typ || typ;
+  const kats = selTyp==='sound' ? (memeBoard.soundKategorien||['reaktion']) : (memeBoard.gifKategorien||[]);
+  const sel = document.getElementById('mk-kategorie');
+  sel.innerHTML = kats.map(kat=>`<option value="${kat}"${k?.kategorie===kat?' selected':''}>${kat}</option>`).join('')
+    + '<option value="__neu__">＋ Neue Kategorie…</option>';
+  if(k?.kategorie) sel.value = k.kategorie;
+  document.getElementById('mk-neue-kat-feld').hidden = true;
+  document.getElementById('mk-sound').value = k?.sound || '';
+  const gifFeld = document.getElementById('mk-gif-feld');
+  const istGif = selTyp==='gif';
+  gifFeld.style.display = istGif ? 'block' : 'none';
+  if(istGif){
+    try{
+      const r = await fetch('/api/gifs-liste');
+      const d = await r.json();
+      memeGifsBibliothek = d.dateien || [];
+    }catch(e){ memeGifsBibliothek=[]; }
+    const gifSel = document.getElementById('mk-gif');
+    gifSel.innerHTML = '<option value="">— kein GIF ausgewählt —</option>'
+      + memeGifsBibliothek.map(g=>`<option value="${g}"${k?.gif===g?' selected':''}>${g}</option>`).join('');
+  }
+  document.getElementById('meme-kachel-overlay').dataset.typ = selTyp;
+  document.getElementById('meme-kachel-overlay').classList.add('offen');
+}
+function schliesseMemeKachelModal(){ document.getElementById('meme-kachel-overlay').classList.remove('offen'); }
+
+function memeKatSelChange(){
+  document.getElementById('mk-neue-kat-feld').hidden = document.getElementById('mk-kategorie').value!=='__neu__';
+}
+
+async function memeSoundUpload(input){
+  const file = input.files[0]; if(!file) return;
+  const formData = new FormData(); formData.append('file', file);
+  try{
+    const r = await fetch('/api/meme-sound-upload', {method:'POST', body:formData});
+    const d = await r.json();
+    if(d.status==='ok'){ document.getElementById('mk-sound').value = d.dateiname; zeigToast('✅ Sound hochgeladen','gruen'); }
+    else zeigToast('❌ '+d.error,'rot');
+  }catch(e){ zeigToast('❌ Fehler beim Upload','rot'); }
+  input.value='';
+}
+
+async function speichereMemeKachel(){
+  const typ = document.getElementById('meme-kachel-overlay').dataset.typ;
+  const name = document.getElementById('mk-name').value.trim();
+  if(!name){ zeigToast('⚠️ Bitte einen Namen eingeben','rot'); return; }
+  let kat = document.getElementById('mk-kategorie').value;
+  if(kat==='__neu__'){
+    kat = document.getElementById('mk-neue-kat').value.trim().toLowerCase().replace(/\s+/g,'-');
+    if(!kat){ zeigToast('⚠️ Bitte Kategorie eingeben','rot'); return; }
+    const katArr = typ==='sound'?'soundKategorien':'gifKategorien';
+    if(!memeBoard[katArr]) memeBoard[katArr]=[];
+    if(!memeBoard[katArr].includes(kat)) memeBoard[katArr].push(kat);
+  }
+  const kachel = {
+    id: memeBearbeitenId || ('m'+Date.now()),
+    name,
+    icon: document.getElementById('mk-icon').value.trim() || (typ==='gif'?'🎬':'🔊'),
+    kategorie: kat || (typ==='sound'?'reaktion':''),
+    typ,
+    sound: document.getElementById('mk-sound').value || null,
+  };
+  if(typ==='gif') kachel.gif = document.getElementById('mk-gif').value || null;
+  if(!memeBoard.kacheln) memeBoard.kacheln=[];
+  const idx = memeBoard.kacheln.findIndex(k=>k.id===kachel.id);
+  if(idx>=0) memeBoard.kacheln[idx]=kachel; else memeBoard.kacheln.push(kachel);
+  await speichereMemeBoard();
+  schliesseMemeKachelModal();
+  rendereMemeVerwaltung();
+}
+
+async function memeKachelLoeschen(id){
+  if(!confirm('Diese Kachel wirklich löschen?')) return;
+  memeBoard.kacheln = (memeBoard.kacheln||[]).filter(k=>k.id!==id);
+  await speichereMemeBoard();
+  rendereMemeVerwaltung();
+}
+
+async function speichereMemeBoard(){
+  try{
+    await fetch('/api/meme-board', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(memeBoard)});
+  }catch(e){ zeigToast('❌ Meme-Board konnte nicht gespeichert werden','rot'); }
+}
+
+document.getElementById('gif-detail-overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('gif-detail-overlay')) schliesseGifDetail();
+});
 
 init();
 </script>
