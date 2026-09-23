@@ -378,6 +378,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
   <header>
     <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
+      <button class="btn" onclick="homeKlick()" style="font-size:13px" title="Startseite">🏠 Home</button>
       <button class="btn" onclick="zeigeEinstellungenModal()" style="font-size:16px;padding:6px 12px" title="Einstellungen">⚙️</button>
       <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px" title="System ausschalten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:block"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
     </div>
@@ -523,7 +524,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
   <header>
     <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
-      <button class="btn" onclick="zeigeAnsicht('start')" style="font-size:13px" title="Zur Startseite">← Start</button>
+      <button class="btn" onclick="homeKlick()" style="font-size:13px" title="Startseite">🏠 Home</button>
       <button class="btn gruen" onclick="speichereAufPi()">💾 Speichern</button>
       <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px" title="System ausschalten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:block"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
     </div>
@@ -717,6 +718,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
   <header>
     <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
+      <button class="btn" onclick="homeKlick()" style="font-size:13px" title="Startseite">🏠 Home</button>
       <button class="btn" onclick="zeigeEinstellungenModal()" style="font-size:16px;padding:6px 12px" title="Einstellungen">⚙️</button>
       <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px" title="System ausschalten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:block"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
     </div>
@@ -788,6 +790,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
   <div class="mod-header">
     <div class="logo" style="font-size:18px">Schlag<span style="color:#E24B4A">fertig</span> <span style="font-size:13px;color:#555;font-weight:400">Moderator</span></div>
     <div style="display:flex;gap:8px">
+      <button class="btn" onclick="homeKlickImSpiel()" style="font-size:13px" title="Startseite">🏠 Home</button>
       <button class="btn" onclick="togglePunktestand()" style="background:#f39c12;color:#fff;border-color:#f39c12">🏆 Punktestand</button>
       <button class="btn" onclick="oeffneMemeOverlay()" style="background:#8e44ad;color:#fff;border-color:#8e44ad">🎉 Meme</button>
       <button class="btn rot" onclick="spielStoppen()">✕ Exit</button>
@@ -834,6 +837,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
   <header>
     <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
+      <button class="btn" onclick="homeKlick()" style="font-size:13px" title="Startseite">🏠 Home</button>
       <button class="btn" onclick="zurueckVonEinstellungen()" style="font-size:13px">← Zurück</button>
       <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px" title="System ausschalten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:block"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
     </div>
@@ -1796,6 +1800,15 @@ async function spielStarten() {
       });
     } else zeigToast('❌ '+d.error,'rot');
   } catch(e) { zeigToast('❌ Keine Verbindung','rot'); }
+}
+
+function homeKlick() {
+  zeigeAnsicht('start');
+}
+
+async function homeKlickImSpiel() {
+  if(!confirm('Spiel wirklich abbrechen und zur Startseite gehen?')) return;
+  await spielStoppen();
 }
 
 async function spielStoppen() {
