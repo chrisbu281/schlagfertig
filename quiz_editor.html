@@ -330,7 +330,8 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
         <span class="status-dot" id="status-dot"></span>
         <span id="status-text">Prüfe...</span>
       </span>
-      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
+      <button class="btn" onclick="zeigeAnsicht('einstellungen');wechsleTab('spieler')" style="padding:6px 10px;font-size:16px" title="Einstellungen">⚙️</button>
+      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px" title="System ausschalten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:block"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
     </div>
   </header>
   <div class="start-hero">
@@ -354,11 +355,6 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
       <button class="start-btn fragen" id="btn-konto" onclick="zeigeKontoModal()">
         <span class="icon">☁️</span>
         Konto
-      </button>
-      <!-- Nur im Admin Modus sichtbar -->
-      <button class="start-btn einstellungen" id="btn-einstellungen" onclick="zeigeAnsicht('einstellungen');wechsleTab('spieler')" style="display:none">
-        <span class="icon">⚙️</span>
-        Einstellungen
       </button>
     </div>
   </div>
@@ -1173,33 +1169,9 @@ function waehlefarbe(idx, farbe, bereich) {
   // Sofort speichern
   speichereAufPi();
 }
-let logoKlicks = 0;
-let logoTimer = null;
-let adminModus = false;
+let adminModus = true;
 
-function adminLogoKlick() {
-  logoKlicks++;
-  if(logoTimer) clearTimeout(logoTimer);
-  logoTimer = setTimeout(() => logoKlicks = 0, 3000);
-  if(logoKlicks >= 5) {
-    logoKlicks = 0;
-    if(adminModus) {
-      adminModus = false;
-      document.getElementById('btn-einstellungen').style.display = 'none';
-      zeigToast('Admin Modus beendet', '');
-    } else {
-      const pw = prompt('🔐 Admin Passwort:');
-      const adminPw = config.admin_passwort || 'schlagfertig2024';
-      if(pw === adminPw) {
-        adminModus = true;
-        document.getElementById('btn-einstellungen').style.display = 'flex';
-        zeigToast('✅ Admin Modus aktiviert', 'gruen');
-      } else if(pw !== null) {
-        zeigToast('❌ Falsches Passwort', 'rot');
-      }
-    }
-  }
-}
+function adminLogoKlick() {}
 
 // ── EINSTELLUNGEN SEITE ──
 let _vorherigeAnsicht = 'start';
