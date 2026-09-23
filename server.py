@@ -130,12 +130,61 @@ def lade_meme_board():
     with open(MEME_KONFIG, "r", encoding="utf-8") as f:
         return json.load(f)
 
+ADMIN_ROLLEN_DATEI = os.path.join(BASIS, "admin_rollen.json")
+
+def _lade_umgebungs_key(name):
+    """Liest einen Schlüssel aus Umgebungsvariable oder .env-Datei im Projektordner."""
+    key = os.environ.get(name, "")
+    if not key:
+        env_pfad = os.path.join(BASIS, ".env")
+        try:
+            with open(env_pfad, encoding="utf-8") as f:
+                for zeile in f:
+                    zeile = zeile.strip()
+                    if zeile.startswith(f"{name}="):
+                        key = zeile.split("=", 1)[1].strip()
+                        break
+        except FileNotFoundError:
+            pass
+    return key
+
 def giphy_api_key():
-    if not os.path.exists(KONFIG):
-        return ""
-    with open(KONFIG, "r", encoding="utf-8") as f:
-        cfg = json.load(f)
-    return (cfg.get("einstellungen") or {}).get("giphy_api_key", "")
+    key = _lade_umgebungs_key("GIPHY_API_KEY")
+    if not key and os.path.exists(KONFIG):
+        with open(KONFIG, "r", encoding="utf-8") as f:
+            cfg = json.load(f)
+        key = (cfg.get("einstellungen") or {}).get("giphy_api_key", "")
+    return key
+
+def freesound_api_key():
+    return _lade_umgebungs_key("FREESOUND_API_KEY")
+
+def lese_admin_emails():
+    admins = set()
+    env_admins = _lade_umgebungs_key("ADMIN_EMAILS")
+    if env_admins:
+        admins.update(e.strip().lower() for e in env_admins.split(",") if e.strip())
+    if os.path.exists(ADMIN_ROLLEN_DATEI):
+        try:
+            with open(ADMIN_ROLLEN_DATEI, "r", encoding="utf-8") as f:
+                d = json.load(f)
+            admins.update(e.lower() for e in d.get("admins", []))
+        except Exception:
+            pass
+    return admins
+
+def ist_admin(email):
+    return bool(email) and email.lower() in lese_admin_emails()
+
+def schreibe_admin_emails(emails):
+    with open(ADMIN_ROLLEN_DATEI, "w", encoding="utf-8") as f:
+        json.dump({"admins": sorted(e.lower() for e in emails)}, f, ensure_ascii=False, indent=2)
+
+def check_admin():
+    cfg = lese_cloud_config()
+    if not ist_admin(cfg.get("email", "")):
+        return jsonify({"error": "Zugriff verweigert – keine Adminrechte"}), 403
+    return None
 
 spiel_state = {
     "modus": "warten",
@@ -470,6 +519,7 @@ def cloud_config_get():
         "email":      cfg.get("email", ""),
         "modus":      cfg.get("modus", ""),
         "anzahl":     anzahl,
+        "rolle":      "admin" if ist_admin(cfg.get("email","")) else "user",
     })
 
 def lade_supabase_fragen(url=None):
@@ -572,12 +622,13 @@ def cloud_login():
         name  = (user.get("user_metadata") or {}).get("name") or email.split("@")[0]
         roh   = _sb_fragen(at)
         fragen = _speichere_fragen_lokal(roh)
+        rolle = "admin" if ist_admin(email) else "user"
         schreibe_cloud_config({
             "modus": "konto", "email": email,
             "benutzer_name": name, "user_id": user.get("id", ""),
-            "access_token": at, "refresh_token": rt,
+            "access_token": at, "refresh_token": rt, "rolle": rolle,
         })
-        return jsonify({"status": "ok", "name": name, "anzahl": len(fragen)})
+        return jsonify({"status": "ok", "name": name, "anzahl": len(fragen), "rolle": rolle})
     except urllib.error.HTTPError as e:
         if e.code == 400:
             return jsonify({"error": "E-Mail oder Passwort falsch"}), 401
@@ -601,7 +652,8 @@ def cloud_auto_refresh():
     try:
         roh    = _sb_fragen(at)
         fragen = _speichere_fragen_lokal(roh)
-        return jsonify({"status": "ok", "name": name, "email": email, "anzahl": len(fragen)})
+        return jsonify({"status": "ok", "name": name, "email": email, "anzahl": len(fragen),
+                        "rolle": "admin" if ist_admin(email) else "user"})
     except urllib.error.HTTPError as e:
         if e.code not in (401, 403) or not rt:
             return jsonify({"error": f"Fehler {e.code}"}), e.code
@@ -614,8 +666,10 @@ def cloud_auto_refresh():
         fragen  = _speichere_fragen_lokal(roh)
         cfg["access_token"]  = new_at
         cfg["refresh_token"] = new_rt
+        cfg["rolle"] = "admin" if ist_admin(email) else "user"
         schreibe_cloud_config(cfg)
-        return jsonify({"status": "ok", "name": name, "email": email, "anzahl": len(fragen)})
+        return jsonify({"status": "ok", "name": name, "email": email, "anzahl": len(fragen),
+                        "rolle": cfg["rolle"]})
     except Exception as e:
         return jsonify({"error": str(e)}), 401
 
@@ -884,7 +938,7 @@ def giphy_search():
     q = request.args.get("q", "").strip()
     key = giphy_api_key()
     if not key:
-        return jsonify({"error": "Kein Giphy-API-Key hinterlegt (Meme-Board → API-Key)"}), 400
+        return jsonify({"error": "Kein Giphy-API-Key – bitte GIPHY_API_KEY in .env auf dem Pi setzen"}), 400
     if not q:
         return jsonify({"results": []})
     if not _requests:
@@ -977,6 +1031,88 @@ def system_reboot():
         os.system("sudo reboot")
     threading.Thread(target=do_reboot, daemon=True).start()
     return jsonify({"status": "ok"})
+
+@app.route("/api/api-keys-status")
+def api_keys_status():
+    return jsonify({
+        "giphy":     bool(giphy_api_key()),
+        "freesound": bool(freesound_api_key()),
+    })
+
+@app.route("/api/freesound-search")
+def freesound_search():
+    q   = request.args.get("q", "").strip()
+    key = freesound_api_key()
+    if not key:
+        return jsonify({"error": "Kein Freesound-API-Key – bitte FREESOUND_API_KEY in .env auf dem Pi setzen"}), 400
+    if not q:
+        return jsonify({"results": []})
+    if not _requests:
+        return jsonify({"error": "requests-Bibliothek nicht installiert"}), 500
+    try:
+        r = _requests.get("https://freesound.org/apiv2/search/text/", params={
+            "query": q, "token": key,
+            "fields": "id,name,username,duration,previews",
+            "filter": "duration:[0.5 TO 30]",
+            "page_size": 15,
+        }, timeout=10)
+        d = r.json()
+        ergebnisse = [{
+            "id":       s["id"],
+            "name":     s["name"],
+            "nutzer":   s.get("username",""),
+            "dauer":    round(s.get("duration", 0), 1),
+            "vorschau": (s.get("previews") or {}).get("preview-hq-mp3",""),
+        } for s in d.get("results", []) if (s.get("previews") or {}).get("preview-hq-mp3")]
+        return jsonify({"results": ergebnisse})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/freesound-download", methods=["POST"])
+def freesound_download():
+    try:
+        data      = request.get_json()
+        vorschau  = data.get("vorschau_url","")
+        sound_id  = data.get("id", "sound")
+        name_roh  = data.get("name", f"freesound_{sound_id}")
+        if not vorschau:
+            return jsonify({"error": "Keine Vorschau-URL"}), 400
+        if not _requests:
+            return jsonify({"error": "requests-Bibliothek nicht installiert"}), 500
+        r = _requests.get(vorschau, timeout=20)
+        r.raise_for_status()
+        basis = os.path.splitext(secure_filename(name_roh))[0] or f"freesound_{sound_id}"
+        dateiname = f"{basis}.mp3"
+        with open(os.path.join(SOUNDS_DIR, dateiname), "wb") as f:
+            f.write(r.content)
+        return jsonify({"status": "ok", "dateiname": dateiname})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/admin/rollen", methods=["GET"])
+def admin_rollen_get():
+    err = check_admin()
+    if err: return err
+    return jsonify({"admins": sorted(lese_admin_emails())})
+
+@app.route("/api/admin/rollen", methods=["POST"])
+def admin_rollen_post():
+    err = check_admin()
+    if err: return err
+    d      = request.get_json() or {}
+    aktion = d.get("aktion")  # "hinzufuegen" | "entfernen"
+    email  = (d.get("email","")).strip().lower()
+    if not email:
+        return jsonify({"error": "E-Mail fehlt"}), 400
+    admins = set(lese_admin_emails())
+    if aktion == "hinzufuegen":
+        admins.add(email)
+    elif aktion == "entfernen":
+        admins.discard(email)
+    else:
+        return jsonify({"error": "Unbekannte Aktion"}), 400
+    schreibe_admin_emails(admins)
+    return jsonify({"status": "ok", "admins": sorted(admins)})
 
 # ── 100-LEUTE-MODUL REGISTRIEREN ──────────────────────────────────────────────
 spiel_100leute.init_app(app, socketio, stop_pygame=stoppe_pygame, start_pygame=starte_quiz)

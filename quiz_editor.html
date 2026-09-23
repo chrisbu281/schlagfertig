@@ -337,6 +337,20 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 .sound-select{font-size:12px;padding:5px 7px;border-radius:8px;border:1.5px solid #ddd;background:#fff;max-width:130px;font-family:inherit}
 .btn-vorschau{background:none;border:1.5px solid #ddd;border-radius:8px;width:28px;height:28px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .btn-vorschau:hover{background:#f0f0ec}
+.api-key-status{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:14px}
+.api-key-status.ok{background:#f0fdf4;border:1px solid #86efac;color:#166534}
+.api-key-status.fehlt{background:#fef2f2;border:1px solid #fca5a5;color:#c0392b}
+.api-key-status code{font-size:11px;background:rgba(0,0,0,.06);padding:2px 6px;border-radius:4px}
+.freesound-treffer{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1.5px solid #eee;margin-bottom:8px;background:#fafafa}
+.freesound-treffer .fs-name{flex:1;min-width:0}
+.freesound-treffer .fs-titel{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.freesound-treffer .fs-meta{font-size:11px;color:#888}
+.freesound-treffer .fs-btn{background:none;border:1.5px solid #ddd;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
+.freesound-treffer .fs-btn:hover{background:#f0f0ec}
+.freesound-treffer .fs-btn.aktiv{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.admin-karte{background:#fff8f0;border:1.5px solid #f59e0b}
+.admin-email-zeile{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:#fff;border:1.5px solid #eee;margin-bottom:6px}
+.admin-email-zeile span{flex:1;font-size:13px}
 
 /* START-BTN VARIANTEN */
 .start-btn.quiz { background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); color: #fff; box-shadow: 0 8px 24px rgba(67,97,238,.3); }
@@ -693,6 +707,20 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
           <button class="btn primaer" onclick="aenderePasswort()">🔐 Passwort ändern</button>
         </div>
       </div>
+
+      <!-- ADMIN-PANEL – nur für Admins sichtbar -->
+      <div class="karte admin-karte" id="admin-panel-karte" hidden>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span style="font-size:18px">🛡️</span>
+          <h2 style="font-size:15px;font-weight:600">Admin-Verwaltung</h2>
+        </div>
+        <p style="font-size:12px;color:#666;margin-bottom:14px">Nutzer mit Adminrechten können API-Keys sehen, Freesound und Giphy nutzen sowie weitere Admins ernennen.</p>
+        <div id="admin-email-liste" style="margin-bottom:14px"></div>
+        <div style="display:flex;gap:8px">
+          <input id="admin-neue-email" type="email" placeholder="E-Mail-Adresse" style="flex:1;border:1.5px solid #ddd;border-radius:10px;padding:9px 13px;font-size:13px;outline:none;font-family:inherit">
+          <button class="btn primaer" onclick="adminHinzufuegen()" style="white-space:nowrap">+ Admin</button>
+        </div>
+      </div>
     </div>
 
     <!-- SOUNDS -->
@@ -711,6 +739,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
           <button class="meme-tab aktiv" id="mtab-sounds" onclick="wechsleMemeTab('sounds')">🔊 Sounds</button>
           <button class="meme-tab" id="mtab-gifs" onclick="wechsleMemeTab('gifs')">🎬 GIFs &amp; Sticker</button>
           <button class="meme-tab" id="mtab-giphy" onclick="wechsleMemeTab('giphy')">🔍 Giphy</button>
+          <button class="meme-tab" id="mtab-freesound" onclick="wechsleMemeTab('freesound')">🎵 Freesound</button>
           <button class="meme-tab" id="mtab-spielsounds" onclick="wechsleMemeTab('spielsounds')">🎮 Spielsounds</button>
         </div>
 
@@ -728,9 +757,8 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 
         <!-- GIPHY PANEL -->
         <div id="meme-panel-giphy" hidden>
-          <div class="feld" style="margin-bottom:12px">
-            <label>Giphy-API-Key</label>
-            <input id="giphy-key" type="text" placeholder="API-Key von developers.giphy.com" oninput="setGiphyKey(this.value)">
+          <div id="giphy-key-status" class="api-key-status fehlt">
+            <span>🔑</span><span>Giphy-API-Key nicht gesetzt — bitte <code>GIPHY_API_KEY=…</code> in <code>.env</code> auf dem Pi eintragen</span>
           </div>
           <div style="display:flex;gap:8px;margin-bottom:14px">
             <input id="giphy-suchfeld" type="text" placeholder="z.B. Applaus, Konfetti, Sieger…" style="flex:1;border:1.5px solid #ddd;border-radius:10px;padding:10px 14px;font-size:13px;outline:none;font-family:inherit" onkeydown="if(event.key==='Enter')giphySuche()">
@@ -744,6 +772,19 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
           </div>
           <div class="pi-gif-grid" id="pi-gif-grid"></div>
           <p style="font-size:11px;color:#999;margin-top:12px;line-height:1.5">GIFs werden dauerhaft auf den Pi heruntergeladen und stehen danach offline zur Verfügung — keine Internetverbindung während der Show nötig.</p>
+        </div>
+
+        <!-- FREESOUND PANEL -->
+        <div id="meme-panel-freesound" hidden>
+          <div id="freesound-key-status" class="api-key-status fehlt">
+            <span>🔑</span><span>Freesound-API-Key nicht gesetzt — bitte <code>FREESOUND_API_KEY=…</code> in <code>.env</code> auf dem Pi eintragen</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <input id="freesound-suchfeld" type="text" placeholder="z.B. Buzzer, Applaus, Fanfare…" style="flex:1;border:1.5px solid #ddd;border-radius:10px;padding:10px 14px;font-size:13px;outline:none;font-family:inherit" onkeydown="if(event.key==='Enter')freesoundSuche()">
+            <button class="btn primaer" onclick="freesoundSuche()">Suchen</button>
+          </div>
+          <div id="freesound-ergebnisse"></div>
+          <p style="font-size:11px;color:#999;margin-top:10px;line-height:1.5">Sounds werden als MP3-Vorschau (~128 kbps) heruntergeladen und stehen sofort im Meme-Board zur Verfügung. Quelle: <strong>freesound.org</strong></p>
         </div>
 
         <!-- SPIELSOUNDS PANEL -->
@@ -1460,6 +1501,11 @@ async function init() {
   await ladeVomPi();
   config.spieler.forEach(s => { if(punkte[s.nr]===undefined) punkte[s.nr]=0; });
   if(config.fragen.length > 0) gewaehlteFragen = new Set(config.fragen.map((_,i)=>i));
+  try{
+    const r = await fetch('/api/cloud/config');
+    const d = await r.json();
+    if(d.rolle) userRolle = d.rolle;
+  }catch(_){}
   zeigeStartPunkte();
   pruefeSpielStatus();
   setInterval(pruefeSpielStatus, 5000);
@@ -1506,7 +1552,12 @@ function wechsleTab(id) {
   document.getElementById('seite-'+id).classList.add('aktiv');
   if(id==='punkte') renderePunkte();
   if(id==='sounds') rendereEinstellungen();
-  if(id==='optionen') ladeSystemInfo();
+  if(id==='optionen'){
+    ladeSystemInfo();
+    const adminKarte = document.getElementById('admin-panel-karte');
+    if(adminKarte){ adminKarte.hidden = userRolle!=='admin'; }
+    if(userRolle==='admin') rendereAdminPanel();
+  }
   if(id==='memeboard'){ ladeMemeBoard().then(()=>rendereMemeVerwaltung()); }
 }
 
@@ -2602,6 +2653,7 @@ let memeGifsBibliothek = [];
 let aktivesMemeTab = 'sounds';
 let aktiveKatSound = 'alle';
 let aktiveKatGif = 'alle';
+let userRolle = 'user';
 
 const SPIELEREIGNISSE = [
   {gruppe:'🔴 Buzzer', ereignisse:[
@@ -2643,20 +2695,22 @@ async function ladeMemeBoard(){
 // ── TAB WECHSELN ──
 function wechsleMemeTab(tab){
   aktivesMemeTab = tab;
-  ['sounds','gifs','giphy','spielsounds'].forEach(t=>{
+  ['sounds','gifs','giphy','freesound','spielsounds'].forEach(t=>{
     document.getElementById('mtab-'+t).classList.toggle('aktiv', t===tab);
     document.getElementById('meme-panel-'+t).hidden = t!==tab;
   });
-  if(tab==='sounds')       rendereSoundTab();
-  else if(tab==='gifs')    rendereGifTab();
-  else if(tab==='giphy')   rendereGiphyTab();
+  if(tab==='sounds')           rendereSoundTab();
+  else if(tab==='gifs')        rendereGifTab();
+  else if(tab==='giphy')       rendereGiphyTab();
+  else if(tab==='freesound')   rendereFreesoundTab();
   else if(tab==='spielsounds') rendereSpielSoundsTab();
 }
 
 function rendereMemeVerwaltung(){
-  if(aktivesMemeTab==='sounds')       rendereSoundTab();
-  else if(aktivesMemeTab==='gifs')    rendereGifTab();
-  else if(aktivesMemeTab==='giphy')   rendereGiphyTab();
+  if(aktivesMemeTab==='sounds')           rendereSoundTab();
+  else if(aktivesMemeTab==='gifs')        rendereGifTab();
+  else if(aktivesMemeTab==='giphy')       rendereGiphyTab();
+  else if(aktivesMemeTab==='freesound')   rendereFreesoundTab();
   else if(aktivesMemeTab==='spielsounds') rendereSpielSoundsTab();
   else rendereSoundTab();
 }
@@ -2771,15 +2825,23 @@ function spieleMemeKachel(id){
 }
 
 // ── GIPHY TAB ──
-function rendereGiphyTab(){
-  if(config.einstellungen.giphy_api_key){
-    const el = document.getElementById('giphy-key');
-    if(el) el.value = config.einstellungen.giphy_api_key;
-  }
+async function rendereGiphyTab(){
+  try{
+    const r = await fetch('/api/api-keys-status');
+    const d = await r.json();
+    const el = document.getElementById('giphy-key-status');
+    if(el){
+      if(d.giphy){
+        el.className='api-key-status ok';
+        el.innerHTML='<span>✅</span><span>Giphy-API-Key konfiguriert</span>';
+      } else {
+        el.className='api-key-status fehlt';
+        el.innerHTML='<span>🔑</span><span>Giphy-API-Key nicht gesetzt — bitte <code>GIPHY_API_KEY=…</code> in <code>.env</code> auf dem Pi eintragen</span>';
+      }
+    }
+  }catch(_){}
   ladePiGifs();
 }
-
-function setGiphyKey(v){ config.einstellungen.giphy_api_key = v; }
 
 async function giphySuche(){
   const q = document.getElementById('giphy-suchfeld').value.trim();
@@ -2869,6 +2931,113 @@ async function gifDetailSpeichern(){
   rendereGifTab();
 }
 function schliesseGifDetail(){ document.getElementById('gif-detail-overlay').classList.remove('offen'); }
+
+// ── FREESOUND TAB ──
+let fsVorschauAudio = null;
+
+async function rendereFreesoundTab(){
+  try{
+    const r = await fetch('/api/api-keys-status');
+    const d = await r.json();
+    const el = document.getElementById('freesound-key-status');
+    if(el){
+      if(d.freesound){
+        el.className='api-key-status ok';
+        el.innerHTML='<span>✅</span><span>Freesound-API-Key konfiguriert</span>';
+      } else {
+        el.className='api-key-status fehlt';
+        el.innerHTML='<span>🔑</span><span>Freesound-API-Key nicht gesetzt — bitte <code>FREESOUND_API_KEY=…</code> in <code>.env</code> auf dem Pi eintragen</span>';
+      }
+    }
+  }catch(_){}
+}
+
+async function freesoundSuche(){
+  const q = document.getElementById('freesound-suchfeld').value.trim();
+  if(!q){ zeigToast('⚠️ Suchbegriff eingeben','rot'); return; }
+  const el = document.getElementById('freesound-ergebnisse');
+  el.innerHTML = '<p style="font-size:12px;color:#999">Suche…</p>';
+  try{
+    const r = await fetch('/api/freesound-search?q='+encodeURIComponent(q));
+    const d = await r.json();
+    if(d.error){ zeigToast('❌ '+d.error,'rot'); el.innerHTML=''; return; }
+    if(!d.results||!d.results.length){ el.innerHTML='<p style="font-size:12px;color:#999">Keine Treffer</p>'; return; }
+    el.innerHTML = d.results.map(s=>`
+      <div class="freesound-treffer" id="fst-${s.id}">
+        <div class="fs-name">
+          <div class="fs-titel">${escHTML(s.name)}</div>
+          <div class="fs-meta">von ${escHTML(s.username)} · ${s.duration.toFixed(1)} s</div>
+        </div>
+        <button class="fs-btn" id="fsv-${s.id}" onclick='freesoundVorschau(${JSON.stringify(s)})'>▶ Anhören</button>
+        <button class="fs-btn" onclick='freesoundDownload(${JSON.stringify(s)})'>⬇ Laden</button>
+      </div>`).join('');
+  }catch(e){ el.innerHTML=''; zeigToast('❌ Freesound-Suche fehlgeschlagen','rot'); }
+}
+
+function freesoundVorschau(s){
+  if(fsVorschauAudio){ fsVorschauAudio.pause(); fsVorschauAudio=null; }
+  document.querySelectorAll('.fs-btn').forEach(b=>b.classList.remove('aktiv'));
+  const btn = document.getElementById('fsv-'+s.id);
+  if(btn) btn.classList.add('aktiv');
+  fsVorschauAudio = new Audio(s.preview_url);
+  fsVorschauAudio.onended = ()=>{ if(btn) btn.classList.remove('aktiv'); fsVorschauAudio=null; };
+  fsVorschauAudio.play().catch(()=>{ if(btn) btn.classList.remove('aktiv'); zeigToast('❌ Vorschau nicht verfügbar','rot'); });
+}
+
+async function freesoundDownload(s){
+  zeigToast('⬇ Lade herunter…','');
+  try{
+    const r = await fetch('/api/freesound-download', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({preview_url:s.preview_url, name:s.name, id:s.id})});
+    const d = await r.json();
+    if(d.status==='ok'){
+      zeigToast('✅ Heruntergeladen: '+d.dateiname,'gruen');
+      await ladeMemeBoard();
+      rendereSoundGrid();
+    } else zeigToast('❌ '+(d.error||'Fehler'),'rot');
+  }catch(e){ zeigToast('❌ Download fehlgeschlagen','rot'); }
+}
+
+function escHTML(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── ADMIN PANEL ──
+async function rendereAdminPanel(){
+  const el = document.getElementById('admin-email-liste'); if(!el) return;
+  el.innerHTML = '<p style="font-size:12px;color:#999">Lade…</p>';
+  try{
+    const r = await fetch('/api/admin/rollen');
+    const d = await r.json();
+    if(d.error){ el.innerHTML='<p style="font-size:12px;color:#c0392b">'+escHTML(d.error)+'</p>'; return; }
+    const admins = d.admins||[];
+    if(!admins.length){ el.innerHTML='<p style="font-size:12px;color:#999">Noch keine Admins eingetragen.</p>'; return; }
+    el.innerHTML = admins.map(e=>`
+      <div class="admin-email-zeile">
+        <span style="font-size:13px;flex:1">${escHTML(e)}</span>
+        <button class="fs-btn" style="color:#c0392b;border-color:#fca5a5" onclick="adminEntfernen('${escHTML(e)}')">Entfernen</button>
+      </div>`).join('');
+  }catch(err){ el.innerHTML='<p style="font-size:12px;color:#c0392b">Verbindungsfehler</p>'; }
+}
+
+async function adminHinzufuegen(){
+  const inp = document.getElementById('admin-neue-email');
+  const email = inp.value.trim().toLowerCase();
+  if(!email){ zeigToast('⚠️ Bitte E-Mail eingeben','rot'); return; }
+  try{
+    const r = await fetch('/api/admin/rollen', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({aktion:'hinzufuegen',email})});
+    const d = await r.json();
+    if(d.status==='ok'){ inp.value=''; zeigToast('✅ Admin hinzugefügt','gruen'); rendereAdminPanel(); }
+    else zeigToast('❌ '+(d.error||'Fehler'),'rot');
+  }catch(e){ zeigToast('❌ Verbindungsfehler','rot'); }
+}
+
+async function adminEntfernen(email){
+  if(!confirm('Admin entfernen: '+email+'?')) return;
+  try{
+    const r = await fetch('/api/admin/rollen', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({aktion:'entfernen',email})});
+    const d = await r.json();
+    if(d.status==='ok'){ zeigToast('✅ Admin entfernt','gruen'); rendereAdminPanel(); }
+    else zeigToast('❌ '+(d.error||'Fehler'),'rot');
+  }catch(e){ zeigToast('❌ Verbindungsfehler','rot'); }
+}
 
 // ── SPIELSOUNDS TAB ──
 function rendereSpielSoundsTab(){
