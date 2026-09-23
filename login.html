@@ -211,12 +211,12 @@ async function weiter_spielen() {
     if (!r.ok) throw new Error(d.error || 'Aktualisierung fehlgeschlagen');
     zeige_fortschritt('a', 100);
     zeige_meldung_a('erfolg', `✅ ${d.anzahl} Fragen geladen – willkommen, ${d.name}!`);
-    setTimeout(() => { window.location.href = '/spielmodus'; }, 700);
+    setTimeout(() => { window.location.href = '/editor'; }, 700);
   } catch(e) {
     // Offline? Trotzdem spielen mit gecachten Fragen
     zeige_fortschritt('a', 0);
     zeige_meldung_a('erfolg', '▶️ Kein Internet – starte mit gespeicherten Fragen.');
-    setTimeout(() => { window.location.href = '/spielmodus'; }, 1200);
+    setTimeout(() => { window.location.href = '/editor'; }, 1200);
   }
 }
 
@@ -243,7 +243,7 @@ async function konto_login() {
     if (!r.ok) throw new Error(d.error || 'Fehler beim Anmelden');
     zeige_fortschritt('b', 100);
     zeige_meldung_b('erfolg', `✅ ${d.anzahl} Fragen geladen – willkommen, ${d.name}!`);
-    setTimeout(() => { window.location.href = '/spielmodus'; }, 700);
+    setTimeout(() => { window.location.href = '/editor'; }, 700);
   } catch(e) {
     zeige_fortschritt('b', 0);
     zeige_meldung_b('fehler', '❌ ' + (e.message || 'Anmeldung fehlgeschlagen'));
@@ -264,7 +264,7 @@ async function gast_modus() {
       document.getElementById('meldung-gast').className = 'meldung erfolg';
       document.getElementById('meldung-gast').textContent = '▶️ Kein Internet – starte mit gespeicherten Fragen.';
     }
-    setTimeout(() => { window.location.href = '/spielmodus'; }, 600);
+    setTimeout(() => { window.location.href = '/editor'; }, 600);
   } catch(e) {
     btn.disabled = false;
     btn.innerHTML = '🎮 Sofort spielen <span style="font-size:12px;font-weight:400;opacity:.7;margin-left:4px">(Standardfragen)</span>';
