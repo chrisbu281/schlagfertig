@@ -2966,7 +2966,7 @@ async function freesoundSuche(){
       <div class="freesound-treffer" id="fst-${s.id}">
         <div class="fs-name">
           <div class="fs-titel">${escHTML(s.name)}</div>
-          <div class="fs-meta">von ${escHTML(s.username)} · ${s.duration.toFixed(1)} s</div>
+          <div class="fs-meta">von ${escHTML(s.nutzer)} · ${s.dauer} s</div>
         </div>
         <button class="fs-btn" id="fsv-${s.id}" onclick='freesoundVorschau(${JSON.stringify(s)})'>▶ Anhören</button>
         <button class="fs-btn" onclick='freesoundDownload(${JSON.stringify(s)})'>⬇ Laden</button>
@@ -2979,7 +2979,7 @@ function freesoundVorschau(s){
   document.querySelectorAll('.fs-btn').forEach(b=>b.classList.remove('aktiv'));
   const btn = document.getElementById('fsv-'+s.id);
   if(btn) btn.classList.add('aktiv');
-  fsVorschauAudio = new Audio(s.preview_url);
+  fsVorschauAudio = new Audio(s.vorschau);
   fsVorschauAudio.onended = ()=>{ if(btn) btn.classList.remove('aktiv'); fsVorschauAudio=null; };
   fsVorschauAudio.play().catch(()=>{ if(btn) btn.classList.remove('aktiv'); zeigToast('❌ Vorschau nicht verfügbar','rot'); });
 }
@@ -2987,7 +2987,7 @@ function freesoundVorschau(s){
 async function freesoundDownload(s){
   zeigToast('⬇ Lade herunter…','');
   try{
-    const r = await fetch('/api/freesound-download', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({preview_url:s.preview_url, name:s.name, id:s.id})});
+    const r = await fetch('/api/freesound-download', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({vorschau_url:s.vorschau, name:s.name, id:s.id})});
     const d = await r.json();
     if(d.status==='ok'){
       zeigToast('✅ Heruntergeladen: '+d.dateiname,'gruen');
