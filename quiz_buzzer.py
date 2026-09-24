@@ -310,7 +310,7 @@ def zeichne_kachel(s, pkt, x, y, bw, bh, highlight=False):
     ls = SF_KL.render("Punkte", True, (210,210,210))
     screen.blit(ls, (mx - ls.get_width()//2, y+268))
 
-def zeige_wartebildschirm(puls):
+def zeige_wartebildschirm(puls, do_flip=True):
     screen.fill(DUNKEL)
     logo1 = SF_GR.render("SCHLAG", True, WEISS)
     logo2 = SF_GR.render("FERTIG", True, ROT)
@@ -325,6 +325,7 @@ def zeige_wartebildschirm(puls):
     blit_mitte(warte, HO//2)
     hint = SF_KL.render("http://schlagfertig.local:5000", True, (40, 40, 60))
     blit_mitte(hint, HO - 54)
+    if do_flip: pygame.display.flip()
 
 def zeige_startbildschirm(spieler, punkte, highlight_nr=None):
     screen.fill(DUNKEL)
@@ -418,7 +419,7 @@ def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=No
 
     if do_flip: pygame.display.flip()
 
-def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", warteschlange=[], frage_dict=None, frage_nr=1, frage_gesamt=1, spielmodus='frei', mc_gewaehlt=None):
+def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", warteschlange=[], frage_dict=None, frage_nr=1, frage_gesamt=1, spielmodus='frei', mc_gewaehlt=None, do_flip=True):
     """Zeigt Pop-up über der Frage wer dran ist"""
     # Erst Frage im Hintergrund zeigen (ohne flip!)
     if frage_dict:
@@ -496,8 +497,8 @@ def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", wartesch
             wq_txt = SF_KL.render(f"{rang_icons[i]} {s_name}{ms_txt}", True, (200,200,200))
             screen.blit(wq_txt, (BR//2 - wq_txt.get_width()//2, wq_y))
             wq_y += 38
-    
-    pygame.display.flip()
+
+    if do_flip: pygame.display.flip()
 
 def zeige_richtig_screen(delta, frage_dict=None, frage_nr=1, frage_gesamt=1, spielmodus='frei', mc_gewaehlt=None):
     theme = current_theme or THEMES['frei']
@@ -563,7 +564,7 @@ def zeige_ergebnis_screen(richtig, delta):
     else:
         zeige_falsch_screen(delta)
 
-def zeige_punktestand_screen(spieler_liste, punkte):
+def zeige_punktestand_screen(spieler_liste, punkte, do_flip=True):
     screen.fill(DUNKEL)
     blit_mitte(SF_GR.render("PUNKTESTAND", True, WEISS), 40)
     n = len(spieler_liste)
@@ -583,7 +584,7 @@ def zeige_punktestand_screen(spieler_liste, punkte):
         else:
             rang_surf = SF_MI.render(rang_text, True, WEISS)
         screen.blit(rang_surf, (gx+i*(bw+14) + bw//2 - rang_surf.get_width()//2, gy-54))
-    pygame.display.flip()
+    if do_flip: pygame.display.flip()
 
 def zeige_sieger_screen(spieler_liste, punkte):
     screen.fill(DUNKEL)
@@ -947,15 +948,18 @@ def main():
                     buzzer_fenster_offen = True  # 2 Sek Fenster für weitere Buzzer
                     modus = "gewinner"
 
+        # Meme-Status einmalig ermitteln – steuert ob Render-Funktionen selbst flippen
+        meme_aktiv = bool(meme_surf and time.time() < meme_bis)
+
         # Bildschirm rendern
         if modus == "warten":
             puls += 0.02 * puls_richtung
             if puls >= 1.0: puls_richtung = -1
             if puls <= 0.0: puls_richtung = 1
-            zeige_wartebildschirm(puls)
+            zeige_wartebildschirm(puls, do_flip=not meme_aktiv)
 
         elif modus == "frage":
-            zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, mc_aufgeloest)
+            zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, mc_aufgeloest, do_flip=not meme_aktiv)
 
         elif modus == "gewinner":
             if letzter_gewinner_nr and letzter_gewinner_nr in spieler_map:
@@ -966,7 +970,7 @@ def main():
                     buzzer_gesperrt = True
                 # Pop-up anzeigen (ohne Ranking)
                 zeige_spieler_dran_screen(s, "Du darfst antworten!",
-                    [], aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt)
+                    [], aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, do_flip=not meme_aktiv)
                 # Nach 3 Sekunden zurück zur Frage
                 if popup_timer and (time.time() - popup_timer) > 3.0:
                     popup_timer = None
@@ -978,15 +982,15 @@ def main():
             pass  # Falsch-Screen bleibt stehen bis Moderator nächste Frage drückt
 
         elif modus == "punktestand":
-            zeige_punktestand_screen(aktive_spieler_liste, punkte)
+            zeige_punktestand_screen(aktive_spieler_liste, punkte, do_flip=not meme_aktiv)
 
         elif modus == "sieger":
             pass  # Sieger-Screen bleibt stehen
 
         # Meme-Board: GIF/Sticker als Standbild kurz einblenden (über allem anderen)
-        if meme_surf and time.time() < meme_bis:
+        if meme_aktiv:
             abdunklung = pygame.Surface((BR, HO), pygame.SRCALPHA)
-            abdunklung.fill((5, 7, 13, 140))
+            abdunklung.fill((0, 0, 0, 200))
             screen.blit(abdunklung, (0, 0))
             screen.blit(meme_surf, (BR//2 - meme_surf.get_width()//2, HO//2 - meme_surf.get_height()//2))
             pygame.display.flip()
