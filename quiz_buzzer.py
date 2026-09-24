@@ -355,13 +355,35 @@ def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=No
         if do_flip: pygame.display.flip()
         return
 
-    # Kategorie + Nummer
-    kat_txt = SF_KL.render(
-        f"Frage {nr}/{gesamt}  ·  {frage_dict.get('kategorie','')}  ·  {frage_dict.get('schwierigkeit','').capitalize()}",
-        True, theme['accent_color'])
-    blit_mitte(kat_txt, 40)
+    # ── HEADER BAR ────────────────────────────────────────────────
+    bar_h = 86
+    bar = pygame.Surface((BR, bar_h), pygame.SRCALPHA)
+    bar.fill((0, 0, 0, 110))
+    screen.blit(bar, (0, 0))
+    pygame.draw.line(screen, theme['accent_color'], (0, bar_h), (BR, bar_h), 2)
 
-    # Frage Text
+    # "FRAGE X / Y" – zentriert
+    nr_surf = SF_KL.render(f"FRAGE  {nr}  /  {gesamt}", True, theme['accent_color'])
+    blit_mitte(nr_surf, bar_h // 2 - nr_surf.get_height() // 2)
+
+    # Kategorie – links, gedimmt
+    kat = frage_dict.get('kategorie', '')
+    if kat:
+        kat_surf = SF_KL.render(kat.upper(), True, (155, 155, 180))
+        screen.blit(kat_surf, (24, bar_h // 2 - kat_surf.get_height() // 2))
+
+    # Schwierigkeit – rechts als farbiges Pill
+    schwier = frage_dict.get('schwierigkeit', '').lower()
+    sw_farben = {'leicht': (46, 204, 113), 'mittel': (230, 126, 34), 'schwer': (231, 76, 60)}
+    sw_farbe = sw_farben.get(schwier, (100, 100, 130))
+    if schwier:
+        sw_surf = SF_KL.render(schwier.capitalize(), True, (255, 255, 255))
+        pw = sw_surf.get_width() + 30
+        ph = sw_surf.get_height() + 12
+        pygame.draw.rect(screen, sw_farbe, (BR - pw - 20, bar_h // 2 - ph // 2, pw, ph), border_radius=ph // 2)
+        screen.blit(sw_surf, (BR - pw - 20 + 15, bar_h // 2 - ph // 2 + 6))
+
+    # ── FRAGE TEXT ────────────────────────────────────────────────
     istMC = spielmodus == 'mc' or frage_dict.get('modus') == 'mc'
     worte = frage_dict.get("frage","").split()
     zeilen, z = [], []
@@ -376,12 +398,11 @@ def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=No
         blit_mitte(SF_MI.render(line, True, theme['text_color']), y_start)
         y_start += 63
 
-    # MC Antworten - NEON FARBEN
+    # ── MC ANTWORTEN ──────────────────────────────────────────────
     if istMC and frage_dict.get("antworten_mc") and len(frage_dict["antworten_mc"]) == 4:
         mc = frage_dict["antworten_mc"]
         richtig_idx = frage_dict.get("richtige_antwort_index", 0)
-        # NEON Farben für MC
-        neon_farben = [(0, 255, 255), (255, 0, 150), (57, 255, 20), (255, 255, 0)]  # Cyan, Pink, Green, Yellow
+        neon_farben = [(0, 255, 255), (255, 0, 150), (57, 255, 20), (255, 255, 0)]
         buchst = ["A","B","C","D"]
         kw = (BR-140)//2
         kh = 100
@@ -392,36 +413,40 @@ def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=No
         for i, (ax, ay) in enumerate(positionen):
             if i >= len(mc): break
             farbe = neon_farben[i]
-
             if mc_aufgeloest:
                 if i == richtig_idx:
-                    # Richtige - Neon Green
                     pygame.draw.rect(screen, (20, 180, 50), (ax, ay, kw, kh), border_radius=14)
                     pygame.draw.rect(screen, (57, 255, 20), (ax, ay, kw, kh), border_radius=14, width=4)
                 elif i == mc_gewaehlt:
-                    # Falsch - Neon Red
                     pygame.draw.rect(screen, (180, 20, 50), (ax, ay, kw, kh), border_radius=14)
                     pygame.draw.rect(screen, (255, 0, 150), (ax, ay, kw, kh), border_radius=14, width=4)
                 else:
-                    # Andere ausgegraut
                     pygame.draw.rect(screen, (40,40,50), (ax,ay,kw,kh), border_radius=14)
             elif mc_gewaehlt == i:
-                # Gewählte - dicker Neon Border
                 pygame.draw.rect(screen, farbe, (ax,ay,kw,kh), border_radius=14)
                 pygame.draw.rect(screen, (255,255,255), (ax,ay,kw,kh), border_radius=14, width=4)
             else:
-                # Normal - Neon Farbe
                 pygame.draw.rect(screen, farbe, (ax,ay,kw,kh), border_radius=14)
-
-            # Text
             txt_farbe = (0,0,0) if farbe == (255, 255, 0) else (255,255,255)
             lbl = SF_MI.render(f"{buchst[i]}", True, txt_farbe)
             ant = SF_KL.render(mc[i], True, txt_farbe)
             screen.blit(lbl, (ax+18, ay+kh//2-lbl.get_height()//2))
             screen.blit(ant, (ax+60, ay+kh//2-ant.get_height()//2))
 
+    # ── BUZZER HINWEIS ────────────────────────────────────────────
     if not istMC:
-        blit_mitte(SF_KL.render("🔔 Buzzer drücken!", True, theme['success_color']), HO-54)
+        txt_surf = SF_KL.render("  Buzzer drücken!", True, theme['success_color'])
+        # Emoji separat mit SF_EMOJI rendern (unterstützt Farb-Emoji)
+        em_font = SF_EMOJI if (SF_EMOJI and SF_EMOJI is not SF_MI) else None
+        em_surf = em_font.render("🔔", True, theme['success_color']) if em_font else None
+        if em_surf:
+            total_w = em_surf.get_width() + txt_surf.get_width()
+            x0 = BR // 2 - total_w // 2
+            y0 = HO - 62
+            screen.blit(em_surf, (x0, y0 + txt_surf.get_height() // 2 - em_surf.get_height() // 2))
+            screen.blit(txt_surf, (x0 + em_surf.get_width(), y0))
+        else:
+            blit_mitte(txt_surf, HO - 62)
 
     if do_flip: pygame.display.flip()
 
