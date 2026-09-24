@@ -734,14 +734,16 @@ def buzzer_thread(spieler):
 def lade_gif_frames(pfad):
     """Gibt eine Liste von (pygame.Surface, dauer_ms) zurück – alle Frames eines GIF.
     Fällt auf pygame-Einzelframe zurück wenn Pillow fehlt oder keine Animation vorliegt."""
-    ziel_h = int(HO * 0.55)
+    max_w = int(BR * 0.88)
+    max_h = int(HO * 0.88)
 
     def skaliere(surf):
         w, h = surf.get_size()
-        if h == 0:
+        if w == 0 or h == 0:
             return surf
-        ziel_w = max(1, int(w * ziel_h / h))
-        return pygame.transform.smoothscale(surf, (ziel_w, ziel_h))
+        # Skaliere so groß wie möglich, ohne Seitenverhältnis zu verletzen
+        faktor = min(max_w / w, max_h / h)
+        return pygame.transform.smoothscale(surf, (max(1, int(w * faktor)), max(1, int(h * faktor))))
 
     if _PIL_VERFUEGBAR:
         try:
