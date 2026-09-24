@@ -8,6 +8,12 @@ import pygame
 import json, time, sys, os, threading, atexit
 import socketio as sio_client
 from queue import Queue
+try:
+    from PIL import Image, ImageSequence
+    _PIL_VERFUEGBAR = True
+except ImportError:
+    _PIL_VERFUEGBAR = False
+    print("Hinweis: Pillow nicht installiert – GIFs werden nur als Standbild angezeigt. (pip install Pillow)")
 
 KONFIG_DATEI = os.path.join(os.path.dirname(__file__), "quiz_config.json")
 STATE_DATEI  = os.path.join(os.path.dirname(__file__), ".spiel_state")
@@ -723,6 +729,43 @@ def buzzer_thread(spieler):
         time.sleep(0.001)
 
 # ─────────────────────────────────────────────
+#  GIF-ANIMATION HILFSFUNKTION
+# ─────────────────────────────────────────────
+def lade_gif_frames(pfad):
+    """Gibt eine Liste von (pygame.Surface, dauer_ms) zurück – alle Frames eines GIF.
+    Fällt auf pygame-Einzelframe zurück wenn Pillow fehlt oder keine Animation vorliegt."""
+    ziel_h = int(HO * 0.55)
+
+    def skaliere(surf):
+        w, h = surf.get_size()
+        if h == 0:
+            return surf
+        ziel_w = max(1, int(w * ziel_h / h))
+        return pygame.transform.smoothscale(surf, (ziel_w, ziel_h))
+
+    if _PIL_VERFUEGBAR:
+        try:
+            img = Image.open(pfad)
+            frames = []
+            for frame in ImageSequence.Iterator(img):
+                dur = frame.info.get('duration', 100)
+                rgba = frame.convert('RGBA')
+                surf = pygame.image.frombuffer(rgba.tobytes(), rgba.size, 'RGBA').convert_alpha()
+                frames.append((skaliere(surf), max(20, dur)))
+            if frames:
+                return frames
+        except Exception as e:
+            print(f"GIF-Pillow-Fehler: {e}")
+
+    # Fallback: pygame lädt nur Frame 0
+    try:
+        surf = pygame.image.load(pfad).convert_alpha()
+        return [(skaliere(surf), 100)]
+    except Exception as e:
+        print(f"GIF-Pygame-Fehler: {e}")
+        return None
+
+# ─────────────────────────────────────────────
 #  HAUPTPROGRAMM
 # ─────────────────────────────────────────────
 def main():
@@ -781,8 +824,10 @@ def main():
     popup_timer = None  # Timer für Pop-up
     buzzer_fenster_offen = False  # 2 Sek Fenster nach erstem Buzzer
     aktive_spieler_liste = spieler  # Wird vom Editor übernommen
-    meme_surf = None  # Meme-Board: aktuell eingeblendetes GIF (Standbild)
-    meme_bis = 0
+    meme_frames = None      # Meme-Board: Liste von (Surface, dauer_ms) – alle GIF-Frames
+    meme_bis = 0            # Zeitstempel bis wann das Meme sichtbar bleibt
+    meme_frame_idx = 0      # Aktuell angezeigter Frame-Index
+    meme_frame_start = 0.0  # Zeitstempel, wann der aktuelle Frame begann
 
     schreibe_state("warten")
     clock = pygame.time.Clock()
@@ -927,14 +972,14 @@ def main():
                 dateiname = data.get('gif')
                 if dateiname:
                     pfad = os.path.join(os.path.dirname(__file__), "gifs", dateiname)
-                    try:
-                        bild = pygame.image.load(pfad).convert_alpha()
-                        ziel_h = int(HO * 0.45)
-                        ziel_w = int(bild.get_width() * ziel_h / bild.get_height())
-                        meme_surf = pygame.transform.smoothscale(bild, (ziel_w, ziel_h))
-                        meme_bis = time.time() + 2.5
-                    except Exception as e:
-                        print(f"Meme-Bild Fehler: {e}")
+                    frames = lade_gif_frames(pfad)
+                    if frames:
+                        meme_frames = frames
+                        # Anzeigedauer: alle Frames mindestens 2× durchlaufen, min 3 Sek
+                        gesamt_ms = sum(d for _, d in frames)
+                        meme_bis = time.time() + max(3.0, 2 * gesamt_ms / 1000)
+                        meme_frame_idx = 0
+                        meme_frame_start = time.time()
 
             elif befehl == 'buzzer_local':
                 nr = data.get('nr')
@@ -949,7 +994,7 @@ def main():
                     modus = "gewinner"
 
         # Meme-Status einmalig ermitteln – steuert ob Render-Funktionen selbst flippen
-        meme_aktiv = bool(meme_surf and time.time() < meme_bis)
+        meme_aktiv = bool(meme_frames and time.time() < meme_bis)
 
         # Bildschirm rendern
         if modus == "warten":
@@ -987,15 +1032,22 @@ def main():
         elif modus == "sieger":
             pass  # Sieger-Screen bleibt stehen
 
-        # Meme-Board: GIF/Sticker als Standbild kurz einblenden (über allem anderen)
+        # Meme-Board: animiertes GIF über allem anderen einblenden
         if meme_aktiv:
+            # Frame-Advance: nächsten Frame wenn Anzeigedauer abgelaufen
+            now = time.time()
+            _, frame_dur_ms = meme_frames[meme_frame_idx]
+            if (now - meme_frame_start) * 1000 >= frame_dur_ms:
+                meme_frame_idx = (meme_frame_idx + 1) % len(meme_frames)
+                meme_frame_start = now
+            meme_surf = meme_frames[meme_frame_idx][0]
             abdunklung = pygame.Surface((BR, HO), pygame.SRCALPHA)
             abdunklung.fill((0, 0, 0, 200))
             screen.blit(abdunklung, (0, 0))
             screen.blit(meme_surf, (BR//2 - meme_surf.get_width()//2, HO//2 - meme_surf.get_height()//2))
             pygame.display.flip()
-        elif meme_surf and time.time() >= meme_bis:
-            meme_surf = None
+        elif meme_frames and time.time() >= meme_bis:
+            meme_frames = None
 
         # Frame-Counter für Animationen
         global frame_counter
