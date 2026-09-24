@@ -198,10 +198,20 @@ let memePopupTimer = null;
 socket.on('zeige_meme', (d) => {
   if(!d || !d.gif) return;
   const popup = document.getElementById('meme-popup');
-  document.getElementById('meme-popup-img').src = '/gifs/' + d.gif;
-  popup.classList.add('zeig');
+  const img   = document.getElementById('meme-popup-img');
   if(memePopupTimer) clearTimeout(memePopupTimer);
-  memePopupTimer = setTimeout(() => popup.classList.remove('zeig'), 3000);
+  const pre = new Image();
+  pre.onload = () => {
+    img.src = pre.src;
+    popup.classList.add('zeig');
+    memePopupTimer = setTimeout(() => popup.classList.remove('zeig'), 3500);
+  };
+  pre.onerror = () => {
+    img.src = '/gifs/' + d.gif;
+    popup.classList.add('zeig');
+    memePopupTimer = setTimeout(() => popup.classList.remove('zeig'), 3500);
+  };
+  pre.src = '/gifs/' + d.gif;
 });
 
 // ════ SOUND (Web Audio API – alles im Browser erzeugt) ════

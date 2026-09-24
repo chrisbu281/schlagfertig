@@ -163,6 +163,21 @@ html,body{height:100%;overflow:hidden;background:#08080f;color:#fff;
 .poi-name{flex:1;font-size:20px;font-weight:700}
 .poi-pts{font-size:28px;font-weight:900;color:#E24B4A}
 
+/* ═══════════════ MEME-POPUP ═══════════════ */
+#meme-popup{
+  position:fixed;inset:0;z-index:300;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.55);
+  opacity:0;transition:opacity .3s;
+}
+#meme-popup.zeig{opacity:1}
+#meme-popup img{
+  max-width:72vw;max-height:72vh;border-radius:24px;
+  box-shadow:0 24px 80px rgba(0,0,0,.7);
+  animation:meme-pop .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes meme-pop{from{transform:scale(.85)}to{transform:scale(1)}}
+
 /* ═══════════════ SIEGER ═══════════════ */
 #s-sieger{
   align-items:center;justify-content:center;text-align:center;
@@ -237,6 +252,9 @@ html,body{height:100%;overflow:hidden;background:#08080f;color:#fff;
     <div class="sg-rest" id="sg-rest"></div>
   </div>
 </div>
+
+<!-- ══ MEME POPUP ══ -->
+<div id="meme-popup"><img id="meme-popup-img" alt=""></div>
 
 <!-- ══ FLASH OVERLAY ══ -->
 <div id="flash">
@@ -316,6 +334,27 @@ socket.on('zeige_punktestand', d => {
 });
 
 socket.on('zeige_sieger', d => zeige_sieger(d.punkte, d.spieler));
+
+let memeTimer = null;
+socket.on('zeige_meme', d => {
+  if (!d || !d.gif) return;
+  const popup = document.getElementById('meme-popup');
+  const img   = document.getElementById('meme-popup-img');
+  if (memeTimer) clearTimeout(memeTimer);
+  // Preload image before showing — prevents flicker
+  const pre = new Image();
+  pre.onload = () => {
+    img.src = pre.src;
+    popup.classList.add('zeig');
+    memeTimer = setTimeout(() => popup.classList.remove('zeig'), 3500);
+  };
+  pre.onerror = () => {
+    img.src = '/gifs/' + d.gif;
+    popup.classList.add('zeig');
+    memeTimer = setTimeout(() => popup.classList.remove('zeig'), 3500);
+  };
+  pre.src = '/gifs/' + d.gif;
+});
 
 // ── FUNKTIONEN ──
 function zeige_screen(id) {
