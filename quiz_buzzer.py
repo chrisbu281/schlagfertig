@@ -737,11 +737,20 @@ def lade_gif_frames(pfad):
     max_w = int(BR * 0.88)
     max_h = int(HO * 0.88)
 
-    def skaliere(surf):
+    def skaliere_pil(rgba_img):
+        """Skaliert ein Pillow-RGBA-Bild mit LANCZOS (schärfste Qualität)."""
+        w, h = rgba_img.size
+        if w == 0 or h == 0:
+            return rgba_img
+        faktor = min(max_w / w, max_h / h)
+        new_size = (max(1, int(w * faktor)), max(1, int(h * faktor)))
+        return rgba_img.resize(new_size, Image.LANCZOS)
+
+    def skaliere_pygame(surf):
+        """Fallback-Skalierung via pygame smoothscale."""
         w, h = surf.get_size()
         if w == 0 or h == 0:
             return surf
-        # Skaliere so groß wie möglich, ohne Seitenverhältnis zu verletzen
         faktor = min(max_w / w, max_h / h)
         return pygame.transform.smoothscale(surf, (max(1, int(w * faktor)), max(1, int(h * faktor))))
 
@@ -751,9 +760,9 @@ def lade_gif_frames(pfad):
             frames = []
             for frame in ImageSequence.Iterator(img):
                 dur = frame.info.get('duration', 100)
-                rgba = frame.convert('RGBA')
+                rgba = skaliere_pil(frame.convert('RGBA'))
                 surf = pygame.image.frombuffer(rgba.tobytes(), rgba.size, 'RGBA').convert_alpha()
-                frames.append((skaliere(surf), max(20, dur)))
+                frames.append((surf, max(20, dur)))
             if frames:
                 return frames
         except Exception as e:
@@ -762,7 +771,7 @@ def lade_gif_frames(pfad):
     # Fallback: pygame lädt nur Frame 0
     try:
         surf = pygame.image.load(pfad).convert_alpha()
-        return [(skaliere(surf), 100)]
+        return [(skaliere_pygame(surf), 100)]
     except Exception as e:
         print(f"GIF-Pygame-Fehler: {e}")
         return None
