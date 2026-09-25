@@ -1073,7 +1073,17 @@ def main():
                 p_raw = data.get('punkte', {})
                 for nr in punkte:
                     punkte[nr] = p_raw.get(str(nr), p_raw.get(nr, punkte[nr]))
-                warteschlange = data.get('warteschlange', [])
+                neue_warteschlange = data.get('warteschlange', [])
+                # Web-Buzzer: wenn Warteschlange von leer zu nicht-leer während Frage → Popup zeigen
+                if len(neue_warteschlange) > 0 and len(warteschlange) == 0 and modus == "frage":
+                    erster_nr = neue_warteschlange[0].get('nr')
+                    if erster_nr is not None:
+                        letzter_gewinner_nr = erster_nr
+                        popup_timer = time.time()
+                        buzzer_fenster_offen = True
+                        modus = "gewinner"
+                        spiele_sound(sounds_config.get('buzzer'))
+                warteschlange = neue_warteschlange
                 if data.get('modus') == 'warten' and modus != 'warten':
                     zeige_schwarz()
                     time.sleep(0.5)
@@ -1091,29 +1101,22 @@ def main():
 
             elif befehl == 'zeige_sieger':
                 p_raw = data.get('punkte', {})
-                # Aktive Spieler vom Editor übernehmen
                 aktive_spieler = data.get('spieler', spieler)
-                # Konvertiere falls nötig
-                if aktive_spieler and isinstance(aktive_spieler[0], dict):
-                    spieler_liste = aktive_spieler
-                else:
-                    spieler_liste = spieler
-                # Server-Punkte sind maßgeblich: alle Keys (int + string) abgleichen
-                for nr in punkte:
-                    v = p_raw.get(str(nr), p_raw.get(nr))
-                    if v is not None:
-                        punkte[nr] = v
-                # Zusätzlich: Server-Keys die nicht in punkte stehen übernehmen
-                for k, v in p_raw.items():
-                    try:
-                        k_int = int(k)
-                        if k_int not in punkte:
-                            punkte[k_int] = v
-                    except (ValueError, TypeError):
-                        if k not in punkte:
-                            punkte[k] = v
+                spieler_liste = aktive_spieler if aktive_spieler and isinstance(aktive_spieler[0], dict) else spieler
+                # Punkte direkt per Spieler aus p_raw aufbauen – vermeidet Key-Typ-Konflikte
+                punkte_final = {}
+                for s in spieler_liste:
+                    nr = s["nr"]
+                    v = p_raw.get(str(nr))
+                    if v is None:
+                        v = p_raw.get(nr)
+                    if v is None:
+                        v = punkte.get(nr)
+                    if v is None:
+                        v = punkte.get(str(nr))
+                    punkte_final[nr] = v if v is not None else 0
                 spiele_sound(sounds_config.get('sieger'))
-                zeige_sieger_screen(spieler_liste, punkte)
+                zeige_sieger_screen(spieler_liste, punkte_final)
                 modus = "sieger"
 
             elif befehl == 'zeige_meme':
@@ -1158,8 +1161,14 @@ def main():
             zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, mc_aufgeloest, do_flip=not meme_aktiv)
 
         elif modus == "gewinner":
-            if letzter_gewinner_nr and letzter_gewinner_nr in spieler_map:
-                s = spieler_map[letzter_gewinner_nr]
+            s = spieler_map.get(letzter_gewinner_nr)
+            if s is None and letzter_gewinner_nr is not None:
+                try:
+                    alt = int(letzter_gewinner_nr) if isinstance(letzter_gewinner_nr, str) else str(letzter_gewinner_nr)
+                    s = spieler_map.get(alt)
+                except (ValueError, TypeError):
+                    pass
+            if s:
                 # Buzzer Fenster nach 2 Sek schließen
                 if buzzer_fenster_offen and popup_timer and (time.time() - popup_timer) > 2.0:
                     buzzer_fenster_offen = False
