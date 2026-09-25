@@ -352,6 +352,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 <div class="mh">
   <div class="mh-logo">Schlag<span>fertig</span></div>
   <div class="mh-badge">MODERATOR</div>
+  <div id="buzzer-header-dots" style="display:flex;align-items:center;gap:5px;margin-left:14px"></div>
   <div class="mh-rechts" id="mh-rechts">
     <!-- Buttons per JS -->
   </div>
@@ -545,6 +546,32 @@ function rendere_bsk() {
         ${s.gpio !== undefined ? `<div class="bsk-gpio">GPIO${s.gpio}</div>` : ''}
       </div>`;
   }).join('');
+  rendere_header_dots();
+}
+
+function rendere_header_dots() {
+  const bar = document.getElementById('buzzer-header-dots');
+  if (!bar || !config.spieler) return;
+  bar.innerHTML = config.spieler.map(s => {
+    const nr  = s.nr ?? s.nummer;
+    const ok  = buzzerStatus[nr] !== undefined;
+    const col = s.farbe || '#888';
+    return `<div id="hdot-${nr}" title="${esc(s.name)}" style="
+      width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:.3s;
+      background:${ok ? col : 'rgba(255,255,255,.15)'};
+      box-shadow:${ok ? '0 0 6px '+col : 'none'};
+    "></div>`;
+  }).join('');
+}
+
+function aktualisiere_header_dot(nr) {
+  const dot = document.getElementById('hdot-' + nr);
+  if (!dot) return;
+  const s = config.spieler.find(x => (x.nr ?? x.nummer) == nr);
+  if (!s) return;
+  const col = s.farbe || '#22c55e';
+  dot.style.background = col;
+  dot.style.boxShadow = '0 0 6px ' + col;
 }
 
 function aktualisiere_bsk(nr) {
@@ -555,12 +582,14 @@ function aktualisiere_bsk(nr) {
   st.className = 'bsk-status ok';
   st.textContent = '✓ Verbunden';
   dot.addEventListener('animationend', () => dot.classList.remove('ping'), { once: true });
+  aktualisiere_header_dot(nr);
 }
 
 function buzzer_test_reset() {
   socket.emit('buzzer_reset_test');
   buzzerStatus = {};
   rendere_bsk();
+  rendere_header_dots();
 }
 
 // ══ INIT ══

@@ -152,6 +152,44 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .av-btn { width: 100%; padding: 6px; border-radius: 8px; border: 1.5px solid #ddd; background: #fff; cursor: pointer; font-size: 12px; font-weight: 500; color: #444; display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 6px; }
 .av-btn.primaer { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
 
+/* Buzzer-Test */
+.buzzer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.buz-karte {
+  border-radius: 16px; border: 2px solid #e0e0e0; padding: 18px 14px;
+  text-align: center; background: #fff; transition: all .2s;
+  position: relative; overflow: hidden;
+}
+.buz-karte.inaktiv { opacity: .45; }
+.buz-karte.aktiv-flash {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34,197,94,.25), 0 0 18px rgba(34,197,94,.15);
+}
+.buz-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #e0e0e0; margin: 0 auto 10px;
+  transition: background .2s, box-shadow .2s;
+}
+.buz-dot.an { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,.6); }
+@keyframes buz-ping {
+  0%   { box-shadow: 0 0 0 0 rgba(34,197,94,.7); }
+  70%  { box-shadow: 0 0 0 12px rgba(34,197,94,0); }
+  100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
+.buz-dot.ping { animation: buz-ping .5s ease; }
+.buz-nr   { font-size: 11px; font-weight: 600; color: #aaa; margin-bottom: 3px; letter-spacing: .5px; text-transform: uppercase; }
+.buz-name { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+.buz-status { font-size: 12px; font-weight: 600; color: #aaa; }
+.buz-status.ok { color: #16a34a; }
+.buz-gpio { font-size: 10px; color: #bbb; margin-top: 5px; }
+.buz-akku { font-size: 11px; color: #888; margin-top: 4px; }
+.buz-avatar {
+  width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: #fff; overflow: hidden;
+  border: 3px solid rgba(255,255,255,.3);
+}
+.buz-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
 /* Punkte */
 .punkte-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
 .punkte-karte { border-radius: 12px; padding: 16px; text-align: center; color: #fff; }
@@ -576,6 +614,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
   </header>
   <div class="tabs">
     <div class="tab aktiv" onclick="wechsleTab('spieler')">👥 Spieler</div>
+    <div class="tab" onclick="wechsleTab('buzzer')">🔵 Buzzer</div>
     <div class="tab" onclick="wechsleTab('fragen')">📋 Fragen</div>
     <div class="tab" onclick="wechsleTab('punkte')">🏆 Punktestand</div>
     <div class="tab" onclick="wechsleTab('optionen')">🖥️ System</div>
@@ -593,6 +632,53 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
           <span style="font-size:12px;color:#888;margin-left:auto">Bis zu 6 Spieler möglich</span>
         </div>
         <div class="spieler-grid" id="spieler-grid"></div>
+      </div>
+    </div>
+
+    <!-- BUZZER -->
+    <div class="seite" id="seite-buzzer">
+      <!-- Test-Bereich -->
+      <div class="karte">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+          <span style="font-size:18px">🔵</span>
+          <h2 style="font-size:15px;font-weight:600">Buzzer-Test</h2>
+          <button class="btn" onclick="buzzerTestReset()" style="margin-left:auto;font-size:12px;padding:6px 12px">↺ Zurücksetzen</button>
+        </div>
+        <p style="font-size:13px;color:#888;margin-bottom:18px">Drücke einen Buzzer — der zugehörige Slot leuchtet auf. So kannst du testen, ob alle Verbindungen funktionieren.</p>
+        <div class="buzzer-grid" id="buzzer-test-grid"></div>
+      </div>
+
+      <!-- GPIO-Belegung -->
+      <div class="karte" style="margin-top:12px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:16px">🔌</span>
+          <h2 style="font-size:15px;font-weight:600">GPIO-Belegung</h2>
+        </div>
+        <p style="font-size:13px;color:#888;margin-bottom:14px">BCM-Pin pro Spieler. Die Pins werden auch im Tab <em>Spieler</em> angezeigt und dort direkt editiert.</p>
+        <div id="buzzer-gpio-liste" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+
+      <!-- Bluetooth (Vorschau) -->
+      <div class="karte" style="margin-top:12px;border:2px dashed #e0e0e0;background:#fafafa">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:16px">📡</span>
+          <h2 style="font-size:15px;font-weight:600;color:#aaa">Bluetooth-Buzzer <span style="font-size:11px;background:#f0f0f0;color:#bbb;border-radius:20px;padding:2px 9px;font-weight:700;letter-spacing:.5px;vertical-align:middle">BALD</span></h2>
+        </div>
+        <p style="font-size:13px;color:#bbb;line-height:1.6">Hier kannst du später Bluetooth-Buzzer koppeln, den Verbindungsstatus sehen und den Akkustand jedes Buzzers abrufen. Die Buzzer verbinden sich beim Start automatisch — diese Seite gibt dir den vollen Überblick.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;opacity:.5">
+          <div style="flex:1;min-width:120px;border-radius:12px;background:#fff;border:1.5px solid #e8e8e8;padding:12px;text-align:center">
+            <div style="font-size:22px;margin-bottom:4px">🔋</div>
+            <div style="font-size:11px;color:#aaa;font-weight:600">Akkustatus</div>
+          </div>
+          <div style="flex:1;min-width:120px;border-radius:12px;background:#fff;border:1.5px solid #e8e8e8;padding:12px;text-align:center">
+            <div style="font-size:22px;margin-bottom:4px">📶</div>
+            <div style="font-size:11px;color:#aaa;font-weight:600">Signalstärke</div>
+          </div>
+          <div style="flex:1;min-width:120px;border-radius:12px;background:#fff;border:1.5px solid #e8e8e8;padding:12px;text-align:center">
+            <div style="font-size:22px;margin-bottom:4px">🔗</div>
+            <div style="font-size:11px;color:#aaa;font-weight:600">Koppeln</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1243,6 +1329,13 @@ let modAufgeloest = false;
 // WebSocket
 let socket = null;
 
+// Buzzer-Test-Status: { nr: timestamp }
+let buzzerStatus = {};
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 // ── WEBSOCKET ──
 function verbindeSocket() {
   socket = io();
@@ -1253,6 +1346,74 @@ function verbindeSocket() {
     rendereWarteschlange();
     rendereModPunkte();
   });
+  socket.on('buzzer_status_update', d => {
+    buzzerStatus[d.nr] = d.ts;
+    aktualisiereBuzzerKarte(d.nr);
+  });
+  socket.on('buzzer_status_reset', () => {
+    buzzerStatus = {};
+    rendereBuzzerTab();
+  });
+}
+
+// ── BUZZER TAB ──
+function rendereBuzzerTab() {
+  rendereBuzzerGrid();
+  rendereBuzzerGPIO();
+}
+
+function rendereBuzzerGrid() {
+  const grid = document.getElementById('buzzer-test-grid');
+  if (!grid) return;
+  grid.innerHTML = config.spieler.map(s => {
+    const nr  = s.nr;
+    const ok  = buzzerStatus[nr] !== undefined;
+    const bg  = s.farbe || '#ccc';
+    const ini = (s.name || '?').charAt(0).toUpperCase();
+    const foto = s.foto ? `<img src="${s.foto}" alt="">` : ini;
+    return `
+      <div class="buz-karte${s.aktiv===false?' inaktiv':''}${ok?' aktiv-flash':''}" id="buz-karte-${nr}">
+        <div class="buz-dot${ok?' an':''}" id="buz-dot-${nr}"></div>
+        <div class="buz-avatar" style="background:${bg}" id="buz-av-${nr}">${foto}</div>
+        <div class="buz-nr">Buzzer ${nr}</div>
+        <div class="buz-name">${esc(s.name)}</div>
+        <div class="buz-status${ok?' ok':''}" id="buz-st-${nr}">${ok?'✓ Signal OK':'Warte auf Druck…'}</div>
+        <div class="buz-gpio">${s.gpio != null ? 'GPIO BCM '+s.gpio : 'Kein Pin'}</div>
+      </div>`;
+  }).join('');
+}
+
+function rendereBuzzerGPIO() {
+  const el = document.getElementById('buzzer-gpio-liste');
+  if (!el) return;
+  el.innerHTML = config.spieler.map(s => {
+    const farbe = s.farbe || '#888';
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:10px;background:#fafafa;border:1px solid #eee">
+        <div style="width:10px;height:10px;border-radius:50%;background:${farbe};flex-shrink:0"></div>
+        <span style="flex:1;font-size:13px;font-weight:600">${esc(s.name)}</span>
+        <span style="font-size:12px;color:#888">BCM ${s.gpio != null ? s.gpio : '–'}</span>
+        <span style="font-size:11px;background:#f0f0f0;border-radius:5px;padding:2px 8px;color:${s.aktiv===false?'#ccc':'#555'}">${s.aktiv===false?'inaktiv':'aktiv'}</span>
+      </div>`;
+  }).join('');
+}
+
+function aktualisiereBuzzerKarte(nr) {
+  const karte = document.getElementById('buz-karte-' + nr);
+  const dot   = document.getElementById('buz-dot-'  + nr);
+  const st    = document.getElementById('buz-st-'   + nr);
+  if (!karte) { rendereBuzzerGrid(); return; }
+  karte.classList.add('aktiv-flash');
+  dot.classList.add('an', 'ping');
+  st.className = 'buz-status ok';
+  st.textContent = '✓ Signal OK';
+  dot.addEventListener('animationend', () => dot.classList.remove('ping'), { once: true });
+}
+
+function buzzerTestReset() {
+  if (socket) socket.emit('buzzer_reset_test');
+  buzzerStatus = {};
+  rendereBuzzerGrid();
 }
 
 // ── INIT ──
@@ -1546,10 +1707,11 @@ function zeigeStartPunkte() {
 
 // ── TABS ──
 function wechsleTab(id) {
-  const tabs=['spieler','fragen','punkte','optionen','sounds','memeboard'];
+  const tabs=['spieler','buzzer','fragen','punkte','optionen','sounds','memeboard'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('aktiv',tabs[i]===id));
   document.querySelectorAll('.seite').forEach(s=>s.classList.remove('aktiv'));
   document.getElementById('seite-'+id).classList.add('aktiv');
+  if(id==='buzzer') rendereBuzzerTab();
   if(id==='punkte') renderePunkte();
   if(id==='sounds') rendereEinstellungen();
   if(id==='optionen'){
