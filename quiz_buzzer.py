@@ -3,7 +3,16 @@
 Schlagfertig – Quiz Buzzer
 Fixes: MC Antworten, Sieger, Punktestand, schwarzer Übergang
 """
-import RPi.GPIO as GPIO
+try:
+    import RPi.GPIO as GPIO
+except (ImportError, RuntimeError):
+    try:
+        import rpi_lgpio as GPIO  # Drop-in Ersatz für Pi 5
+        print("Hinweis: RPi.GPIO nicht verfügbar – nutze rpi-lgpio")
+    except ImportError:
+        print("WARNUNG: Weder RPi.GPIO noch rpi-lgpio verfügbar. Buzzer deaktiviert.")
+        GPIO = None
+
 import pygame
 import json, time, sys, os, threading, atexit
 import socketio as sio_client
@@ -13,7 +22,7 @@ try:
     _PIL_VERFUEGBAR = True
 except ImportError:
     _PIL_VERFUEGBAR = False
-    print("Hinweis: Pillow nicht installiert – GIFs werden nur als Standbild angezeigt. (pip install Pillow)")
+    print("Hinweis: Pillow nicht installiert – GIFs werden nur als Standbild angezeigt.")
 
 KONFIG_DATEI = os.path.join(os.path.dirname(__file__), "quiz_config.json")
 STATE_DATEI  = os.path.join(os.path.dirname(__file__), ".spiel_state")
@@ -191,14 +200,26 @@ def spiele_sound(dateiname):
     except Exception as e:
         print(f"Sound Wiedergabe Fehler: {e}")
 def gpio_setup(spieler):
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setwarnings(False)
-    for s in spieler:
-        GPIO.setup(s["gpio"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    if not GPIO: return
+    try:
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+        for s in spieler:
+            if s.get("gpio"):
+                GPIO.setup(s["gpio"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    except Exception as e:
+        print(f"GPIO-Setup-Fehler: {e}")
 
 def gpio_cleanup():
+    if not GPIO: return
     try: GPIO.cleanup()
     except: pass
+
+def gpio_lese(pin):
+    """Liest einen GPIO-Pin; gibt GPIO.HIGH zurück wenn GPIO nicht verfügbar."""
+    if not GPIO: return 1  # HIGH = nicht gedrückt
+    try: return GPIO.input(pin)
+    except: return 1
 
 # ─────────────────────────────────────────────
 #  DISPLAY
@@ -315,6 +336,45 @@ def zeichne_kachel(s, pkt, x, y, bw, bh, highlight=False):
     screen.blit(ps, (mx - ps.get_width()//2, y+168))
     ls = SF_KL.render("Punkte", True, (210,210,210))
     screen.blit(ls, (mx - ls.get_width()//2, y+268))
+
+def zeige_gpio_test(spieler, do_flip=True):
+    """GPIO-Test-Bildschirm: zeigt Live-Status aller konfigurierten Pins."""
+    screen.fill((10, 10, 20))
+    titel = SF_MI.render("GPIO-TEST-MODUS", True, (226, 75, 74))
+    blit_mitte(titel, 30)
+    hint = SF_KL.render("Drücke einen Buzzer – sieh welcher Pin reagiert  |  'T' zum Beenden", True, (120, 120, 140))
+    blit_mitte(hint, 110)
+
+    n = len(spieler)
+    kw, kh = min(240, (BR - 80) // max(n, 1) - 14), 200
+    gx = (BR - (n * kw + (n - 1) * 14)) // 2
+    gy = HO // 2 - kh // 2
+
+    for i, s in enumerate(spieler):
+        pin = s.get("gpio", "–")
+        farbe = hex_zu_rgb(s["farbe"])
+        x, y = gx + i * (kw + 14), gy
+
+        gedr = False
+        if GPIO and pin and isinstance(pin, int):
+            try:
+                gedr = (GPIO.input(pin) == 0)  # LOW = gedrückt
+            except: pass
+
+        rand_farbe = (57, 255, 20) if gedr else (60, 60, 80)
+        pygame.draw.rect(screen, dunkler(farbe, .4), (x, y, kw, kh), border_radius=18)
+        pygame.draw.rect(screen, rand_farbe, (x, y, kw, kh), border_radius=18, width=4 if gedr else 2)
+
+        name_s = SF_KL.render(s["name"], True, WEISS)
+        screen.blit(name_s, (x + kw // 2 - name_s.get_width() // 2, y + 20))
+
+        pin_txt = SF_MI.render(f"BCM {pin}", True, (57, 255, 20) if gedr else (200, 200, 220))
+        screen.blit(pin_txt, (x + kw // 2 - pin_txt.get_width() // 2, y + 70))
+
+        status = SF_KL.render("● GEDRÜCKT" if gedr else "○ offen", True, (57, 255, 20) if gedr else (100, 100, 120))
+        screen.blit(status, (x + kw // 2 - status.get_width() // 2, y + 140))
+
+    if do_flip: pygame.display.flip()
 
 def zeige_wartebildschirm(puls, do_flip=True):
     screen.fill(DUNKEL)
@@ -707,21 +767,16 @@ buzzer_warteschlange_lokal = []  # Lokale Kopie der Warteschlange
 
 def buzzer_thread(spieler):
     global buzzer_gesperrt, buzzer_start_zeit, buzzer_warteschlange_lokal
-    # Sicherstellen dass GPIO korrekt initialisiert ist
-    try:
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
-        for s in spieler:
-            GPIO.setup(s["gpio"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    except: pass
+    gpio_setup(spieler)
 
-    letzter = {s["nr"]: GPIO.HIGH for s in spieler}
+    letzter = {s["nr"]: 1 for s in spieler}  # 1 = HIGH = nicht gedrückt
     erster_buzz_zeit = None
 
     while buzzer_aktiv:
         for s in spieler:
-            jetzt = GPIO.input(s["gpio"])
-            if jetzt == GPIO.LOW and letzter[s["nr"]] == GPIO.HIGH:
+            if not s.get("gpio"): continue
+            jetzt = gpio_lese(s["gpio"])
+            if jetzt == 0 and letzter[s["nr"]] == 1:  # LOW = gedrückt
                 nr = s["nr"]
                 # Buzzer-Test: jeden Druck melden, Spiellogik überspringen
                 if test_modus:
@@ -750,7 +805,7 @@ def buzzer_thread(spieler):
                     except: pass
                     befehle.put(('buzzer_local', {'nr': nr, 'ms': ms}))
 
-            letzter[s["nr"]] = jetzt
+            letzter[s["nr"]] = jetzt if s.get("gpio") else 1
         time.sleep(0.001)
 
 # ─────────────────────────────────────────────
@@ -865,6 +920,7 @@ def main():
     meme_frame_idx = 0      # Aktuell angezeigter Frame-Index
     meme_frame_start = 0.0  # Zeitstempel, wann der aktuelle Frame begann
 
+    gpio_test_aktiv = False  # 'T' togglet den GPIO-Test-Screen
     schreibe_state("warten")
     clock = pygame.time.Clock()
 
@@ -882,6 +938,9 @@ def main():
                 zeige_schwarz()
                 pygame.quit()
                 sys.exit()
+            # 'T' → GPIO-Test-Modus umschalten (nur im Warten-Modus)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_t and modus == "warten":
+                gpio_test_aktiv = not gpio_test_aktiv
 
         # Befehle verarbeiten
         while not befehle.empty():
@@ -1034,10 +1093,13 @@ def main():
 
         # Bildschirm rendern
         if modus == "warten":
-            puls += 0.02 * puls_richtung
-            if puls >= 1.0: puls_richtung = -1
-            if puls <= 0.0: puls_richtung = 1
-            zeige_wartebildschirm(puls, do_flip=not meme_aktiv)
+            if gpio_test_aktiv:
+                zeige_gpio_test(spieler, do_flip=not meme_aktiv)
+            else:
+                puls += 0.02 * puls_richtung
+                if puls >= 1.0: puls_richtung = -1
+                if puls <= 0.0: puls_richtung = 1
+                zeige_wartebildschirm(puls, do_flip=not meme_aktiv)
 
         elif modus == "frage":
             zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, mc_aufgeloest, do_flip=not meme_aktiv)
