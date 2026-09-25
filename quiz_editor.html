@@ -1738,7 +1738,12 @@ function rendereSpielerwizard() {
           style="border:1.5px solid #ddd;border-radius:8px;padding:5px 8px;font-size:13px;width:100%;outline:none;text-align:center;margin-top:4px"
           oninput="updateSpieler(${i},'name',this.value)">
       </div>
-      <div class="sw-gpio" style="margin-top:4px">GPIO ${s.gpio}</div>
+      <div class="sw-gpio" style="margin-top:6px;display:flex;align-items:center;justify-content:center;gap:5px">
+        <span style="font-size:11px;color:#888">GPIO BCM</span>
+        <input type="number" min="0" max="27" value="${s.gpio||''}" placeholder="–"
+          style="width:52px;border:1.5px solid #ddd;border-radius:7px;padding:3px 5px;font-size:12px;outline:none;text-align:center"
+          oninput="updateSpieler(${i},'gpio',this.value===''?null:parseInt(this.value))">
+      </div>
       ${farbPaletteHTML(i, s.farbe, 'wizard')}
     </div>`).join('');
 }
@@ -2201,7 +2206,10 @@ function rendereSpieler(){
       <label>Farbe</label>
       <div class="farb-zeile">
         <div style="width:26px;height:26px;border-radius:50%;background:${s.farbe};border:2px solid #ddd;flex-shrink:0"></div>
-        <span class="gpio-badge">GPIO ${s.gpio}</span>
+        <label style="margin:0;font-size:12px;color:#888;font-weight:500;white-space:nowrap">GPIO BCM</label>
+        <input type="number" min="0" max="27" value="${s.gpio||''}" placeholder="–"
+          style="width:58px;border:1.5px solid #ddd;border-radius:8px;padding:4px 6px;font-size:13px;outline:none"
+          oninput="updateSpieler(${idx},'gpio',this.value===''?null:parseInt(this.value))">
       </div>
       ${farbPaletteHTML(idx, s.farbe, 'einst')}`;
     grid.appendChild(div);

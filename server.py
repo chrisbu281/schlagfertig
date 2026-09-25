@@ -733,6 +733,17 @@ def csv_vorlage():
     return Response(v, mimetype="text/csv",
                     headers={"Content-Disposition":"attachment; filename=schlagfertig_vorlage.csv"})
 
+def _punkte_zu_nr(punkte_roh):
+    """Wandelt name-basierte Punkte ({"Max": 10}) in nr-basierte ({"1": 10}) um."""
+    aktive = spiel_state.get('aktive_spieler', [])
+    name_zu_nr = {s['name']: str(s['nr']) for s in aktive if 'name' in s and 'nr' in s}
+    if not name_zu_nr:
+        return punkte_roh
+    konv = {}
+    for k, v in punkte_roh.items():
+        konv[name_zu_nr.get(str(k), str(k))] = v
+    return konv
+
 # ── WEBSOCKET EVENTS ──
 @socketio.on('connect')
 def on_connect():
@@ -744,9 +755,9 @@ def on_mod_starten(data):
     spiel_state['frage_idx'] = 0
     spiel_state['aktuelle_frage'] = data.get('frage')
     spiel_state['warteschlange'] = []
-    spiel_state['punkte'] = data.get('punkte', {})
-    spiel_state['spielmodus'] = data.get('spielmodus', 'frei')
     spiel_state['aktive_spieler'] = data.get('aktive_spieler', [])
+    spiel_state['punkte'] = _punkte_zu_nr(data.get('punkte', {}))
+    spiel_state['spielmodus'] = data.get('spielmodus', 'frei')
     spiel_state['punktestand_sichtbar'] = False
     schreibe_state("spiel")
     socketio.emit('state_update', spiel_state)
@@ -777,14 +788,14 @@ def on_naechste_frage(data):
 
 @socketio.on('mod_richtig')
 def on_richtig(data):
-    spiel_state['punkte'] = data.get('punkte', {})
+    spiel_state['punkte'] = _punkte_zu_nr(data.get('punkte', {}))
     spiel_state['warteschlange'] = []
     socketio.emit('state_update', spiel_state)
     socketio.emit('zeige_ergebnis', {'richtig': True, 'delta': data.get('delta', 10)})
 
 @socketio.on('mod_falsch')
 def on_falsch(data):
-    spiel_state['punkte'] = data.get('punkte', {})
+    spiel_state['punkte'] = _punkte_zu_nr(data.get('punkte', {}))
     if spiel_state['warteschlange']:
         spiel_state['warteschlange'].pop(0)
     socketio.emit('state_update', spiel_state)
@@ -805,7 +816,7 @@ def on_mc_auswahl(data):
 
 @socketio.on('mod_mc_aufloesen')
 def on_mc_aufloesen(data):
-    spiel_state['punkte'] = data.get('punkte', {})
+    spiel_state['punkte'] = _punkte_zu_nr(data.get('punkte', {}))
     spiel_state['warteschlange'] = []
     socketio.emit('state_update', spiel_state)
     socketio.emit('zeige_mc_aufloesen', {
@@ -835,7 +846,7 @@ def on_toggle_punktestand(data):
     spiel_state['punktestand_sichtbar'] = not spiel_state.get('punktestand_sichtbar', False)
     socketio.emit('zeige_punktestand', {
         'sichtbar': spiel_state['punktestand_sichtbar'],
-        'punkte': data.get('punkte', {}),
+        'punkte': _punkte_zu_nr(data.get('punkte', {})),
         'spieler': data.get('spieler', [])
     })
 
@@ -843,7 +854,7 @@ def on_toggle_punktestand(data):
 def on_sieger(data):
     spiel_state['modus'] = 'sieger'
     socketio.emit('zeige_sieger', {
-        'punkte': data.get('punkte', {}),
+        'punkte': _punkte_zu_nr(data.get('punkte', {})),
         'spieler': data.get('spieler', [])
     })
 
