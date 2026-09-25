@@ -1051,7 +1051,7 @@ def main():
                 buzzer_start_zeit = time.time()
                 popup_timer = None
                 buzzer_fenster_offen = False
-                if modus == "punktestand":
+                if modus in ("punktestand", "gewinner"):
                     modus = "frage"
 
             elif befehl == 'zeige_sieger':
@@ -1117,15 +1117,9 @@ def main():
                 if buzzer_fenster_offen and popup_timer and (time.time() - popup_timer) > 2.0:
                     buzzer_fenster_offen = False
                     buzzer_gesperrt = True
-                # Pop-up anzeigen (ohne Ranking)
+                # Pop-up bleibt bis Moderator Richtig/Falsch klickt
                 zeige_spieler_dran_screen(s, "Du darfst antworten!",
-                    [], aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, do_flip=not meme_aktiv)
-                # Nach 3 Sekunden zurück zur Frage
-                if popup_timer and (time.time() - popup_timer) > 3.0:
-                    popup_timer = None
-                    buzzer_fenster_offen = False
-                    zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False)
-                    modus = "frage"
+                    warteschlange, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, do_flip=not meme_aktiv)
 
         elif modus == "warte_moderator":
             pass  # Falsch-Screen bleibt stehen bis Moderator nächste Frage drückt
