@@ -1331,6 +1331,7 @@ let socket = null;
 
 // Buzzer-Test-Status: { nr: timestamp }
 let buzzerStatus = {};
+let buzzerTimers = {};  // Auto-Dim-Timer je Spieler
 
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -1352,8 +1353,15 @@ function verbindeSocket() {
   socket.on('buzzer_status_update', d => {
     buzzerStatus[d.nr] = d.ts;
     aktualisiereBuzzerKarte(d.nr);
+    // Auto-Dim nach 1,5 s falls kein Release-Event kommt
+    clearTimeout(buzzerTimers[d.nr]);
+    buzzerTimers[d.nr] = setTimeout(() => {
+      delete buzzerStatus[d.nr];
+      aktualisiereBuzzerKarte(d.nr);
+    }, 1500);
   });
   socket.on('buzzer_status_clear', d => {
+    clearTimeout(buzzerTimers[d.nr]);
     delete buzzerStatus[d.nr];
     aktualisiereBuzzerKarte(d.nr);
   });
