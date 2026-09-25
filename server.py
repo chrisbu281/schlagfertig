@@ -878,6 +878,16 @@ def on_buzzer(data):
         socketio.emit('buzzer_status_update', {'nr': nr, 'ts': buzzer_zuletzt[nr]})
     socketio.emit('state_update', spiel_state)
 
+@socketio.on('test_start')
+def on_test_start():
+    """Browser öffnet Buzzer-Tab → Test-Modus an quiz_buzzer.py weiterleiten."""
+    socketio.emit('test_start')
+
+@socketio.on('test_stop')
+def on_test_stop():
+    """Browser verlässt Buzzer-Tab → Test-Modus beenden."""
+    socketio.emit('test_stop')
+
 @socketio.on('buzzer_test_press')
 def on_buzzer_test_press(data):
     """Empfängt rohen Buzzer-Druck im Testmodus und leitet ihn an Clients weiter."""
