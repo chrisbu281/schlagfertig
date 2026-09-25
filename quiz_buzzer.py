@@ -679,81 +679,95 @@ def zeige_punktestand_screen(spieler_liste, punkte, do_flip=True):
 
 def zeige_sieger_screen(spieler_liste, punkte):
     screen.fill(DUNKEL)
-    blit_mitte(SF_GR.render("SPIELENDE!", True, WEISS), 30)
 
     if not spieler_liste:
         pygame.display.flip()
         return
 
-    # Nach Punkten sortieren
     sortiert = sorted(spieler_liste,
         key=lambda s: punkte.get(s["nr"], punkte.get(str(s["nr"]), 0)),
         reverse=True)
 
-    def zeichne_podium_karte(s, pkt, cx, cy, groesse):
-        farbe = hex_zu_rgb(s["farbe"])
-        kr = groesse // 2
-        pygame.draw.circle(screen, dunkler(farbe, .5), (cx, cy), kr+4)
-        pygame.draw.circle(screen, farbe, (cx, cy), kr)
+    rang_farben = [(255, 215, 0), (192, 192, 192), (205, 127, 50)]
+    rang_labels  = ["1.", "2.", "3.", "4.", "5.", "6."]
+
+    n = len(sortiert)
+    max_pkt = max((punkte.get(s["nr"], punkte.get(str(s["nr"]), 0)) for s in sortiert), default=1) or 1
+
+    # Proportionale Schriftgrößen basierend auf Bildschirmhöhe
+    titel_sz = max(28, HO // 8)
+    row_sz   = max(14, HO // 16)
+    font_titel = pygame.font.SysFont("DejaVu Sans", titel_sz, bold=True)
+    font_row   = pygame.font.SysFont("DejaVu Sans", row_sz,   bold=True)
+    font_pts   = pygame.font.SysFont("DejaVu Sans", row_sz)
+
+    # Titel
+    titel_surf = font_titel.render("SPIELENDE!", True, WEISS)
+    blit_mitte(titel_surf, int(HO * 0.03))
+    titel_bottom = int(HO * 0.03) + titel_surf.get_height() + int(HO * 0.02)
+
+    # Verfügbare Höhe für Liste
+    available_h = HO - titel_bottom - int(HO * 0.02)
+    row_h = available_h // n
+    kr = max(8, min(row_h // 2 - 6, int(HO * 0.07)))
+
+    pad_l = int(BR * 0.04)
+
+    for i, s in enumerate(sortiert):
+        pkt    = punkte.get(s["nr"], punkte.get(str(s["nr"]), 0))
+        farbe  = hex_zu_rgb(s["farbe"])
+        rang_f = rang_farben[i] if i < 3 else (140, 140, 160)
+
+        y  = titel_bottom + i * row_h
+        cy = y + row_h // 2
+
+        # Zeilenhintergrund (leicht eingefärbt für Top-3)
+        if i < 3:
+            row_bg = pygame.Surface((BR - pad_l * 2, row_h - 4), pygame.SRCALPHA)
+            row_bg.fill((*dunkler(farbe, 0.25), 70))
+            screen.blit(row_bg, (pad_l, y + 2))
+
+        # Rang-Nummer
+        rang_surf = font_pts.render(rang_labels[i], True, rang_f)
+        screen.blit(rang_surf, (pad_l, cy - rang_surf.get_height()//2))
+
+        # Avatar-Kreis
+        cx_av = pad_l + rang_surf.get_width() + kr + int(BR * 0.015)
         foto_surf = _foto_cache.get(s["nr"])
         if foto_surf is None and s.get("foto"):
-            foto_surf = lade_foto(s, groesse=kr*2)
+            foto_surf = lade_foto(s, groesse=kr * 2)
             _foto_cache[s["nr"]] = foto_surf
+        pygame.draw.circle(screen, dunkler(farbe, 0.45), (cx_av, cy), kr + 2)
+        pygame.draw.circle(screen, farbe, (cx_av, cy), kr)
         if foto_surf:
-            fs = pygame.transform.smoothscale(foto_surf, (kr*2, kr*2))
-            screen.blit(fs, (cx-kr, cy-kr))
+            fs = pygame.transform.smoothscale(foto_surf, (kr * 2, kr * 2))
+            screen.blit(fs, (cx_av - kr, cy - kr))
         else:
-            ini = SF_MI.render(s["name"][0].upper(), True, WEISS)
-            screen.blit(ini, (cx-ini.get_width()//2, cy-ini.get_height()//2))
-        font_n = pygame.font.SysFont("DejaVu Sans", max(18, groesse//3), bold=True)
-        font_p = pygame.font.SysFont("DejaVu Sans", max(14, groesse//4))
-        name_s = font_n.render(s["name"], True, WEISS)
-        pkt_s = font_p.render(f"{pkt} Punkte", True, (200,200,200))
-        screen.blit(name_s, (cx-name_s.get_width()//2, cy+kr+8))
-        screen.blit(pkt_s, (cx-pkt_s.get_width()//2, cy+kr+8+name_s.get_height()+4))
+            ini_f = pygame.font.SysFont("DejaVu Sans", max(10, kr), bold=True)
+            ini   = ini_f.render(s["name"][0].upper(), True, WEISS)
+            screen.blit(ini, (cx_av - ini.get_width()//2, cy - ini.get_height()//2))
 
-    # 🥇 Platz 1 – groß oben mitte
-    if len(sortiert) >= 1:
-        s1 = sortiert[0]
-        p1 = punkte.get(s1["nr"], punkte.get(str(s1["nr"]), 0))
-        rang = SF_MI.render("1.", True, (255,215,0))
-        screen.blit(rang, (BR//2-rang.get_width()//2, 110))
-        zeichne_podium_karte(s1, p1, BR//2, 230, 110)
+        # Name
+        name_x   = cx_av + kr + int(BR * 0.02)
+        name_surf = font_row.render(s["name"], True, WEISS)
+        screen.blit(name_surf, (name_x, cy - name_surf.get_height()//2))
 
-    # 🥈 Platz 2 – links
-    if len(sortiert) >= 2:
-        s2 = sortiert[1]
-        p2 = punkte.get(s2["nr"], punkte.get(str(s2["nr"]), 0))
-        rang = SF_KL.render("2.", True, (192,192,192))
-        screen.blit(rang, (BR//4-rang.get_width()//2, 270))
-        zeichne_podium_karte(s2, p2, BR//4, 360, 80)
+        # Punkte-Balken (rechts)
+        bar_x  = int(BR * 0.52)
+        bar_w  = int(BR * 0.28)
+        bar_h  = max(5, kr // 2)
+        bar_y  = cy - bar_h // 2
+        pygame.draw.rect(screen, (35, 35, 50), (bar_x, bar_y, bar_w, bar_h), border_radius=bar_h)
+        fill_w = int(bar_w * pkt / max_pkt)
+        if fill_w > 0:
+            pygame.draw.rect(screen, farbe, (bar_x, bar_y, fill_w, bar_h), border_radius=bar_h)
 
-    # 🥉 Platz 3 – rechts
-    if len(sortiert) >= 3:
-        s3 = sortiert[2]
-        p3 = punkte.get(s3["nr"], punkte.get(str(s3["nr"]), 0))
-        rang = SF_KL.render("3.", True, (205,127,50))
-        screen.blit(rang, (BR*3//4-rang.get_width()//2, 270))
-        zeichne_podium_karte(s3, p3, BR*3//4, 360, 80)
-
-    # Platz 4-6 – Liste unten
-    y = HO - 160
-    for i, s in enumerate(sortiert[3:]):
-        pkt = punkte.get(s["nr"], punkte.get(str(s["nr"]), 0))
-        farbe = hex_zu_rgb(s["farbe"])
-        kr = 22
-        cx = BR//2 - 180
-        foto_surf = _foto_cache.get(s["nr"])
-        if foto_surf:
-            fs = pygame.transform.smoothscale(foto_surf, (kr*2, kr*2))
-            screen.blit(fs, (cx-kr, y-kr))
-        else:
-            pygame.draw.circle(screen, farbe, (cx, y), kr)
-            ini = SF_KL.render(s["name"][0].upper(), True, WEISS)
-            screen.blit(ini, (cx-ini.get_width()//2, y-ini.get_height()//2))
-        txt = SF_KL.render(f"{i+4}.  {s['name']}  –  {pkt} Punkte", True, (160,160,160))
-        screen.blit(txt, (cx+kr+12, y-txt.get_height()//2))
-        y += 46
+        # Punktzahl
+        pkt_surf = font_pts.render(str(pkt), True, rang_f)
+        pkt_x    = bar_x + bar_w + int(BR * 0.015)
+        screen.blit(pkt_surf, (pkt_x, cy - pkt_surf.get_height()//2))
+        pkt_lbl  = font_pts.render(" Pkt", True, (90, 90, 110))
+        screen.blit(pkt_lbl, (pkt_x + pkt_surf.get_width(), cy - pkt_lbl.get_height()//2))
 
     pygame.display.flip()
 
