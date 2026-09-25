@@ -1706,12 +1706,15 @@ function zeigeStartPunkte() {
 }
 
 // ── TABS ──
+let _aktiverTab = 'spieler';
 function wechsleTab(id) {
   const tabs=['spieler','buzzer','fragen','punkte','optionen','sounds','memeboard'];
+  if(_aktiverTab==='buzzer' && id!=='buzzer' && socket) socket.emit('test_stop');
+  _aktiverTab = id;
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('aktiv',tabs[i]===id));
   document.querySelectorAll('.seite').forEach(s=>s.classList.remove('aktiv'));
   document.getElementById('seite-'+id).classList.add('aktiv');
-  if(id==='buzzer') rendereBuzzerTab();
+  if(id==='buzzer'){ rendereBuzzerTab(); if(socket) socket.emit('test_start'); }
   if(id==='punkte') renderePunkte();
   if(id==='sounds') rendereEinstellungen();
   if(id==='optionen'){
