@@ -230,31 +230,24 @@ ROT    = (230, 57,  70)
 SCHWARZ = (0, 0, 0)
 
 # ═══ THEME SYSTEM ═══
+_BASIS_THEME = {
+    'name': 'Standard',
+    'bg_color': (13, 13, 23),
+    'text_color': (255, 255, 255),
+    'accent_color': (100, 150, 255),
+    'success_color': (30, 200, 90),
+    'error_color': (230, 60, 60),
+    'popup_alpha': 140,
+    'neon_colors': [
+        (0, 220, 255),      # Cyan
+        (255, 80, 180),     # Pink
+        (57, 255, 20),      # Green
+        (255, 230, 0)       # Yellow
+    ]
+}
 THEMES = {
-    'frei': {
-        'name': 'Standard',
-        'bg_color': (13, 13, 23),
-        'text_color': (255, 255, 255),
-        'accent_color': (100, 150, 255),
-        'success_color': (30, 200, 90),
-        'error_color': (230, 60, 60),
-        'popup_alpha': 140
-    },
-    'mc': {
-        'name': 'Neon',
-        'bg_color': (8, 8, 18),
-        'text_color': (255, 255, 255),
-        'accent_color': (0, 255, 255),
-        'success_color': (57, 255, 20),
-        'error_color': (255, 0, 150),
-        'popup_alpha': 160,
-        'neon_colors': [
-            (0, 255, 255),      # Cyan
-            (255, 0, 150),      # Pink
-            (57, 255, 20),      # Green
-            (255, 255, 0)       # Yellow
-        ]
-    }
+    'frei': _BASIS_THEME,
+    'mc':   _BASIS_THEME,
 }
 
 current_theme = None
@@ -576,7 +569,7 @@ def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", wartesch
     
     # Warteschlange unten
     if len(warteschlange) > 1:
-        rang_icons = ["🥇","🥈","🥉","4.","5.","6."]
+        rang_icons = ["1.","2.","3.","4.","5.","6."]
         wq_y = py + ph + 24
         for i, e in enumerate(warteschlange):
             if i == 0: continue
@@ -665,15 +658,14 @@ def zeige_punktestand_screen(spieler_liste, punkte, do_flip=True):
     gy = HO//2 - bh//2 + 30
     # Nach Punkten sortiert anzeigen
     sortiert = sorted(spieler_liste, key=lambda s: punkte.get(s["nr"], punkte.get(str(s["nr"]), 0)), reverse=True)
-    rang_emojis = ["🥇", "🥈", "🥉", "4."]
+    rang_labels_pts = ["1.", "2.", "3.", "4.", "5.", "6."]
+    rang_farben_pts = [(255, 215, 0), (192, 192, 192), (205, 127, 50)]
     for i, s in enumerate(sortiert):
         pkt = punkte.get(s["nr"], punkte.get(str(s["nr"]), 0))
         zeichne_kachel(s, pkt, gx+i*(bw+14), gy, bw, bh)
-        rang_text = rang_emojis[i] if i < 3 else f"{i+1}."
-        if i < 3 and SF_EMOJI:
-            rang_surf = SF_EMOJI.render(rang_text, True, WEISS)
-        else:
-            rang_surf = SF_MI.render(rang_text, True, WEISS)
+        rang_text = rang_labels_pts[i] if i < len(rang_labels_pts) else f"{i+1}."
+        rang_f = rang_farben_pts[i] if i < 3 else WEISS
+        rang_surf = SF_MI.render(rang_text, True, rang_f)
         screen.blit(rang_surf, (gx+i*(bw+14) + bw//2 - rang_surf.get_width()//2, gy-54))
     if do_flip: pygame.display.flip()
 
@@ -1077,8 +1069,20 @@ def main():
                     spieler_liste = aktive_spieler
                 else:
                     spieler_liste = spieler
+                # Server-Punkte sind maßgeblich: alle Keys (int + string) abgleichen
                 for nr in punkte:
-                    punkte[nr] = p_raw.get(str(nr), p_raw.get(nr, punkte[nr]))
+                    v = p_raw.get(str(nr), p_raw.get(nr))
+                    if v is not None:
+                        punkte[nr] = v
+                # Zusätzlich: Server-Keys die nicht in punkte stehen übernehmen
+                for k, v in p_raw.items():
+                    try:
+                        k_int = int(k)
+                        if k_int not in punkte:
+                            punkte[k_int] = v
+                    except (ValueError, TypeError):
+                        if k not in punkte:
+                            punkte[k] = v
                 spiele_sound(sounds_config.get('sieger'))
                 zeige_sieger_screen(spieler_liste, punkte)
                 modus = "sieger"
