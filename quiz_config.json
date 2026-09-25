@@ -48,6 +48,22 @@
       "gpio": 17,
       "name": "Spieler 4",
       "nr": 4
+    },
+    {
+      "nr": 5,
+      "name": "Spieler 5",
+      "gpio": 24,
+      "farbe": "#9B59B6",
+      "foto": "",
+      "aktiv": false
+    },
+    {
+      "nr": 6,
+      "name": "Spieler 6",
+      "gpio": 18,
+      "farbe": "#E91E8C",
+      "foto": "",
+      "aktiv": false
     }
   ],
   "fragen": [
