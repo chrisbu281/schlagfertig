@@ -2112,7 +2112,9 @@ async function spielStarten() {
         punkte: modPunkte,
         gesamt: modFragenListe.length,
         spielmodus: wizardModus,
-        aktive_spieler: aktiveSpieler
+        aktive_spieler: aktiveSpieler,
+        zeitlimit_aktiv: config.einstellungen.zeitlimit_aktiv || false,
+        zeitlimit_sek: config.einstellungen.zeitlimit_sek || 30
       });
     } else zeigToast('❌ '+d.error,'rot');
   } catch(e) { zeigToast('❌ Keine Verbindung','rot'); }
@@ -2171,18 +2173,11 @@ function rendereModFrage() {
     return;
   }
 
-  // Button zurücksetzen
+  // Button zurücksetzen – immer "Nächste Frage" beim Anzeigen der Frage
   if(naechsteBtn) {
-    // Letzte Frage? Button schon jetzt anpassen
-    if(modAktuellIdx === modFragenListe.length - 1) {
-      naechsteBtn.textContent = '🏆 Sieger verkünden!';
-      naechsteBtn.style.background = '#f39c12';
-      naechsteBtn.onclick = verkuendeSimulierer;
-    } else {
-      naechsteBtn.textContent = 'Nächste Frage →';
-      naechsteBtn.style.background = '';
-      naechsteBtn.onclick = modNaechsteFrage;
-    }
+    naechsteBtn.textContent = 'Nächste Frage →';
+    naechsteBtn.style.background = '';
+    naechsteBtn.onclick = modNaechsteFrage;
   }
   document.getElementById('mod-frage-nr').textContent = `FRAGE ${modAktuellIdx+1} / ${modFragenListe.length}`;
   document.getElementById('mod-frage-kat').textContent = f.kategorie;
@@ -2253,6 +2248,11 @@ function modMCAufloesen() {
   document.getElementById('mod-btn-aufloesen').disabled=true;
   rendereModPunkte();
   rendereWarteschlange();
+  const istLetzteFrage = modAktuellIdx === modFragenListe.length - 1;
+  if(istLetzteFrage) {
+    const btn = document.getElementById('mod-btn-naechste');
+    if(btn){ btn.textContent='🏆 Sieger verkünden!'; btn.style.background='#f39c12'; btn.onclick=verkuendeSimulierer; }
+  }
 }
 
 function rendereModNav() {
@@ -2297,11 +2297,20 @@ function modBewerteAntwort(richtig) {
   const pr=config.einstellungen.punkte_richtig||10;
   const pf=config.einstellungen.punkte_falsch||5;
   const name=config.spieler.find(s=>s.nr===erster.nr)?.name||'';
+  const istLetzteFrage = modAktuellIdx === modFragenListe.length - 1;
   if(richtig){
     modPunkte[erster.nr]=(modPunkte[erster.nr]||0)+pr;
     zeigToast(`+${pr} für ${name}!`,'gruen');
     modWarteschlange=[];
     socket.emit('mod_richtig',{punkte:modPunkte,delta:pr});
+    if(istLetzteFrage) {
+      // Letzte Frage beantwortet: Button auf Sieger verkünden umstellen
+      const btn = document.getElementById('mod-btn-naechste');
+      if(btn){ btn.textContent='🏆 Sieger verkünden!'; btn.style.background='#f39c12'; btn.onclick=verkuendeSimulierer; }
+    } else if(config.einstellungen.auto_weiter) {
+      // Auto-Weiter: nach Pi-Animation (3 Sek Richtig + kurz Puffer) nächste Frage
+      setTimeout(modNaechsteFrage, 3500);
+    }
   } else {
     modPunkte[erster.nr]=Math.max(0,(modPunkte[erster.nr]||0)-pf);
     zeigToast(`-${pf} für ${name}`,'rot');
@@ -2309,7 +2318,11 @@ function modBewerteAntwort(richtig) {
     socket.emit('mod_falsch',{punkte:modPunkte,delta:pf});
     if(modWarteschlange.length>0){
       const naechster=config.spieler.find(s=>s.nr===modWarteschlange[0].nr);
-      if(naechster) setTimeout(()=>zeigToast(`🥈 ${naechster.name} ist jetzt dran!`,''),500);
+      if(naechster) setTimeout(()=>zeigToast(`${naechster.name} ist jetzt dran!`,''),500);
+    } else if(istLetzteFrage) {
+      // Letzte Frage, alle falsch: Button auf Sieger verkünden
+      const btn = document.getElementById('mod-btn-naechste');
+      if(btn){ btn.textContent='🏆 Sieger verkünden!'; btn.style.background='#f39c12'; btn.onclick=verkuendeSimulierer; }
     }
   }
   rendereWarteschlange();
@@ -2332,7 +2345,9 @@ function modNaechsteFrage() {
       idx:modAktuellIdx,
       gesamt:modFragenListe.length,
       spielmodus:wizardModus,
-      aktive_spieler:config.spieler.filter(s=>s.aktiv!==false)
+      aktive_spieler:config.spieler.filter(s=>s.aktiv!==false),
+      zeitlimit_aktiv: config.einstellungen.zeitlimit_aktiv || false,
+      zeitlimit_sek: config.einstellungen.zeitlimit_sek || 30
     });
   } else {
     zeigToast('Alle Fragen gespielt!','');
@@ -2350,7 +2365,9 @@ function modSpringe(idx) {
     frage:modFragenListe[idx],idx,
     gesamt:modFragenListe.length,
     spielmodus:wizardModus,
-    aktive_spieler:config.spieler.filter(s=>s.aktiv!==false)
+    aktive_spieler:config.spieler.filter(s=>s.aktiv!==false),
+    zeitlimit_aktiv: config.einstellungen.zeitlimit_aktiv || false,
+    zeitlimit_sek: config.einstellungen.zeitlimit_sek || 30
   });
 }
 

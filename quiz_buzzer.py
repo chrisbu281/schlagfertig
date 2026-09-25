@@ -503,7 +503,7 @@ def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=No
 
     if do_flip: pygame.display.flip()
 
-def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", warteschlange=[], frage_dict=None, frage_nr=1, frage_gesamt=1, spielmodus='frei', mc_gewaehlt=None, do_flip=True):
+def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", warteschlange=[], frage_dict=None, frage_nr=1, frage_gesamt=1, spielmodus='frei', mc_gewaehlt=None, timer_rest=None, do_flip=True):
     """Zeigt Pop-up über der Frage wer dran ist"""
     # Erst Frage im Hintergrund zeigen (ohne flip!)
     if frage_dict:
@@ -566,7 +566,30 @@ def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", wartesch
     # Text
     txt_surf = SF_MI.render(text, True, (220,220,220))
     screen.blit(txt_surf, (BR//2 - txt_surf.get_width()//2, py+225))
-    
+
+    # Countdown-Timer (wenn aktiv)
+    if timer_rest is not None:
+        timer_y = py + 290
+        timer_w = pw - 60
+        timer_bar_h = 14
+        timer_x = px + 30
+        # Hintergrund-Balken
+        pygame.draw.rect(screen, (40, 40, 60), (timer_x, timer_y, timer_w, timer_bar_h), border_radius=7)
+        # Füll-Balken: Farbe wechselt von grün zu rot
+        if timer_rest > 0:
+            fill_ratio = min(1.0, timer_rest / (zeitlimit_sek or 30))
+            fill_w = int(timer_w * fill_ratio)
+            t_farbe = (
+                int(255 * (1 - fill_ratio)),
+                int(255 * fill_ratio),
+                40
+            )
+            pygame.draw.rect(screen, t_farbe, (timer_x, timer_y, fill_w, timer_bar_h), border_radius=7)
+        # Sekunden-Text
+        sek_font = pygame.font.SysFont("DejaVu Sans", 28, bold=True)
+        sek_surf = sek_font.render(f"{max(0, int(timer_rest))}s", True, (255, 255, 255))
+        screen.blit(sek_surf, (BR//2 - sek_surf.get_width()//2, timer_y + timer_bar_h + 6))
+
     # Warteschlange unten
     if len(warteschlange) > 1:
         rang_icons = ["1.","2.","3.","4.","5.","6."]
@@ -771,6 +794,10 @@ buzzer_gesperrt = False
 buzzer_start_zeit = None
 buzzer_warteschlange_lokal = []  # Lokale Kopie der Warteschlange
 
+# Zeitlimit-Einstellungen (kommen mit zeige_frage)
+zeitlimit_aktiv = False
+zeitlimit_sek = 30
+
 def buzzer_thread(spieler):
     global buzzer_gesperrt, buzzer_start_zeit, buzzer_warteschlange_lokal
     gpio_setup(spieler)
@@ -872,7 +899,7 @@ def lade_gif_frames(pfad):
 #  HAUPTPROGRAMM
 # ─────────────────────────────────────────────
 def main():
-    global buzzer_aktiv, buzzer_gesperrt, buzzer_start_zeit
+    global buzzer_aktiv, buzzer_gesperrt, buzzer_start_zeit, zeitlimit_aktiv, zeitlimit_sek
 
     pruefe_einzelinstanz()   # Doppelstart beim Boot abfangen
 
@@ -964,6 +991,8 @@ def main():
                 frage_gesamt = data.get('gesamt', 1)
                 spielmodus = data.get('spielmodus', 'frei')
                 set_modus_theme(spielmodus)  # Theme setzen
+                zeitlimit_aktiv = data.get('zeitlimit_aktiv', False)
+                zeitlimit_sek = data.get('zeitlimit_sek', 30)
                 # Aktive Spieler übernehmen und spieler_map aktualisieren!
                 if data.get('aktive_spieler'):
                     aktive_spieler_liste = data.get('aktive_spieler')
@@ -1135,9 +1164,14 @@ def main():
                 if buzzer_fenster_offen and popup_timer and (time.time() - popup_timer) > 2.0:
                     buzzer_fenster_offen = False
                     buzzer_gesperrt = True
+                # Countdown berechnen (startet wenn Buzzer-Fenster geschlossen)
+                t_rest = None
+                if zeitlimit_aktiv and popup_timer and not buzzer_fenster_offen:
+                    vergangen = time.time() - popup_timer - 2.0
+                    t_rest = max(0.0, zeitlimit_sek - vergangen)
                 # Pop-up bleibt bis Moderator Richtig/Falsch klickt
                 zeige_spieler_dran_screen(s, "Du darfst antworten!",
-                    warteschlange, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, do_flip=not meme_aktiv)
+                    warteschlange, aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, timer_rest=t_rest, do_flip=not meme_aktiv)
 
         elif modus == "warte_moderator":
             pass  # Falsch-Screen bleibt stehen bis Moderator nächste Frage drückt

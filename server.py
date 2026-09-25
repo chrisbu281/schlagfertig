@@ -759,6 +759,8 @@ def on_mod_starten(data):
     spiel_state['punkte'] = _punkte_zu_nr(data.get('punkte', {}))
     spiel_state['spielmodus'] = data.get('spielmodus', 'frei')
     spiel_state['punktestand_sichtbar'] = False
+    spiel_state['zeitlimit_aktiv'] = data.get('zeitlimit_aktiv', False)
+    spiel_state['zeitlimit_sek'] = data.get('zeitlimit_sek', 30)
     schreibe_state("spiel")
     socketio.emit('state_update', spiel_state)
     socketio.emit('zeige_frage', {
@@ -766,7 +768,9 @@ def on_mod_starten(data):
         'idx': 0,
         'gesamt': data.get('gesamt', 1),
         'spielmodus': spiel_state['spielmodus'],
-        'aktive_spieler': spiel_state['aktive_spieler']
+        'aktive_spieler': spiel_state['aktive_spieler'],
+        'zeitlimit_aktiv': spiel_state['zeitlimit_aktiv'],
+        'zeitlimit_sek': spiel_state['zeitlimit_sek']
     })
 
 @socketio.on('mod_naechste_frage')
@@ -777,13 +781,17 @@ def on_naechste_frage(data):
     spiel_state['mc_gewaehlt'] = None
     if data.get('aktive_spieler'):
         spiel_state['aktive_spieler'] = data.get('aktive_spieler')
+    spiel_state['zeitlimit_aktiv'] = data.get('zeitlimit_aktiv', spiel_state.get('zeitlimit_aktiv', False))
+    spiel_state['zeitlimit_sek'] = data.get('zeitlimit_sek', spiel_state.get('zeitlimit_sek', 30))
     socketio.emit('state_update', spiel_state)
     socketio.emit('zeige_frage', {
         'frage': spiel_state['aktuelle_frage'],
         'idx': spiel_state['frage_idx'],
         'gesamt': data.get('gesamt', 1),
         'spielmodus': data.get('spielmodus', 'frei'),
-        'aktive_spieler': spiel_state.get('aktive_spieler', [])
+        'aktive_spieler': spiel_state.get('aktive_spieler', []),
+        'zeitlimit_aktiv': spiel_state['zeitlimit_aktiv'],
+        'zeitlimit_sek': spiel_state['zeitlimit_sek']
     })
 
 @socketio.on('mod_richtig')
