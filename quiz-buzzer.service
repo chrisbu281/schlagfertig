@@ -1,0 +1,16 @@
+[Unit]
+Description=Schlagfertig Quiz Buzzer Display
+After=network.target schlagfertig.service
+Wants=schlagfertig.service
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/schlagfertig
+ExecStart=/home/pi/schlagfertig/env/bin/python /home/pi/schlagfertig/quiz_buzzer.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
