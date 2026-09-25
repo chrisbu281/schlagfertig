@@ -1339,7 +1339,10 @@ function esc(s) {
 // ── WEBSOCKET ──
 function verbindeSocket() {
   socket = io();
-  socket.on('connect', () => console.log('WebSocket verbunden!'));
+  socket.on('connect', () => {
+    console.log('WebSocket verbunden!');
+    if(_aktiverTab === 'buzzer') socket.emit('test_start');
+  });
   socket.on('state_update', (data) => {
     modWarteschlange = data.warteschlange || [];
     if(data.punkte) modPunkte = data.punkte;
@@ -1348,6 +1351,10 @@ function verbindeSocket() {
   });
   socket.on('buzzer_status_update', d => {
     buzzerStatus[d.nr] = d.ts;
+    aktualisiereBuzzerKarte(d.nr);
+  });
+  socket.on('buzzer_status_clear', d => {
+    delete buzzerStatus[d.nr];
     aktualisiereBuzzerKarte(d.nr);
   });
   socket.on('buzzer_status_reset', () => {
@@ -1403,11 +1410,19 @@ function aktualisiereBuzzerKarte(nr) {
   const dot   = document.getElementById('buz-dot-'  + nr);
   const st    = document.getElementById('buz-st-'   + nr);
   if (!karte) { rendereBuzzerGrid(); return; }
-  karte.classList.add('aktiv-flash');
-  dot.classList.add('an', 'ping');
-  st.className = 'buz-status ok';
-  st.textContent = '✓ Signal OK';
-  dot.addEventListener('animationend', () => dot.classList.remove('ping'), { once: true });
+  const aktiv = buzzerStatus[nr] !== undefined;
+  karte.classList.toggle('aktiv-flash', aktiv);
+  dot.classList.toggle('an', aktiv);
+  if (aktiv) {
+    dot.classList.add('ping');
+    st.className = 'buz-status ok';
+    st.textContent = '✓ Signal OK';
+    dot.addEventListener('animationend', () => dot.classList.remove('ping'), { once: true });
+  } else {
+    dot.classList.remove('ping');
+    st.className = 'buz-status';
+    st.textContent = 'Warte auf Signal…';
+  }
 }
 
 function buzzerTestReset() {

@@ -887,6 +887,14 @@ def on_buzzer_test_press(data):
         buzzer_zuletzt[nr] = _time.time()
         socketio.emit('buzzer_status_update', {'nr': nr, 'ts': buzzer_zuletzt[nr]})
 
+@socketio.on('buzzer_test_release')
+def on_buzzer_test_release(data):
+    """Buzzer wurde losgelassen im Testmodus."""
+    nr = data.get('nr')
+    if nr is not None:
+        buzzer_zuletzt.pop(nr, None)
+        socketio.emit('buzzer_status_clear', {'nr': nr})
+
 @socketio.on('buzzer_reset_test')
 def on_buzzer_reset_test():
     """Setzt alle Buzzer-Zeitstempel zurück (für Testmodus)."""

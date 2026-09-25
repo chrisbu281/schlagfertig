@@ -805,6 +805,12 @@ def buzzer_thread(spieler):
                     except: pass
                     befehle.put(('buzzer_local', {'nr': nr, 'ms': ms}))
 
+            elif jetzt == 1 and letzter[s["nr"]] == 0 and test_modus:
+                # Steigende Flanke im Testmodus: Loslassen melden
+                try:
+                    sio.emit('buzzer_test_release', {'nr': s["nr"]})
+                except: pass
+
             letzter[s["nr"]] = jetzt if s.get("gpio") else 1
         time.sleep(0.001)
 
