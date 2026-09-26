@@ -870,6 +870,7 @@ async function lade_status() {
 
 // ══ BUZZER ══
 let _buzzerPopupTimer = null;
+let _buzzerPopupNr = null; // welcher Spieler aktuell im Popup gezeigt wird
 
 function zeige_buzzer(q) {
   const el = document.getElementById('buz-reihe');
@@ -878,10 +879,12 @@ function zeige_buzzer(q) {
   if (!q || !q.length) {
     el.innerHTML = '<div class="buz-leer">Buzzer bereit…</div>';
     popup.classList.remove('sicht');
+    clearTimeout(_buzzerPopupTimer);
+    _buzzerPopupNr = null;
     return;
   }
 
-  // Small chips at bottom (keep as backup)
+  // Small chips at bottom
   el.innerHTML = q.map((e, i) => {
     const s = spielSpieler.find(sp => sp.nr == e.nr);
     const name = s ? s.name : `Spieler ${e.nr}`;
@@ -925,11 +928,13 @@ function zeige_buzzer(q) {
     wq.style.display = 'none';
   }
 
-  popup.classList.add('sicht');
-
-  // Nach 3 Sekunden Popup wegschiebt – kleine Chips bleiben unten sichtbar
-  clearTimeout(_buzzerPopupTimer);
-  _buzzerPopupTimer = setTimeout(() => popup.classList.remove('sicht'), 3000);
+  // Popup nur zeigen wenn neuer Spieler buzzert (nicht bei jedem state_update)
+  if (e0.nr !== _buzzerPopupNr) {
+    _buzzerPopupNr = e0.nr;
+    popup.classList.add('sicht');
+    clearTimeout(_buzzerPopupTimer);
+    _buzzerPopupTimer = setTimeout(() => popup.classList.remove('sicht'), 3000);
+  }
 }
 
 // ══ SCORES ══
