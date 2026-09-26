@@ -513,96 +513,77 @@ def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=No
     if do_flip: pygame.display.flip()
 
 def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", warteschlange=[], frage_dict=None, frage_nr=1, frage_gesamt=1, spielmodus='frei', mc_gewaehlt=None, timer_rest=None, do_flip=True):
-    """Zeigt Pop-up über der Frage wer dran ist"""
-    # Erst Frage im Hintergrund zeigen (ohne flip!)
+    """Zeigt Buzzer-Banner über der Frage wer dran ist"""
+    farbe = hex_zu_rgb(spieler_obj["farbe"])
+
+    # Frage im Hintergrund (gedimmt)
     if frage_dict:
         zeige_frage_screen(frage_dict, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, False, do_flip=False)
+    else:
+        screen.fill(DUNKEL)
 
-    # Pop-up darüber zeichnen
-    farbe = hex_zu_rgb(spieler_obj["farbe"])
-    theme = current_theme or THEMES['frei']
-    istMC = spielmodus == 'mc'
-
-    # Halbtransparenter dunkler Hintergrund
+    # Dunkles Overlay über der Frage
     overlay = pygame.Surface((BR, HO), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, theme.get('popup_alpha', 140)))
+    overlay.fill((0, 0, 0, 160))
     screen.blit(overlay, (0, 0))
 
-    # Pop-up Karte
-    pw, ph = 580, 360
-    px = BR//2 - pw//2
-    py = HO//2 - ph//2
+    # ── VOLLE BREITE BANNER ────────────────────────────────────────
+    bh = 200  # Banner-Höhe
+    # Farbiger Hintergrund
+    pygame.draw.rect(screen, dunkler(farbe, 0.45), (0, 0, BR, bh))
+    pygame.draw.rect(screen, dunkler(farbe, 0.25), (0, 0, BR, bh - 8))
+    # Leuchtender Streifen am unteren Rand des Banners
+    pygame.draw.rect(screen, farbe, (0, bh - 6, BR, 6))
 
-    # NEON-Border für MC
-    if istMC:
-        pygame.draw.rect(screen, farbe, (px, py, pw, ph), border_radius=26, width=4)
-
-    # Schatten (für Tiefe)
-    schatten = pygame.Surface((pw+12, ph+12), pygame.SRCALPHA)
-    schatten.fill((0,0,0,120))
-    screen.blit(schatten, (px+6, py+6))
-
-    # Karte Hintergrund
-    if istMC:
-        # Neon-Border für MC
-        pygame.draw.rect(screen, dunkler(farbe,.5), (px, py, pw, ph), border_radius=26)
-        pygame.draw.rect(screen, farbe, (px+2, py+2, pw-4, ph-4), border_radius=24)
-        pygame.draw.rect(screen, farbe, (px, py, pw, ph), border_radius=26, width=3)
-    else:
-        pygame.draw.rect(screen, dunkler(farbe,.3), (px, py, pw, ph), border_radius=24)
-        pygame.draw.rect(screen, farbe, (px+2, py+2, pw-4, ph-4), border_radius=22)
-    
-    # Foto oder Avatar
-    kr = 75
+    # Avatar (links im Banner)
+    kr = 68
+    cx = 90
+    cy = bh // 2
     foto_surf = _foto_cache.get(spieler_obj["nr"])
     if foto_surf is None and spieler_obj.get("foto"):
         foto_surf = lade_foto(spieler_obj, groesse=kr*2)
         _foto_cache[spieler_obj["nr"]] = foto_surf
     if foto_surf:
         fs = pygame.transform.smoothscale(foto_surf, (kr*2, kr*2))
-        screen.blit(fs, (BR//2 - kr, py+70 - kr))
+        screen.blit(fs, (cx - kr, cy - kr))
     else:
-        pygame.draw.circle(screen, dunkler(farbe,.5), (BR//2, py+70), kr+4)
-        pygame.draw.circle(screen, farbe, (BR//2, py+70), kr)
-        ini = SF_MI.render(spieler_obj["name"][0].upper(), True, WEISS)
-        screen.blit(ini, (BR//2-ini.get_width()//2, py+70-ini.get_height()//2))
+        pygame.draw.circle(screen, dunkler(farbe, 0.5), (cx, cy), kr + 4)
+        pygame.draw.circle(screen, farbe, (cx, cy), kr)
+        ini_font = pygame.font.SysFont("DejaVu Sans", 56, bold=True)
+        ini = ini_font.render(spieler_obj["name"][0].upper(), True, WEISS)
+        screen.blit(ini, (cx - ini.get_width()//2, cy - ini.get_height()//2))
 
-    # Name (größer)
-    name_font = pygame.font.SysFont("DejaVu Sans", 48, bold=True)
+    # Name (groß)
+    name_font = pygame.font.SysFont("DejaVu Sans", 62, bold=True)
     name_surf = name_font.render(spieler_obj["name"], True, WEISS)
-    screen.blit(name_surf, (BR//2 - name_surf.get_width()//2, py+155))
+    name_x = cx + kr + 20
+    name_y = cy - name_surf.get_height() - 6
+    screen.blit(name_surf, (name_x, name_y))
 
-    # Text
-    txt_surf = SF_MI.render(text, True, (220,220,220))
-    screen.blit(txt_surf, (BR//2 - txt_surf.get_width()//2, py+225))
+    # Subtext "Du darfst antworten!"
+    sub_surf = SF_MI.render(text, True, farbe)
+    screen.blit(sub_surf, (name_x, cy + 6))
 
-    # Countdown-Timer (wenn aktiv)
+    # Countdown-Timer (wenn aktiv) – innerhalb des Banners
     if timer_rest is not None:
-        timer_y = py + 290
-        timer_w = pw - 60
-        timer_bar_h = 14
-        timer_x = px + 30
-        # Hintergrund-Balken
-        pygame.draw.rect(screen, (40, 40, 60), (timer_x, timer_y, timer_w, timer_bar_h), border_radius=7)
-        # Füll-Balken: Farbe wechselt von grün zu rot
+        timer_y = bh - 38
+        timer_w = BR - 200
+        timer_bar_h = 12
+        timer_x = cx + kr + 20
+        pygame.draw.rect(screen, (30, 30, 50), (timer_x, timer_y, timer_w, timer_bar_h), border_radius=6)
         if timer_rest > 0:
             fill_ratio = min(1.0, timer_rest / (zeitlimit_sek or 30))
             fill_w = int(timer_w * fill_ratio)
-            t_farbe = (
-                int(255 * (1 - fill_ratio)),
-                int(255 * fill_ratio),
-                40
-            )
-            pygame.draw.rect(screen, t_farbe, (timer_x, timer_y, fill_w, timer_bar_h), border_radius=7)
-        # Sekunden-Text
-        sek_font = pygame.font.SysFont("DejaVu Sans", 28, bold=True)
-        sek_surf = sek_font.render(f"{max(0, int(timer_rest))}s", True, (255, 255, 255))
-        screen.blit(sek_surf, (BR//2 - sek_surf.get_width()//2, timer_y + timer_bar_h + 6))
+            t_farbe = (int(255*(1-fill_ratio)), int(255*fill_ratio), 40)
+            pygame.draw.rect(screen, t_farbe, (timer_x, timer_y, fill_w, timer_bar_h), border_radius=6)
+        sek_font = pygame.font.SysFont("DejaVu Sans", 22, bold=True)
+        sek_surf = sek_font.render(f"{max(0, int(timer_rest))}s", True, WEISS)
+        screen.blit(sek_surf, (timer_x + timer_w + 10, timer_y - 4))
 
-    # Warteschlange unten
+    # Warteschlange (weitere Spieler) unterhalb des Banners
     if len(warteschlange) > 1:
-        rang_icons = ["1.","2.","3.","4.","5.","6."]
-        wq_y = py + ph + 24
+        rang_icons = ["1.", "2.", "3.", "4.", "5.", "6."]
+        wq_y = bh + 18
         for i, e in enumerate(warteschlange):
             if i == 0: continue
             s_nr = e.get('nr')
@@ -610,9 +591,9 @@ def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", wartesch
             s = spieler_map_global.get(s_nr)
             s_name = s['name'] if s else f"Spieler {s_nr}"
             ms_txt = f"  +{s_ms} ms" if s_ms else ""
-            wq_txt = SF_KL.render(f"{rang_icons[i]} {s_name}{ms_txt}", True, (200,200,200))
+            wq_txt = SF_KL.render(f"{rang_icons[i]} {s_name}{ms_txt}", True, (200, 200, 200))
             screen.blit(wq_txt, (BR//2 - wq_txt.get_width()//2, wq_y))
-            wq_y += 38
+            wq_y += 36
 
     if do_flip: pygame.display.flip()
 

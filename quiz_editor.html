@@ -1345,8 +1345,15 @@ function verbindeSocket() {
     if(_aktiverTab === 'buzzer') socket.emit('test_start');
   });
   socket.on('state_update', (data) => {
+    const prevLen = modWarteschlange.length;
     modWarteschlange = data.warteschlange || [];
     if(data.punkte) modPunkte = data.punkte;
+    // Toast wenn erstmals jemand buzzt
+    if(prevLen === 0 && modWarteschlange.length > 0 && config) {
+      const erster = modWarteschlange[0];
+      const s = config.spieler.find(sp => sp.nr === erster.nr);
+      if(s) zeigToast(`🔔 ${s.name} hat gebuzzert!`, 'gruen');
+    }
     rendereWarteschlange();
     rendereModPunkte();
   });
