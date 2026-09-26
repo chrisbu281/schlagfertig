@@ -419,10 +419,14 @@ html,body{
 #buzzer-popup{
   position:fixed;top:0;left:0;right:0;z-index:50;
   transform:translateY(-110%);
-  transition:transform .45s cubic-bezier(.34,1.56,.64,1);
-  will-change:transform;
+  pointer-events:none;
 }
-#buzzer-popup.sicht{transform:translateY(0)}
+@keyframes buzzer-popup-anim{
+  0%   {transform:translateY(-110%)}
+  12%  {transform:translateY(0)}
+  82%  {transform:translateY(0)}
+  100% {transform:translateY(-110%)}
+}
 
 .bp-banner{
   display:flex;align-items:center;gap:28px;
@@ -869,7 +873,6 @@ async function lade_status() {
 }
 
 // ══ BUZZER ══
-let _buzzerPopupTimer = null;
 let _buzzerPopupNr = null; // welcher Spieler aktuell im Popup gezeigt wird
 
 function zeige_buzzer(q) {
@@ -878,8 +881,8 @@ function zeige_buzzer(q) {
 
   if (!q || !q.length) {
     el.innerHTML = '<div class="buz-leer">Buzzer bereit…</div>';
-    popup.classList.remove('sicht');
-    clearTimeout(_buzzerPopupTimer);
+    popup.style.animation = 'none';
+    popup.style.transform = 'translateY(-110%)';
     _buzzerPopupNr = null;
     return;
   }
@@ -929,11 +932,12 @@ function zeige_buzzer(q) {
   }
 
   // Popup nur zeigen wenn neuer Spieler buzzert (nicht bei jedem state_update)
-  if (e0.nr !== _buzzerPopupNr) {
+  if (e0.nr != _buzzerPopupNr) {
     _buzzerPopupNr = e0.nr;
-    popup.classList.add('sicht');
-    clearTimeout(_buzzerPopupTimer);
-    _buzzerPopupTimer = setTimeout(() => popup.classList.remove('sicht'), 3000);
+    // CSS-Animation für zuverlässiges Auto-Hide nach 3.5s
+    popup.style.animation = 'none';
+    popup.offsetWidth; // reflow erzwingen damit Animation neu startet
+    popup.style.animation = 'buzzer-popup-anim 3.5s ease forwards';
   }
 }
 
