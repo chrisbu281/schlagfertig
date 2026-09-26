@@ -827,13 +827,21 @@ def on_mc_auswahl(data):
 @socketio.on('mod_mc_aufloesen')
 def on_mc_aufloesen(data):
     spiel_state['punkte'] = _punkte_zu_nr(data.get('punkte', {}))
-    spiel_state['warteschlange'] = []
+    richtig = data.get('richtig', False)
+    if richtig:
+        spiel_state['warteschlange'] = []
+    else:
+        if spiel_state['warteschlange']:
+            spiel_state['warteschlange'].pop(0)
     socketio.emit('state_update', spiel_state)
     socketio.emit('zeige_mc_aufloesen', {
         'gewaehlt': data.get('gewaehlt'),
         'richtig_idx': data.get('richtig_idx'),
-        'richtig': data.get('richtig'),
-        'delta': data.get('delta', 10)
+        'falsch_idx': data.get('falsch_idx'),
+        'richtig': richtig,
+        'delta': data.get('delta', 10),
+        'punkte': spiel_state['punkte'],
+        'warteschlange': spiel_state['warteschlange']
     })
 
 @socketio.on('mod_freigeben')

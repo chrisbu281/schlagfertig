@@ -2216,6 +2216,15 @@ function rendereModFrage() {
     freiButtons.style.display='none';
     aufloesen.style.display='block';
     aufloesen.disabled=true;
+    let hint = document.getElementById('mod-mc-hint');
+    if(!hint) {
+      hint = document.createElement('p');
+      hint.id = 'mod-mc-hint';
+      hint.style.cssText = 'font-size:12px;color:#aaa;margin:8px 0 2px;text-align:center;';
+      mcAuswahl.parentNode.insertBefore(hint, mcAuswahl);
+    }
+    hint.textContent = 'Tippe die Antwort an, die der Spieler gegeben hat';
+    hint.style.display = 'block';
     mcAuswahl.innerHTML = f.antworten_mc.map((a,i)=>`
       <button class="mc-auswahl-btn mc-${['a','b','c','d'][i]}" onclick="modWaehleAntwort(${i})">
         ${MC_BUCHST[i]}: ${a}
@@ -2226,6 +2235,8 @@ function rendereModFrage() {
     aufloesen.style.display='none';
     document.getElementById('mod-btn-richtig').disabled=true;
     document.getElementById('mod-btn-falsch').disabled=true;
+    const hint = document.getElementById('mod-mc-hint');
+    if(hint) hint.style.display = 'none';
   }
 }
 
@@ -2265,8 +2276,11 @@ function modMCAufloesen() {
     }
     modWarteschlange=[];
   }
+  const hint = document.getElementById('mod-mc-hint');
+  if(hint) hint.style.display = 'none';
   socket.emit('mod_mc_aufloesen', {
     gewaehlt:modGewaehlteAntwort, richtig_idx:richtigIdx,
+    falsch_idx: richtig ? null : modGewaehlteAntwort,
     richtig:richtig, punkte:modPunkte,
     delta:richtig?pr:pf
   });

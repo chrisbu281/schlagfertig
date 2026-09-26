@@ -399,7 +399,7 @@ def zeige_startbildschirm(spieler, punkte, highlight_nr=None):
         zeichne_kachel(s, pkt, gx+i*(bw+14), gy, bw, bh, highlight=s["nr"]==highlight_nr)
     pygame.display.flip()
 
-def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=None, mc_aufgeloest=False, do_flip=True):
+def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=None, mc_aufgeloest=False, do_flip=True, mc_highlight_falsch=None, mc_highlight_richtig=None):
     # Theme-basierte Hintergrundfarbe
     theme = current_theme or THEMES['frei']
     screen.fill(theme['bg_color'])
@@ -466,7 +466,16 @@ def zeige_frage_screen(frage_dict, nr, gesamt, spielmodus='frei', mc_gewaehlt=No
         for i, (ax, ay) in enumerate(positionen):
             if i >= len(mc): break
             farbe = neon_farben[i]
-            if mc_aufgeloest:
+            if mc_highlight_falsch is not None or mc_highlight_richtig is not None:
+                if i == mc_highlight_richtig:
+                    pygame.draw.rect(screen, (20, 180, 50), (ax, ay, kw, kh), border_radius=14)
+                    pygame.draw.rect(screen, (57, 255, 20), (ax, ay, kw, kh), border_radius=14, width=4)
+                elif i == mc_highlight_falsch:
+                    pygame.draw.rect(screen, (180, 20, 50), (ax, ay, kw, kh), border_radius=14)
+                    pygame.draw.rect(screen, (255, 80, 0), (ax, ay, kw, kh), border_radius=14, width=4)
+                else:
+                    pygame.draw.rect(screen, (40,40,50), (ax,ay,kw,kh), border_radius=14)
+            elif mc_aufgeloest:
                 if i == richtig_idx:
                     pygame.draw.rect(screen, (20, 180, 50), (ax, ay, kw, kh), border_radius=14)
                     pygame.draw.rect(screen, (57, 255, 20), (ax, ay, kw, kh), border_radius=14, width=4)
@@ -1018,15 +1027,45 @@ def main():
 
             elif befehl == 'zeige_mc_aufloesen':
                 mc_gewaehlt = data.get('gewaehlt')
-                mc_aufgeloest = True
+                richtig = data.get('richtig', False)
+                delta = data.get('delta', 10)
+                falsch_idx = data.get('falsch_idx')
+                richtig_idx_data = data.get('richtig_idx')
                 # Punkte aktualisieren
                 p_raw = data.get('punkte', {})
                 for nr in punkte:
                     punkte[nr] = p_raw.get(str(nr), p_raw.get(nr, punkte[nr]))
-                zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, True)
-                # Nach 5 Sek Punktestand zeigen
-                time.sleep(5)
-                modus = "punktestand"
+                if richtig:
+                    mc_aufgeloest = True
+                    spiele_sound(sounds_config.get('richtig'))
+                    zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus, mc_gewaehlt, True)
+                    time.sleep(5)
+                    modus = "punktestand"
+                else:
+                    # Falsche Antwort: kein Overlay, nur Sound + Farb-Highlights
+                    spiele_sound(sounds_config.get('falsch'))
+                    zeige_frage_screen(aktuelle_frage, frage_nr, frage_gesamt, spielmodus,
+                                       mc_gewaehlt, False,
+                                       mc_highlight_falsch=falsch_idx,
+                                       mc_highlight_richtig=richtig_idx_data)
+                    time.sleep(3)
+                    warteschlange = data.get('warteschlange', warteschlange)
+                    if len(warteschlange) > 0:
+                        naechster_nr = warteschlange[0]['nr']
+                        naechster = spieler_map.get(naechster_nr)
+                        if naechster is None:
+                            try:
+                                alt = int(naechster_nr) if isinstance(naechster_nr, str) else str(naechster_nr)
+                                naechster = spieler_map.get(alt)
+                            except (ValueError, TypeError):
+                                pass
+                        if naechster:
+                            letzter_gewinner_nr = naechster_nr
+                            popup_timer = time.time()
+                            buzzer_fenster_offen = False
+                            modus = "gewinner"
+                    else:
+                        modus = "punktestand"
 
             elif befehl == 'zeige_ergebnis':
                 richtig = data.get('richtig', False)
