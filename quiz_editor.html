@@ -2128,7 +2128,12 @@ async function spielStarten() {
       zeigToast('▶ Spiel gestartet!','gruen');
       // Nur aktive Spieler
       const aktiveSpieler = config.spieler.filter(s => s.aktiv !== false);
-      modFragenListe = config.fragen.filter((_,i) => gewaehlteFragen.has(i));
+      modFragenListe = config.fragen.filter((f,i) => {
+        if (!gewaehlteFragen.has(i)) return false;
+        if (wizardModus === 'mc'   && f.modus !== 'mc') return false;
+        if (wizardModus === 'frei' && f.modus === 'mc') return false;
+        return true;
+      });
       if(config.einstellungen.fragen_mischen) modFragenListe = modFragenListe.sort(()=>Math.random()-.5);
       modAktuellIdx = 0;
       modPunkte = {};
