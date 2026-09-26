@@ -529,9 +529,10 @@ def zeige_spieler_dran_screen(spieler_obj, text="Du darfst antworten!", wartesch
 
     # ── VOLLE BREITE BANNER ────────────────────────────────────────
     bh = 200  # Banner-Höhe
-    # Farbiger Hintergrund
-    pygame.draw.rect(screen, dunkler(farbe, 0.45), (0, 0, BR, bh))
-    pygame.draw.rect(screen, dunkler(farbe, 0.25), (0, 0, BR, bh - 8))
+    # Farbiger Hintergrund: satt genug um die Spielerfarbe zu zeigen
+    pygame.draw.rect(screen, dunkler(farbe, 0.55), (0, 0, BR, bh))
+    # Hellerer Streifen am oberen Rand
+    pygame.draw.rect(screen, dunkler(farbe, 0.7), (0, 0, BR, 8))
     # Leuchtender Streifen am unteren Rand des Banners
     pygame.draw.rect(screen, farbe, (0, bh - 6, BR, 6))
 

@@ -393,6 +393,63 @@ html,body{
 .screen.aktiv{animation:slide-in .4s ease}
 #s-idle.aktiv{animation:none}
 
+/* ═══════════════════════════════════════
+   BUZZER POPUP BANNER
+═══════════════════════════════════════ */
+#buzzer-popup{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  transform:translateY(-110%);
+  transition:transform .45s cubic-bezier(.34,1.56,.64,1);
+  will-change:transform;
+}
+#buzzer-popup.sicht{transform:translateY(0)}
+
+.bp-banner{
+  display:flex;align-items:center;gap:28px;
+  padding:22px 40px;
+  background:var(--bp-bg,rgba(226,75,74,.12));
+  border-bottom:5px solid var(--bp-farbe,#E24B4A);
+  box-shadow:0 8px 40px rgba(0,0,0,.6);
+}
+.bp-avatar{
+  width:88px;height:88px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:40px;font-weight:900;color:#fff;
+  background:var(--bp-farbe,#E24B4A);
+  box-shadow:0 0 32px var(--bp-glow,rgba(226,75,74,.5));
+  animation:bp-pulse 1.4s ease-in-out infinite;
+}
+@keyframes bp-pulse{
+  0%,100%{box-shadow:0 0 28px var(--bp-glow,rgba(226,75,74,.4))}
+  50%{box-shadow:0 0 56px var(--bp-glow,rgba(226,75,74,.7)),0 0 100px var(--bp-glow,rgba(226,75,74,.3))}
+}
+.bp-info{flex:1;overflow:hidden}
+.bp-rang-label{
+  font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;
+  color:var(--bp-farbe,#E24B4A);opacity:.85;margin-bottom:4px;
+}
+.bp-name{
+  font-size:64px;font-weight:900;letter-spacing:-.5px;color:#fff;
+  line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.bp-sub{
+  font-size:19px;font-weight:700;color:var(--bp-farbe,#E24B4A);
+  margin-top:4px;opacity:.9;
+}
+.bp-wq{
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  padding:10px 40px 14px;
+  background:rgba(0,0,0,.35);
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.bp-wq-chip{
+  padding:6px 16px;border-radius:20px;
+  font-size:13px;font-weight:700;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12);
+  color:rgba(255,255,255,.6);
+}
+
 </style>
 </head>
 <body>
@@ -513,6 +570,19 @@ html,body{
 <!-- ══════════════════════════════════
      ERGEBNIS-OVERLAY
 ══════════════════════════════════════ -->
+<!-- ══ BUZZER POPUP BANNER ══ -->
+<div id="buzzer-popup">
+  <div class="bp-banner" id="bp-banner">
+    <div class="bp-avatar" id="bp-avatar">?</div>
+    <div class="bp-info">
+      <div class="bp-rang-label">🔔 GEBUZZERT!</div>
+      <div class="bp-name" id="bp-name">–</div>
+      <div class="bp-sub" id="bp-sub">Darf antworten!</div>
+    </div>
+  </div>
+  <div class="bp-wq" id="bp-wq" style="display:none"></div>
+</div>
+
 <div id="ergebnis-overlay">
   <div class="erg-icon" id="erg-icon">✓</div>
   <div class="erg-text" id="erg-text" style="color:#4ade80">Richtig!</div>
@@ -769,15 +839,59 @@ async function lade_status() {
 // ══ BUZZER ══
 function zeige_buzzer(q) {
   const el = document.getElementById('buz-reihe');
+  const popup = document.getElementById('buzzer-popup');
+
   if (!q || !q.length) {
     el.innerHTML = '<div class="buz-leer">Buzzer bereit…</div>';
+    popup.classList.remove('sicht');
     return;
   }
-  el.innerHTML = q.map((e, i) => `
-    <div class="buz-item">
+
+  // Small chips at bottom (keep as backup)
+  el.innerHTML = q.map((e, i) => {
+    const s = spielSpieler.find(sp => sp.nr == e.nr);
+    const name = s ? s.name : `Spieler ${e.nr}`;
+    const farbe = (s && s.farbe) ? s.farbe : '#E24B4A';
+    return `<div class="buz-item" style="${i===0?`background:${farbe}25;border-color:${farbe}60;color:#fff`:''}">
       <span class="buz-rang">${i+1}</span>
-      <span>${esc(e.nr || '?')}</span>
-    </div>`).join('');
+      <span>${esc(name)}</span>
+    </div>`;
+  }).join('');
+
+  // Big popup banner for first buzzer
+  const e0 = q[0];
+  const s0 = spielSpieler.find(sp => sp.nr == e0.nr);
+  const name0 = s0 ? s0.name : `Spieler ${e0.nr}`;
+  const farbe0 = (s0 && s0.farbe) ? s0.farbe : '#E24B4A';
+  const ini0 = name0.charAt(0).toUpperCase();
+
+  const r = parseInt(farbe0.slice(1,3)||'e2',16);
+  const g = parseInt(farbe0.slice(3,5)||'4b',16);
+  const b = parseInt(farbe0.slice(5,7)||'4a',16);
+
+  document.documentElement.style.setProperty('--bp-farbe', farbe0);
+  document.documentElement.style.setProperty('--bp-bg', `rgba(${r},${g},${b},0.14)`);
+  document.documentElement.style.setProperty('--bp-glow', `rgba(${r},${g},${b},0.55)`);
+
+  document.getElementById('bp-banner').style.background = `rgba(${r},${g},${b},0.14)`;
+  document.getElementById('bp-avatar').textContent = ini0;
+  document.getElementById('bp-avatar').style.background = farbe0;
+  document.getElementById('bp-name').textContent = name0;
+
+  const wq = document.getElementById('bp-wq');
+  if (q.length > 1) {
+    wq.style.display = 'flex';
+    wq.innerHTML = q.slice(1).map(e => {
+      const s = spielSpieler.find(sp => sp.nr == e.nr);
+      const wname = s ? s.name : `Spieler ${e.nr}`;
+      const wfarbe = (s && s.farbe) ? s.farbe : '#888';
+      return `<div class="bp-wq-chip" style="color:${wfarbe};border-color:${wfarbe}44">⌛ ${esc(wname)}</div>`;
+    }).join('');
+  } else {
+    wq.style.display = 'none';
+  }
+
+  popup.classList.add('sicht');
 }
 
 // ══ SCORES ══
