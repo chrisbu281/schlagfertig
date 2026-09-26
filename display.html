@@ -649,9 +649,15 @@ let ergebnisTimer = null;
 // ══ SOCKET ══
 const socket = io();
 
+let _ersterConnect = true;
 socket.on('connect', () => {
   document.getElementById('netz-dot').classList.remove('offline');
   document.getElementById('netz-text').textContent = 'Verbunden';
+  if (!_ersterConnect) {
+    // Server neu gestartet → Seite neu laden damit neue HTML-Version aktiv wird
+    location.reload();
+  }
+  _ersterConnect = false;
 });
 
 socket.on('disconnect', () => {
