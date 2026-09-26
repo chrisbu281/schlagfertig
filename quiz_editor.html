@@ -525,8 +525,8 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
           <label class="toggle"><input type="checkbox" id="wiz-warteschlange" checked><span class="toggle-slider"></span></label>
         </div>
         <div class="toggle-zeile" id="wiz-zeile-zweite-chance">
-          <div class="toggle-info"><strong>Zweite Chance</strong><span>Nach falscher Antwort kommt der Nächste dran</span></div>
-          <label class="toggle"><input type="checkbox" id="wiz-zweite-chance" checked><span class="toggle-slider"></span></label>
+          <div class="toggle-info"><strong>Zweite Chance</strong><span>Nach falscher Antwort kommt der Nächste dran</span><span id="wiz-hint-zweite-chance" style="display:none;color:#e67e22;font-size:11px;font-weight:500">⚠️ Nicht verfügbar wenn Zeitlimit aktiv</span></div>
+          <label class="toggle"><input type="checkbox" id="wiz-zweite-chance" checked onchange="wizZweiteChanceToggle(this.checked)"><span class="toggle-slider"></span></label>
         </div>
         <div class="toggle-zeile">
           <div class="toggle-info"><strong>Reaktionszeit anzeigen</strong><span>Millisekunden in der Warteschlange</span></div>
@@ -544,8 +544,8 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
           <div class="toggle-info"><strong>Wiederholungen verhindern</strong><span>Bereits gespielte Fragen nicht nochmal zeigen</span></div>
           <label class="toggle"><input type="checkbox" id="wiz-keine-wiederholung" checked><span class="toggle-slider"></span></label>
         </div>
-        <div class="toggle-zeile">
-          <div class="toggle-info"><strong>Zeitlimit pro Frage</strong><span>Buzzer sperren nach Ablauf der Zeit</span></div>
+        <div class="toggle-zeile" id="wiz-zeile-zeitlimit">
+          <div class="toggle-info"><strong>Zeitlimit pro Frage</strong><span>Buzzer sperren nach Ablauf der Zeit</span><span id="wiz-hint-zeitlimit" style="display:none;color:#e67e22;font-size:11px;font-weight:500">⚠️ Nicht verfügbar wenn Zweite Chance aktiv</span></div>
           <label class="toggle"><input type="checkbox" id="wiz-zeitlimit-aktiv" onchange="wizZeitlimitToggle(this.checked)"><span class="toggle-slider"></span></label>
         </div>
         <div id="wiz-zeitlimit-zeile" style="display:none;margin-top:8px;margin-left:4px">
@@ -1816,11 +1816,19 @@ function starteWizard() {
   setTimeout(() => {
     const el = id => document.getElementById(id);
     if(el('wiz-warteschlange')) el('wiz-warteschlange').checked = e.warteschlange_aktiv !== false;
-    if(el('wiz-zweite-chance')) el('wiz-zweite-chance').checked = e.zweite_chance !== false;
     if(el('wiz-reaktion')) el('wiz-reaktion').checked = e.reaktionszeit_anzeigen !== false;
     if(el('wiz-mischen')) el('wiz-mischen').checked = e.fragen_mischen !== false;
     if(el('wiz-p-richtig')) el('wiz-p-richtig').value = e.punkte_richtig || 10;
     if(el('wiz-p-falsch')) el('wiz-p-falsch').value = e.punkte_falsch || 5;
+    // Zeitlimit und Zweite Chance laden + gegenseitige Sperre anwenden
+    const zeitlimitAn = e.zeitlimit_aktiv === true;
+    if(el('wiz-zeitlimit-aktiv')) el('wiz-zeitlimit-aktiv').checked = zeitlimitAn;
+    wizZeitlimitToggle(zeitlimitAn);
+    if(!zeitlimitAn) {
+      const zweiteChanceAn = e.zweite_chance !== false;
+      if(el('wiz-zweite-chance')) el('wiz-zweite-chance').checked = zweiteChanceAn;
+      wizZweiteChanceToggle(zweiteChanceAn);
+    }
   }, 100);
   const anzahl = config.spieler.filter(s => s.aktiv !== false).length;
   wizardSchritt(1);
@@ -1895,6 +1903,23 @@ function wizardWeiter(schritt) {
 function wizZeitlimitToggle(an) {
   const zeile = document.getElementById('wiz-zeitlimit-zeile');
   if(zeile) zeile.style.display = an ? 'block' : 'none';
+  // Zweite Chance sperren wenn Timer aktiv (unvereinbar)
+  const zeileZC = document.getElementById('wiz-zeile-zweite-chance');
+  const cbZC = document.getElementById('wiz-zweite-chance');
+  const hintZC = document.getElementById('wiz-hint-zweite-chance');
+  if(zeileZC) { zeileZC.style.opacity = an ? '0.4' : '1'; zeileZC.style.pointerEvents = an ? 'none' : 'auto'; }
+  if(cbZC && an) cbZC.checked = false;
+  if(hintZC) hintZC.style.display = an ? 'block' : 'none';
+}
+
+function wizZweiteChanceToggle(an) {
+  // Zeitlimit sperren wenn Zweite Chance aktiv (unvereinbar)
+  const zeileZL = document.getElementById('wiz-zeile-zeitlimit');
+  const cbZL = document.getElementById('wiz-zeitlimit-aktiv');
+  const hintZL = document.getElementById('wiz-hint-zeitlimit');
+  if(zeileZL) { zeileZL.style.opacity = an ? '0.4' : '1'; zeileZL.style.pointerEvents = an ? 'none' : 'auto'; }
+  if(cbZL && an) { cbZL.checked = false; wizZeitlimitToggle(false); }
+  if(hintZL) hintZL.style.display = an ? 'block' : 'none';
 }
 
 function wizardZurueck(schritt) {
