@@ -869,6 +869,8 @@ async function lade_status() {
 }
 
 // ══ BUZZER ══
+let _buzzerPopupTimer = null;
+
 function zeige_buzzer(q) {
   const el = document.getElementById('buz-reihe');
   const popup = document.getElementById('buzzer-popup');
@@ -924,6 +926,10 @@ function zeige_buzzer(q) {
   }
 
   popup.classList.add('sicht');
+
+  // Nach 3 Sekunden Popup wegschiebt – kleine Chips bleiben unten sichtbar
+  clearTimeout(_buzzerPopupTimer);
+  _buzzerPopupTimer = setTimeout(() => popup.classList.remove('sicht'), 3000);
 }
 
 // ══ SCORES ══
