@@ -81,9 +81,11 @@ def _konvertiere_frage(f):
     richtig_buchstabe = (f.get("richtige_antwort") or "").upper()
     richtig_idx = {"A": 0, "B": 1, "C": 2, "D": 3}.get(richtig_buchstabe)
 
-    # modus aus modi-Array ableiten (["mc"] → "mc", sonst "frei")
+    # modus aus modi-Array ableiten; Supabase nutzt "multiple_choice", Pi intern "mc"
+    # Fallback: wenn antwort_a vorhanden → ist MC, egal was modi sagt
     modi = f.get("modi") or []
-    modus = "mc" if "mc" in modi else "frei"
+    ist_mc = "mc" in modi or "multiple_choice" in modi or len(mc_liste) >= 2
+    modus = "mc" if ist_mc else "frei"
 
     return {
         "_gewaehlt": False,
