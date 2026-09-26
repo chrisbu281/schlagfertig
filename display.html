@@ -547,7 +547,7 @@ html,body{
   </div>
 
   <div class="idle-footer">
-    <div class="footer-left" id="system-info">–</div>
+    <div class="footer-left" id="system-info">– &nbsp;·&nbsp; <span style="opacity:.35">v0.9.3</span></div>
     <div class="footer-right">
       <button class="footer-btn" onclick="window.location='/setup'">⚙ Einstellungen</button>
       <button class="footer-btn primary" onclick="window.location='/moderator'">Moderator-Panel →</button>
@@ -679,7 +679,7 @@ socket.on('connect', () => {
   document.getElementById('netz-text').textContent = 'Verbunden';
   if (!_ersterConnect) {
     // Server neu gestartet → Seite neu laden damit neue HTML-Version aktiv wird
-    location.reload();
+    location.href = '/display?v=' + Date.now();
   }
   _ersterConnect = false;
 });
