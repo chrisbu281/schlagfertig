@@ -398,7 +398,9 @@ def setup_abschliessen():
 
 @app.route("/display")
 def display_page():
-    return send_from_directory(BASIS, "display.html")
+    resp = send_from_directory(BASIS, "display.html")
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    return resp
 
 @app.route("/qr")
 def qr_seite():

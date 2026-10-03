@@ -419,6 +419,7 @@ html,body{
 #buzzer-popup{
   position:fixed;top:0;left:0;right:0;z-index:50;
   transform:translateY(-110%);
+  transition:transform .45s cubic-bezier(.34,1.56,.64,1);
   pointer-events:none;
 }
 @keyframes buzzer-popup-anim{
@@ -873,12 +874,26 @@ async function lade_status() {
 }
 
 // ══ BUZZER ══
+let _popupNr = null;
+let _popupTimeout = null;
+
+function _verstecke_buzzer_popup() {
+  document.getElementById('buzzer-popup').style.transform = 'translateY(-110%)';
+  if (_popupTimeout) { clearTimeout(_popupTimeout); _popupTimeout = null; }
+}
+
 function zeige_buzzer(q) {
   const el = document.getElementById('buz-reihe');
+  const popup = document.getElementById('buzzer-popup');
+
   if (!q || !q.length) {
     el.innerHTML = '<div class="buz-leer">Buzzer bereit…</div>';
+    _verstecke_buzzer_popup();
+    _popupNr = null;
     return;
   }
+
+  // Kleine Chips unten
   el.innerHTML = q.map((e, i) => {
     const s = spielSpieler.find(sp => sp.nr == e.nr);
     const name = s ? s.name : `Spieler ${e.nr}`;
@@ -888,57 +903,48 @@ function zeige_buzzer(q) {
       <span>${esc(name)}</span>
     </div>`;
   }).join('');
-}
 
-function zeige_buzzer_popup(nr, warteschlange) {
-  const popup = document.getElementById('buzzer-popup');
-  const s0 = spielSpieler.find(sp => sp.nr == nr);
-  const name0 = s0 ? s0.name : `Spieler ${nr}`;
-  const farbe0 = (s0 && s0.farbe) ? s0.farbe : '#E24B4A';
-  const ini0 = name0.charAt(0).toUpperCase();
-  const r = parseInt(farbe0.slice(1,3)||'e2',16);
-  const g = parseInt(farbe0.slice(3,5)||'4b',16);
-  const b = parseInt(farbe0.slice(5,7)||'4a',16);
+  // Großes Popup nur zeigen wenn neuer Spieler (und nicht schon versteckt für diesen Spieler)
+  const e0 = q[0];
+  if (e0.nr != _popupNr) {
+    _popupNr = e0.nr;
+    const s0 = spielSpieler.find(sp => sp.nr == e0.nr);
+    const name0 = s0 ? s0.name : `Spieler ${e0.nr}`;
+    const farbe0 = (s0 && s0.farbe) ? s0.farbe : '#E24B4A';
+    const r = parseInt(farbe0.slice(1,3)||'e2',16);
+    const g = parseInt(farbe0.slice(3,5)||'4b',16);
+    const b = parseInt(farbe0.slice(5,7)||'4a',16);
 
-  document.documentElement.style.setProperty('--bp-farbe', farbe0);
-  document.documentElement.style.setProperty('--bp-bg', `rgba(${r},${g},${b},0.14)`);
-  document.documentElement.style.setProperty('--bp-glow', `rgba(${r},${g},${b},0.55)`);
-  document.getElementById('bp-banner').style.background = `rgba(${r},${g},${b},0.14)`;
-  document.getElementById('bp-avatar').textContent = ini0;
-  document.getElementById('bp-avatar').style.background = farbe0;
-  document.getElementById('bp-name').textContent = name0;
+    document.documentElement.style.setProperty('--bp-farbe', farbe0);
+    document.documentElement.style.setProperty('--bp-bg', `rgba(${r},${g},${b},0.14)`);
+    document.documentElement.style.setProperty('--bp-glow', `rgba(${r},${g},${b},0.55)`);
+    document.getElementById('bp-banner').style.background = `rgba(${r},${g},${b},0.14)`;
+    document.getElementById('bp-avatar').textContent = name0.charAt(0).toUpperCase();
+    document.getElementById('bp-avatar').style.background = farbe0;
+    document.getElementById('bp-name').textContent = name0;
 
-  const wq = document.getElementById('bp-wq');
-  const rest = (warteschlange || []).filter(e => e.nr != nr);
-  if (rest.length) {
-    wq.style.display = 'flex';
-    wq.innerHTML = rest.map(e => {
-      const s = spielSpieler.find(sp => sp.nr == e.nr);
-      const wname = s ? s.name : `Spieler ${e.nr}`;
-      const wfarbe = (s && s.farbe) ? s.farbe : '#888';
-      return `<div class="bp-wq-chip" style="color:${wfarbe};border-color:${wfarbe}44">⌛ ${esc(wname)}</div>`;
-    }).join('');
-  } else {
-    wq.style.display = 'none';
+    const wq = document.getElementById('bp-wq');
+    if (q.length > 1) {
+      wq.style.display = 'flex';
+      wq.innerHTML = q.slice(1).map(e => {
+        const s = spielSpieler.find(sp => sp.nr == e.nr);
+        const wname = s ? s.name : `Spieler ${e.nr}`;
+        const wfarbe = (s && s.farbe) ? s.farbe : '#888';
+        return `<div class="bp-wq-chip" style="color:${wfarbe};border-color:${wfarbe}44">⌛ ${esc(wname)}</div>`;
+      }).join('');
+    } else {
+      wq.style.display = 'none';
+    }
+
+    // Popup einblenden + client-seitiger Fallback-Timer (3.5s)
+    popup.style.transform = 'translateY(0)';
+    if (_popupTimeout) clearTimeout(_popupTimeout);
+    _popupTimeout = setTimeout(_verstecke_buzzer_popup, 3500);
   }
-
-  popup.style.animation = 'none';
-  popup.offsetWidth;
-  popup.style.animation = 'buzzer-popup-anim 3.5s ease forwards';
 }
 
-function verstecke_buzzer_popup() {
-  const popup = document.getElementById('buzzer-popup');
-  popup.style.animation = 'none';
-  popup.style.transform = 'translateY(-110%)';
-}
-
-// Server-gesteuerte Popup-Events
-socket.on('buzzer_popup_ausblenden', () => verstecke_buzzer_popup());
-socket.on('buzzer_popup_zeigen', d => {
-  if (d.warteschlange) zeige_buzzer(d.warteschlange);
-  zeige_buzzer_popup(d.nr, d.warteschlange);
-});
+// Server schickt dieses Event nach 3s → Popup ausblenden
+socket.on('buzzer_popup_ausblenden', _verstecke_buzzer_popup);
 
 // ══ SCORES ══
 function aktualisiere_header_scores() {
