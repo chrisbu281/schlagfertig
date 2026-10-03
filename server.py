@@ -399,8 +399,15 @@ def setup_abschliessen():
 
 @app.route("/display")
 def display_page():
+    import time as _t
+    v = request.args.get('v')
+    if not v:
+        # Redirect to unique timestamped URL so Chromium cannot serve cached version
+        return redirect(f'/display?v={int(_t.time())}', code=302)
     resp = send_from_directory(BASIS, "display.html")
-    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '-1'
     return resp
 
 @app.route("/qr")
