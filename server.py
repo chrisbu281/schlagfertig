@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify, send_from_directory, redirect, Response
 from flask_socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
-import json, os, csv, io, subprocess, urllib.request, urllib.parse, sys
+import json, os, csv, io, subprocess, urllib.request, urllib.parse, sys, threading
 try:
     import requests as _requests
 except ImportError:
@@ -187,6 +187,8 @@ def check_admin():
     if not ist_admin(cfg.get("email", "")):
         return jsonify({"error": "Zugriff verweigert – keine Adminrechte"}), 403
     return None
+
+_popup_timer = None  # server-side 3s timer for buzzer popup
 
 spiel_state = {
     "modus": "warten",
@@ -781,6 +783,7 @@ def on_naechste_frage(data):
     spiel_state['frage_idx'] = data.get('idx', 0)
     spiel_state['warteschlange'] = []
     spiel_state['mc_gewaehlt'] = None
+    _cancel_popup_timer()
     if data.get('aktive_spieler'):
         spiel_state['aktive_spieler'] = data.get('aktive_spieler')
     spiel_state['zeitlimit_aktiv'] = data.get('zeitlimit_aktiv', spiel_state.get('zeitlimit_aktiv', False))
@@ -800,6 +803,7 @@ def on_naechste_frage(data):
 def on_richtig(data):
     spiel_state['punkte'] = _punkte_zu_nr(data.get('punkte', {}))
     spiel_state['warteschlange'] = []
+    _cancel_popup_timer()
     socketio.emit('state_update', spiel_state)
     socketio.emit('zeige_ergebnis', {'richtig': True, 'delta': data.get('delta', 10)})
 
@@ -808,6 +812,10 @@ def on_falsch(data):
     spiel_state['punkte'] = _punkte_zu_nr(data.get('punkte', {}))
     if spiel_state['warteschlange']:
         spiel_state['warteschlange'].pop(0)
+    _cancel_popup_timer()
+    # Nächsten Spieler in der Warteschlange anzeigen
+    if spiel_state['warteschlange']:
+        _starte_popup_timer()
     socketio.emit('state_update', spiel_state)
     socketio.emit('zeige_ergebnis', {
         'richtig': False,
@@ -830,9 +838,13 @@ def on_mc_aufloesen(data):
     richtig = data.get('richtig', False)
     if richtig:
         spiel_state['warteschlange'] = []
+        _cancel_popup_timer()
     else:
         if spiel_state['warteschlange']:
             spiel_state['warteschlange'].pop(0)
+        _cancel_popup_timer()
+        if spiel_state['warteschlange']:
+            _starte_popup_timer()
     socketio.emit('state_update', spiel_state)
     socketio.emit('zeige_mc_aufloesen', {
         'gewaehlt': data.get('gewaehlt'),
@@ -847,6 +859,7 @@ def on_mc_aufloesen(data):
 @socketio.on('mod_freigeben')
 def on_freigeben():
     spiel_state['warteschlange'] = []
+    _cancel_popup_timer()
     socketio.emit('state_update', spiel_state)
     socketio.emit('buzzer_freigeben')
 
@@ -880,21 +893,43 @@ def on_sieger(data):
 def on_stoppen():
     spiel_state['modus'] = 'warten'
     spiel_state['warteschlange'] = []
+    _cancel_popup_timer()
     schreibe_state("stoppen")
     socketio.emit('state_update', spiel_state)
+
+def _starte_popup_timer():
+    """Startet einen 3-Sekunden-Server-Timer der das Popup ausblendet."""
+    global _popup_timer
+    if _popup_timer is not None:
+        _popup_timer.cancel()
+    _popup_timer = threading.Timer(3.0, lambda: socketio.emit('buzzer_popup_ausblenden'))
+    _popup_timer.daemon = True
+    _popup_timer.start()
+
+def _cancel_popup_timer():
+    """Bricht den laufenden Popup-Timer ab und blendet das Popup sofort aus."""
+    global _popup_timer
+    if _popup_timer is not None:
+        _popup_timer.cancel()
+        _popup_timer = None
+    socketio.emit('buzzer_popup_ausblenden')
 
 @socketio.on('buzzer_gedrueckt')
 def on_buzzer(data):
     import time as _time
     nr = data.get('nr')
     eintrag = {'nr': nr, 'ms': data.get('ms')}
-    if not any(e['nr'] == eintrag['nr'] for e in spiel_state['warteschlange']):
+    neu = not any(e['nr'] == eintrag['nr'] for e in spiel_state['warteschlange'])
+    if neu:
         spiel_state['warteschlange'].append(eintrag)
     # Letzten Druckzeitpunkt speichern (für Buzzer-Status)
     if nr is not None:
         buzzer_zuletzt[nr] = _time.time()
         socketio.emit('buzzer_status_update', {'nr': nr, 'ts': buzzer_zuletzt[nr]})
     socketio.emit('state_update', spiel_state)
+    # Popup nur für den ersten Spieler in der Warteschlange anzeigen
+    if neu and len(spiel_state['warteschlange']) == 1:
+        _starte_popup_timer()
 
 @socketio.on('test_start')
 def on_test_start():

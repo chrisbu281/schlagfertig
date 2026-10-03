@@ -873,21 +873,12 @@ async function lade_status() {
 }
 
 // ══ BUZZER ══
-let _buzzerPopupNr = null; // welcher Spieler aktuell im Popup gezeigt wird
-
 function zeige_buzzer(q) {
   const el = document.getElementById('buz-reihe');
-  const popup = document.getElementById('buzzer-popup');
-
   if (!q || !q.length) {
     el.innerHTML = '<div class="buz-leer">Buzzer bereit…</div>';
-    popup.style.animation = 'none';
-    popup.style.transform = 'translateY(-110%)';
-    _buzzerPopupNr = null;
     return;
   }
-
-  // Small chips at bottom
   el.innerHTML = q.map((e, i) => {
     const s = spielSpieler.find(sp => sp.nr == e.nr);
     const name = s ? s.name : `Spieler ${e.nr}`;
@@ -897,14 +888,14 @@ function zeige_buzzer(q) {
       <span>${esc(name)}</span>
     </div>`;
   }).join('');
+}
 
-  // Big popup banner for first buzzer
-  const e0 = q[0];
-  const s0 = spielSpieler.find(sp => sp.nr == e0.nr);
-  const name0 = s0 ? s0.name : `Spieler ${e0.nr}`;
+function zeige_buzzer_popup(nr, warteschlange) {
+  const popup = document.getElementById('buzzer-popup');
+  const s0 = spielSpieler.find(sp => sp.nr == nr);
+  const name0 = s0 ? s0.name : `Spieler ${nr}`;
   const farbe0 = (s0 && s0.farbe) ? s0.farbe : '#E24B4A';
   const ini0 = name0.charAt(0).toUpperCase();
-
   const r = parseInt(farbe0.slice(1,3)||'e2',16);
   const g = parseInt(farbe0.slice(3,5)||'4b',16);
   const b = parseInt(farbe0.slice(5,7)||'4a',16);
@@ -912,16 +903,16 @@ function zeige_buzzer(q) {
   document.documentElement.style.setProperty('--bp-farbe', farbe0);
   document.documentElement.style.setProperty('--bp-bg', `rgba(${r},${g},${b},0.14)`);
   document.documentElement.style.setProperty('--bp-glow', `rgba(${r},${g},${b},0.55)`);
-
   document.getElementById('bp-banner').style.background = `rgba(${r},${g},${b},0.14)`;
   document.getElementById('bp-avatar').textContent = ini0;
   document.getElementById('bp-avatar').style.background = farbe0;
   document.getElementById('bp-name').textContent = name0;
 
   const wq = document.getElementById('bp-wq');
-  if (q.length > 1) {
+  const rest = (warteschlange || []).filter(e => e.nr != nr);
+  if (rest.length) {
     wq.style.display = 'flex';
-    wq.innerHTML = q.slice(1).map(e => {
+    wq.innerHTML = rest.map(e => {
       const s = spielSpieler.find(sp => sp.nr == e.nr);
       const wname = s ? s.name : `Spieler ${e.nr}`;
       const wfarbe = (s && s.farbe) ? s.farbe : '#888';
@@ -931,15 +922,23 @@ function zeige_buzzer(q) {
     wq.style.display = 'none';
   }
 
-  // Popup nur zeigen wenn neuer Spieler buzzert (nicht bei jedem state_update)
-  if (e0.nr != _buzzerPopupNr) {
-    _buzzerPopupNr = e0.nr;
-    // CSS-Animation für zuverlässiges Auto-Hide nach 3.5s
-    popup.style.animation = 'none';
-    popup.offsetWidth; // reflow erzwingen damit Animation neu startet
-    popup.style.animation = 'buzzer-popup-anim 3.5s ease forwards';
-  }
+  popup.style.animation = 'none';
+  popup.offsetWidth;
+  popup.style.animation = 'buzzer-popup-anim 3.5s ease forwards';
 }
+
+function verstecke_buzzer_popup() {
+  const popup = document.getElementById('buzzer-popup');
+  popup.style.animation = 'none';
+  popup.style.transform = 'translateY(-110%)';
+}
+
+// Server-gesteuerte Popup-Events
+socket.on('buzzer_popup_ausblenden', () => verstecke_buzzer_popup());
+socket.on('buzzer_popup_zeigen', d => {
+  if (d.warteschlange) zeige_buzzer(d.warteschlange);
+  zeige_buzzer_popup(d.nr, d.warteschlange);
+});
 
 // ══ SCORES ══
 function aktualisiere_header_scores() {
