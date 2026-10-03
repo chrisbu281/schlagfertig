@@ -36,14 +36,14 @@ html,body{height:100%;overflow:hidden;background:#08080f;color:#fff;
   border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;gap:24px;
   background:rgba(0,0,0,.2);
 }
-.fh-logo{font-size:15px;font-weight:900;color:rgba(255,255,255,.5);letter-spacing:-.3px}
+.fh-logo{font-size:15px;font-weight:900;color:rgba(255,255,255,.7);letter-spacing:-.3px}
 .fh-logo .ak{color:#E24B4A}
 .fh-nr{font-size:13px;font-weight:700;letter-spacing:1.5px;
-  color:rgba(255,255,255,.25);text-transform:uppercase}
+  color:rgba(255,255,255,.55);text-transform:uppercase}
 .fh-scores{margin-left:auto;display:flex;gap:24px;align-items:center}
 .fhs{display:flex;align-items:center;gap:8px}
 .fhs-dot{width:8px;height:8px;border-radius:50%}
-.fhs-name{font-size:13px;font-weight:600;color:rgba(255,255,255,.45)}
+.fhs-name{font-size:13px;font-weight:600;color:rgba(255,255,255,.8)}
 .fhs-pts{font-size:19px;font-weight:900;color:#fff}
 
 .fm{
@@ -94,7 +94,7 @@ html,body{height:100%;overflow:hidden;background:#08080f;color:#fff;
   border-top:1px solid rgba(255,255,255,.05);min-height:68px;
   align-items:center;background:rgba(0,0,0,.25);flex-wrap:wrap;
 }
-.bl-leer{color:rgba(255,255,255,.18);font-size:14px}
+.bl-leer{color:rgba(255,255,255,.4);font-size:14px}
 .be{
   display:flex;align-items:center;gap:8px;
   padding:9px 18px;border-radius:30px;font-weight:700;
@@ -102,14 +102,14 @@ html,body{height:100%;overflow:hidden;background:#08080f;color:#fff;
 }
 .be:first-child{
   font-size:17px;
-  background:rgba(226,75,74,.18);border:1.5px solid rgba(226,75,74,.4);
+  background:rgba(226,75,74,.25);border:1.5px solid rgba(226,75,74,.6);color:#fff;
 }
 .be:not(:first-child){
   font-size:14px;
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
-  color:rgba(255,255,255,.4);
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.65);
 }
-.be-ms{font-size:11px;color:rgba(255,255,255,.22);font-variant-numeric:tabular-nums}
+.be-ms{font-size:11px;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums}
 @keyframes b-rein{
   from{transform:scale(.7) translateY(8px);opacity:0}
   to{transform:none;opacity:1}
@@ -464,7 +464,8 @@ function aktualisiere_scores(punkte) {
   const farben = ['#E24B4A','#4361ee','#2d8a4e','#f59e0b','#8b5cf6','#06b6d4'];
   el.innerHTML = spieler.slice(0, 6).map((s, i) => {
     const name = typeof s === 'string' ? s : s.name;
-    const pts  = punkte[name] ?? 0;
+    const nr   = typeof s === 'object' ? String(s.nr ?? '') : '';
+    const pts  = (nr && punkte[nr] != null) ? punkte[nr] : (punkte[name] ?? 0);
     const col  = (typeof s === 'object' && s.farbe) || farben[i % farben.length];
     return `<div class="fhs">
       <div class="fhs-dot" style="background:${esc(col)}"></div>
