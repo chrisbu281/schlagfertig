@@ -1721,11 +1721,11 @@ async function pruefeUpdate() {
     }
     if (d.update_verfuegbar) {
       box.style.background = '#fffbe6'; box.style.border = '1px solid #f0c040'; box.style.color = '#7a5800';
-      box.innerHTML = `⬆ Neue Version: <strong>${d.neu}</strong>${d.nachricht ? ' · ' + d.nachricht : ''}`;
+      box.innerHTML = `⬆ Neue Version verfügbar: <strong>${d.version_neu||d.neu}</strong>${d.nachricht ? ' · ' + d.nachricht : ''}`;
       btnI.style.display = 'inline-flex';
     } else {
       box.style.background = '#f0fff4'; box.style.border = '1px solid #6ee7b7'; box.style.color = '#065f46';
-      box.innerHTML = `✓ Aktuell · Version <strong>${d.aktuell}</strong>`;
+      box.innerHTML = `✓ Du hast die aktuelle Version: <strong>${d.version_aktuell||d.aktuell}</strong>`;
     }
   } catch(e) {
     btnC.disabled = false; btnC.innerHTML = '🔍 <span>Update prüfen</span>';

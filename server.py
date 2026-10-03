@@ -1102,11 +1102,16 @@ def system_info():
         temp = subprocess.check_output("vcgencmd measure_temp", shell=True).decode().strip().replace("temp=","")
     except: temp = "Unbekannt"
     try:
+        version_datei = os.path.join(BASIS, "VERSION")
+        version = open(version_datei).read().strip() if os.path.exists(version_datei) else "?"
+    except: version = "?"
+    try:
         commit = subprocess.check_output(
-            "git -C " + BASIS + " log -1 --format='%h %s' 2>/dev/null",
+            "git -C " + BASIS + " rev-parse --short HEAD 2>/dev/null",
             shell=True).decode().strip()
-    except: commit = "unbekannt"
-    return jsonify({"ip":ip,"wlan":wlan,"hostname":hostname,"speicher":speicher,"temperatur":temp,"version":commit})
+    except: commit = ""
+    version_str = f"v{version}" + (f" ({commit})" if commit else "")
+    return jsonify({"ip":ip,"wlan":wlan,"hostname":hostname,"speicher":speicher,"temperatur":temp,"version":version_str})
 
 @app.route("/api/system/passwort", methods=["POST"])
 def system_passwort():
@@ -1159,9 +1164,23 @@ def system_update_check():
         msg = subprocess.check_output(
             ["git", "-C", BASIS, "log", "-1", "--format=%s", "origin/main"], timeout=5
         ).decode().strip()
+        # Versionsnummer aus der neuen Version lesen
+        try:
+            neue_version = subprocess.check_output(
+                ["git", "-C", BASIS, "show", f"origin/main:VERSION"], timeout=5
+            ).decode().strip()
+        except Exception:
+            neue_version = ""
+        try:
+            version_datei = os.path.join(BASIS, "VERSION")
+            akt_version = open(version_datei).read().strip() if os.path.exists(version_datei) else ""
+        except Exception:
+            akt_version = ""
         return jsonify({
             "aktuell": aktuell,
             "neu": neu,
+            "version_aktuell": f"v{akt_version}" if akt_version else aktuell,
+            "version_neu": f"v{neue_version}" if neue_version else neu,
             "update_verfuegbar": aktuell != neu,
             "nachricht": msg if aktuell != neu else "",
         })
