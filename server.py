@@ -572,6 +572,7 @@ def cloud_sync():
         with open(KONFIG, "w", encoding="utf-8") as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
         schreibe_cloud_config({"modus": "gast"})
+        threading.Thread(target=_sync_100leute_stille, daemon=True).start()
         return jsonify({"status": "ok", "name": "Gast", "anzahl": len(fragen)})
     except urllib.error.URLError as e:
         return jsonify({"error": f"Supabase nicht erreichbar: {e.reason}"}), 503
@@ -585,6 +586,7 @@ def cloud_sync_refresh():
         fragen = lade_supabase_fragen()
         config = lese_oder_erstelle_config()
         config["fragen"] = fragen
+        threading.Thread(target=_sync_100leute_stille, daemon=True).start()
         with open(KONFIG, "w", encoding="utf-8") as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
         return jsonify({"status": "ok", "anzahl": len(fragen)})
@@ -600,6 +602,7 @@ def cloud_gast():
         fragen = lade_supabase_fragen()
         config = lese_oder_erstelle_config()
         config["fragen"] = fragen
+        threading.Thread(target=_sync_100leute_stille, daemon=True).start()
         with open(KONFIG, "w", encoding="utf-8") as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
         schreibe_cloud_config({"modus": "gast"})
@@ -665,6 +668,7 @@ def cloud_auto_refresh():
     try:
         roh    = _sb_fragen(at)
         fragen = _speichere_fragen_lokal(roh)
+        threading.Thread(target=_sync_100leute_stille, daemon=True).start()
         return jsonify({"status": "ok", "name": name, "email": email, "anzahl": len(fragen),
                         "rolle": "admin" if ist_admin(email) else "user"})
     except urllib.error.HTTPError as e:
@@ -681,6 +685,7 @@ def cloud_auto_refresh():
         cfg["refresh_token"] = new_rt
         cfg["rolle"] = "admin" if ist_admin(email) else "user"
         schreibe_cloud_config(cfg)
+        threading.Thread(target=_sync_100leute_stille, daemon=True).start()
         return jsonify({"status": "ok", "name": name, "email": email, "anzahl": len(fragen),
                         "rolle": cfg["rolle"]})
     except Exception as e:
@@ -1264,6 +1269,21 @@ SUPABASE_100LEUTE_CSV  = f"{SUPABASE_BASE}/storage/v1/object/public/sync/fragen_
 SUPABASE_FASTFIVE_CSV  = f"{SUPABASE_BASE}/storage/v1/object/public/sync/fragen_fastfive.csv"
 CSV_100LEUTE  = os.path.join(BASIS, "fragen_100leute.csv")
 CSV_FASTFIVE  = os.path.join(BASIS, "fragen_fastfive.csv")
+
+def _sync_100leute_stille():
+    """Lädt 100-Leute-Fragen aus Supabase – best effort, keine Fehler nach außen."""
+    for url, ziel in [(SUPABASE_100LEUTE_CSV, CSV_100LEUTE),
+                      (SUPABASE_FASTFIVE_CSV,  CSV_FASTFIVE)]:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Schlagfertig/1.0"})
+            with urllib.request.urlopen(req, timeout=8) as r:
+                content = r.read().decode("utf-8-sig")
+            rows = list(csv.reader(io.StringIO(content)))
+            if len(rows) >= 2:
+                with open(ziel, "w", encoding="utf-8", newline="") as f:
+                    f.write(content)
+        except Exception:
+            pass
 
 @app.route("/api/100leute/fragen-info")
 def hundert_fragen_info():
