@@ -55,7 +55,7 @@ PAKETE=(
   plymouth
   fonts-noto-core fonts-noto-extra
   alsa-utils
-  libgpiod2 python3-pygame
+  python3-pygame
 )
 
 # Chromium: Name unterscheidet sich je nach OS-Version
@@ -66,6 +66,14 @@ else
 fi
 
 apt-get install -y -qq "${PAKETE[@]}"
+
+# libgpiod: Paketname je nach Debian-Version unterschiedlich
+if apt-cache show libgpiod2 &>/dev/null; then
+  apt-get install -y -qq libgpiod2
+elif apt-cache show libgpiod3 &>/dev/null; then
+  apt-get install -y -qq libgpiod3
+fi
+
 ok "Pakete installiert"
 
 # Chromium-Binary ermitteln
