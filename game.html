@@ -180,6 +180,25 @@ html,body{height:100%;overflow:hidden;background:#08080f;color:#fff;
 #meme-popup{background:rgba(0,0,0,.82)}
 @keyframes meme-pop{from{transform:scale(.85)}to{transform:scale(1)}}
 
+/* ═══════════════ BUZZER POPUP ═══════════════ */
+#buzzer-popup{
+  position:fixed;inset:0;z-index:250;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .25s;
+}
+#buzzer-popup.zeig{opacity:1}
+.bp-banner{
+  background:linear-gradient(135deg,rgba(180,30,30,.96),rgba(226,75,74,.92));
+  border:2px solid rgba(255,255,255,.22);border-radius:28px;
+  padding:40px 72px;text-align:center;
+  box-shadow:0 24px 80px rgba(226,75,74,.45);
+}
+#buzzer-popup.zeig .bp-banner{animation:bp-pop .35s cubic-bezier(.34,1.56,.64,1)}
+.bp-name{font-size:80px;font-weight:900;color:#fff;line-height:1.1;word-break:break-word}
+.bp-label{font-size:17px;font-weight:700;letter-spacing:2.5px;
+  color:rgba(255,255,255,.6);text-transform:uppercase;margin-top:10px}
+@keyframes bp-pop{from{transform:scale(.65)}to{transform:scale(1)}}
+
 /* ═══════════════ SIEGER ═══════════════ */
 #s-sieger{
   align-items:center;justify-content:center;text-align:center;
@@ -258,6 +277,14 @@ html,body{height:100%;overflow:hidden;background:#08080f;color:#fff;
 <!-- ══ MEME POPUP ══ -->
 <div id="meme-popup"><img id="meme-popup-img" alt=""></div>
 
+<!-- ══ BUZZER POPUP ══ -->
+<div id="buzzer-popup">
+  <div class="bp-banner">
+    <div class="bp-name"  id="bp-name">–</div>
+    <div class="bp-label">hat gebuzzert!</div>
+  </div>
+</div>
+
 <!-- ══ FLASH OVERLAY ══ -->
 <div id="flash">
   <div class="f-icon"  id="f-icon">✓</div>
@@ -282,6 +309,8 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 let zustand = {modus:'warten',punkte:{},warteschlange:[],spielmodus:'frei'};
 let aktiveSpiler = [];
 let flashTimer   = null;
+let _popupNr     = null;
+let _popupTimer  = null;
 
 // ── SOCKET ──
 const socket = io();
@@ -323,7 +352,8 @@ socket.on('zeige_mc_aufloesen', d => {
   flash(d.richtig, d.richtig ? `+${d.delta} Punkt${d.delta!==1?'e':''}` : '');
 });
 
-socket.on('buzzer_freigeben', () => aktualisiere_buzzer([]));
+socket.on('buzzer_freigeben', () => { _verstecke_buzzer_popup(); aktualisiere_buzzer([]); });
+socket.on('buzzer_popup_ausblenden', _verstecke_buzzer_popup);
 
 socket.on('zeige_punktestand', d => {
   const el = document.getElementById('po');
@@ -392,10 +422,29 @@ function zeige_frage(frage, idx, gesamt, modus) {
   aktualisiere_buzzer([]);
 }
 
+function _verstecke_buzzer_popup() {
+  clearTimeout(_popupTimer);
+  _popupTimer = null;
+  document.getElementById('buzzer-popup').classList.remove('zeig');
+}
+
+function _zeige_buzzer_popup(nr) {
+  if (_popupNr === nr) return;
+  _popupNr = nr;
+  const sp = aktiveSpiler.find(s => String(s.nr || s.name) === String(nr))
+          || aktiveSpiler.find(s => String(s.name) === String(nr));
+  const name = sp ? sp.name : String(nr);
+  document.getElementById('bp-name').textContent = name;
+  clearTimeout(_popupTimer);
+  document.getElementById('buzzer-popup').classList.add('zeig');
+  _popupTimer = setTimeout(_verstecke_buzzer_popup, 4000);
+}
+
 function aktualisiere_buzzer(q) {
   const bl = document.getElementById('buzzer-leiste');
   if (!q || !q.length) {
     bl.innerHTML = '<div class="bl-leer">Noch kein Buzzer gedrückt</div>';
+    _popupNr = null;
     return;
   }
   bl.innerHTML = q.map((e, i) =>
@@ -404,6 +453,7 @@ function aktualisiere_buzzer(q) {
       ${e.ms ? `<span class="be-ms">(${e.ms}ms)</span>` : ''}
     </div>`
   ).join('');
+  _zeige_buzzer_popup(q[0].nr);
 }
 
 function aktualisiere_scores(punkte) {

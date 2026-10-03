@@ -416,7 +416,15 @@ def qr_seite():
 
 @app.route("/game")
 def game_page():
-    return send_from_directory(BASIS, "game.html")
+    import time as _t
+    v = request.args.get('v')
+    if not v:
+        return redirect(f'/game?v={int(_t.time())}', code=302)
+    resp = send_from_directory(BASIS, "game.html")
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '-1'
+    return resp
 
 @app.route("/moderator")
 def moderator_page():
