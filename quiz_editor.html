@@ -399,6 +399,8 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 .start-btn.hundert:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(245,197,24,.5); }
 .start-btn.fragen-btn { background: linear-gradient(135deg, #2d8a4e 0%, #1e5c31 100%); color: #fff; box-shadow: 0 8px 24px rgba(45,138,78,.3); }
 .start-btn.fragen-btn:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(45,138,78,.5); }
+.start-btn.store { background: linear-gradient(135deg, #7c3aed 0%, #4f1d96 100%); color: #fff; box-shadow: 0 8px 24px rgba(124,58,237,.3); }
+.start-btn.store:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(124,58,237,.5); }
 </style>
 <script src="/sio.js"></script>
 </head>
@@ -438,6 +440,11 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
       <button class="start-btn fragen" id="btn-konto" onclick="zeigeKontoModal()">
         <span class="icon">☁️</span>
         Konto
+      </button>
+      <button class="start-btn store" onclick="location.href='/appstore'">
+        <span class="icon">🎮</span>
+        <span style="font-size:15px">Weitere Spiele</span>
+        <span style="font-size:11px;opacity:.8">App Store</span>
       </button>
     </div>
   </div>
