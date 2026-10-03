@@ -156,6 +156,12 @@ systemctl enable schlagfertig.service
 systemctl enable schlagfertig-buzzer.service
 ok "Dienste aktiviert (schlagfertig + schlagfertig-buzzer)"
 
+# sudo-Rechte für Server-interne Befehle (Update, Neustart, Shutdown)
+echo "$PI_USER ALL=(ALL) NOPASSWD: /bin/systemctl restart schlagfertig, /sbin/reboot, /sbin/shutdown, /sbin/halt" \
+  > /etc/sudoers.d/schlagfertig
+chmod 440 /etc/sudoers.d/schlagfertig
+ok "sudo-Rechte konfiguriert"
+
 # ══════════════════════════════════════════════════════════════
 step "6/8" "Plymouth-Splashscreen erstellen"
 # ══════════════════════════════════════════════════════════════

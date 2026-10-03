@@ -1143,6 +1143,54 @@ def system_reboot():
     threading.Thread(target=do_reboot, daemon=True).start()
     return jsonify({"status": "ok"})
 
+@app.route("/api/system/update-check")
+def system_update_check():
+    try:
+        subprocess.run(
+            ["git", "-C", BASIS, "fetch", "origin", "main"],
+            timeout=15, capture_output=True
+        )
+        aktuell = subprocess.check_output(
+            ["git", "-C", BASIS, "rev-parse", "--short", "HEAD"], timeout=5
+        ).decode().strip()
+        neu = subprocess.check_output(
+            ["git", "-C", BASIS, "rev-parse", "--short", "origin/main"], timeout=5
+        ).decode().strip()
+        msg = subprocess.check_output(
+            ["git", "-C", BASIS, "log", "-1", "--format=%s", "origin/main"], timeout=5
+        ).decode().strip()
+        return jsonify({
+            "aktuell": aktuell,
+            "neu": neu,
+            "update_verfuegbar": aktuell != neu,
+            "nachricht": msg if aktuell != neu else "",
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/system/update", methods=["POST"])
+def system_update():
+    def do_update():
+        import time
+        try:
+            subprocess.run(["git", "-C", BASIS, "pull", "origin", "main"], timeout=60, capture_output=True)
+            venv_pip = os.path.join(BASIS, "env", "bin", "pip")
+            if os.path.exists(venv_pip):
+                subprocess.run(
+                    [venv_pip, "install", "-q", "-r", os.path.join(BASIS, "requirements.txt")],
+                    timeout=120, capture_output=True
+                )
+        except Exception:
+            pass
+        time.sleep(1)
+        os.system("sudo systemctl restart schlagfertig")
+    threading.Thread(target=do_update, daemon=True).start()
+    return jsonify({"status": "ok"})
+
+@app.route("/einstellungen")
+def einstellungen_page():
+    return send_from_directory(BASIS, "einstellungen.html")
+
 @app.route("/api/api-keys-status")
 def api_keys_status():
     return jsonify({
