@@ -188,7 +188,8 @@ def check_admin():
         return jsonify({"error": "Zugriff verweigert – keine Adminrechte"}), 403
     return None
 
-_popup_timer = None  # server-side 3s timer for buzzer popup
+_popup_timer = None   # server-side 3s timer for buzzer popup
+_popup_aktiv = False  # True while popup should be visible; False after timer fired
 
 spiel_state = {
     "modus": "warten",
@@ -754,6 +755,8 @@ def _punkte_zu_nr(punkte_roh):
 @socketio.on('connect')
 def on_connect():
     emit('state_update', spiel_state)
+    if not _popup_aktiv:
+        emit('buzzer_popup_ausblenden')
 
 @socketio.on('mod_starten')
 def on_mod_starten(data):
@@ -900,20 +903,24 @@ def on_stoppen():
     socketio.emit('state_update', spiel_state)
 
 def _starte_popup_timer():
-    """Startet einen 3-Sekunden-Server-Timer der das Popup ausblendet."""
-    global _popup_timer
+    global _popup_timer, _popup_aktiv
     if _popup_timer is not None:
         _popup_timer.cancel()
-    _popup_timer = threading.Timer(3.0, lambda: socketio.emit('buzzer_popup_ausblenden'))
+    _popup_aktiv = True
+    def _timer_callback():
+        global _popup_aktiv
+        _popup_aktiv = False
+        socketio.emit('buzzer_popup_ausblenden')
+    _popup_timer = threading.Timer(3.0, _timer_callback)
     _popup_timer.daemon = True
     _popup_timer.start()
 
 def _cancel_popup_timer():
-    """Bricht den laufenden Popup-Timer ab und blendet das Popup sofort aus."""
-    global _popup_timer
+    global _popup_timer, _popup_aktiv
     if _popup_timer is not None:
         _popup_timer.cancel()
         _popup_timer = None
+    _popup_aktiv = False
     socketio.emit('buzzer_popup_ausblenden')
 
 @socketio.on('buzzer_gedrueckt')

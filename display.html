@@ -419,13 +419,15 @@ html,body{
 #buzzer-popup{
   position:fixed;top:0;left:0;right:0;z-index:50;
   transform:translateY(-110%);
-  transition:transform .45s cubic-bezier(.34,1.56,.64,1);
   pointer-events:none;
 }
-@keyframes buzzer-popup-anim{
+#buzzer-popup.popup-zeigen{
+  animation:popup-ein-aus 3.5s ease forwards;
+}
+@keyframes popup-ein-aus{
   0%   {transform:translateY(-110%)}
-  12%  {transform:translateY(0)}
-  82%  {transform:translateY(0)}
+  10%  {transform:translateY(0)}
+  80%  {transform:translateY(0)}
   100% {transform:translateY(-110%)}
 }
 
@@ -875,16 +877,25 @@ async function lade_status() {
 
 // ══ BUZZER ══
 let _popupNr = null;
-let _popupTimeout = null;
+let _popupFallback = null;
+
+const _popup_el = () => document.getElementById('buzzer-popup');
 
 function _verstecke_buzzer_popup() {
-  document.getElementById('buzzer-popup').style.transform = 'translateY(-110%)';
-  if (_popupTimeout) { clearTimeout(_popupTimeout); _popupTimeout = null; }
+  const p = _popup_el();
+  p.classList.remove('popup-zeigen');
+  p.style.transform = 'translateY(-110%)';
+  if (_popupFallback) { clearTimeout(_popupFallback); _popupFallback = null; }
 }
+
+// CSS animationend → cleanup after animation finishes naturally
+document.getElementById('buzzer-popup').addEventListener('animationend', () => {
+  _popup_el().classList.remove('popup-zeigen');
+  // _popupNr bleibt gesetzt → state_update zeigt Popup für denselben Spieler NICHT nochmal
+});
 
 function zeige_buzzer(q) {
   const el = document.getElementById('buz-reihe');
-  const popup = document.getElementById('buzzer-popup');
 
   if (!q || !q.length) {
     el.innerHTML = '<div class="buz-leer">Buzzer bereit…</div>';
@@ -936,14 +947,20 @@ function zeige_buzzer(q) {
       wq.style.display = 'none';
     }
 
-    // Popup einblenden + client-seitiger Fallback-Timer (3.5s)
-    popup.style.transform = 'translateY(0)';
-    if (_popupTimeout) clearTimeout(_popupTimeout);
-    _popupTimeout = setTimeout(_verstecke_buzzer_popup, 3500);
+    // Animation neu starten (reflow erzwingt Neustart)
+    const p = _popup_el();
+    p.style.transform = '';
+    p.classList.remove('popup-zeigen');
+    void p.offsetWidth;
+    p.classList.add('popup-zeigen');
+
+    // Absoluter Fallback: nach 4s per JS verstecken falls animationend nie feuert
+    if (_popupFallback) clearTimeout(_popupFallback);
+    _popupFallback = setTimeout(_verstecke_buzzer_popup, 4000);
   }
 }
 
-// Server schickt dieses Event nach 3s → Popup ausblenden
+// Server schickt dieses Event nach 3s → Popup sofort ausblenden
 socket.on('buzzer_popup_ausblenden', _verstecke_buzzer_popup);
 
 // ══ SCORES ══
