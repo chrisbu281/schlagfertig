@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schlagfertig – App Store</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#1a1a2e;color:#fff;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px}
+
+.logo{text-align:center;margin-bottom:10px;margin-top:8px}
+.logo .gross{font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px}
+.logo .gross span{color:#E24B4A}
+.logo .sub{color:#888;font-size:12px;margin-top:3px}
+
+.store-header{text-align:center;margin-bottom:28px}
+.store-header h1{font-size:22px;font-weight:900;margin-bottom:6px}
+.store-header h1 .store-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:36px;height:36px;background:linear-gradient(135deg,#E24B4A,#c0392b);
+  border-radius:10px;font-size:18px;margin-right:10px;vertical-align:middle;
+}
+.store-header p{color:#888;font-size:13px}
+
+.abschnitt{width:100%;max-width:900px;margin-bottom:28px}
+.abschnitt-titel{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:#666;margin-bottom:12px;padding-left:4px}
+
+.spiele-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:14px;
+}
+
+.spiel-karte{
+  background:#fff;border-radius:20px;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,.25);
+  transition:all .2s;
+}
+.spiel-karte:hover{transform:translateY(-3px);box-shadow:0 14px 44px rgba(0,0,0,.35)}
+
+.sk-header{
+  padding:22px 20px 16px;display:flex;align-items:flex-start;gap:14px;
+  border-bottom:1px solid #f0f0ec;
+}
+.sk-icon{
+  width:54px;height:54px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+}
+
+.sk-meta{flex:1;min-width:0}
+.sk-name{font-size:16px;font-weight:800;color:#1a1a2e;line-height:1.2}
+.sk-untertitel{font-size:11px;color:#999;margin-top:2px;font-weight:500}
+.sk-version{font-size:10px;color:#bbb;margin-top:4px}
+
+.sk-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;
+  letter-spacing:.5px;text-transform:uppercase;flex-shrink:0;
+}
+.sk-badge.installiert{background:#f0fdf4;color:#166534;border:1px solid #86efac}
+.sk-badge.verfuegbar{background:#eff6ff;color:#1d4ed8;border:1px solid #93c5fd}
+
+.sk-body{padding:14px 20px 18px}
+.sk-desc{font-size:13px;color:#666;line-height:1.6;margin-bottom:14px}
+
+.sk-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.sk-tag{
+  font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;
+  background:#f4f4f0;color:#888;border:1px solid #e8e8e4;
+}
+
+.sk-btn{
+  width:100%;padding:12px;border-radius:12px;border:none;
+  font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .15s;text-decoration:none;
+}
+.sk-btn.spielen{background:#f59e0b;color:#000}
+.sk-btn.spielen:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.sk-btn.installieren{background:#3b82f6;color:#fff}
+.sk-btn.installieren:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.sk-btn.demnachst{background:#f0f0ec;color:#bbb;cursor:not-allowed}
+
+/* Leerer Zustand */
+.leer{text-align:center;padding:40px 20px;color:#555;font-size:14px}
+.leer .icon{font-size:40px;margin-bottom:12px;opacity:.4}
+
+/* Lade-Spinner */
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;
+  color:#666;font-size:13px;padding:20px}
+.spinner{width:18px;height:18px;border:2px solid #333;border-top-color:#E24B4A;
+  border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Zurück-Link */
+.back{margin-top:auto;padding-top:20px;text-align:center}
+.back a{font-size:13px;color:#666;text-decoration:none;transition:.15s}
+.back a:hover{color:#E24B4A}
+
+/* Kommende Spiele Vorschau */
+.vorschau-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:10px;
+}
+.vorschau-karte{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;
+  opacity:.6;
+}
+.vorschau-icon{font-size:28px;flex-shrink:0}
+.vorschau-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px}
+.vorschau-sub{font-size:11px;color:#777}
+.vorschau-bald{
+  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  background:rgba(255,255,255,.08);color:#666;padding:2px 6px;
+  border-radius:10px;display:inline-block;margin-top:4px;
+}
+</style>
+</head>
+<body>
+
+<div class="logo">
+  <div class="gross">SCHLAG<span>FERTIG</span></div>
+  <div class="sub">Quiz-Buzzer-System</div>
+</div>
+
+<div class="store-header">
+  <h1>
+    <span class="store-icon">🎮</span>
+    Spiele
+  </h1>
+  <p>Installierte Spielmodi und neue Spiele entdecken</p>
+</div>
+
+<div class="abschnitt">
+  <div class="abschnitt-titel">Installiert</div>
+  <div class="spiele-grid" id="installiert-grid">
+    <div class="loading"><div class="spinner"></div> Lade Spiele…</div>
+  </div>
+</div>
+
+<div class="abschnitt" id="abschnitt-verfuegbar" style="display:none">
+  <div class="abschnitt-titel">Online verfügbar</div>
+  <div class="spiele-grid" id="verfuegbar-grid"></div>
+</div>
+
+<div class="abschnitt">
+  <div class="abschnitt-titel">Demnächst</div>
+  <div class="vorschau-grid">
+    <div class="vorschau-karte">
+      <div class="vorschau-icon">🎵</div>
+      <div>
+        <div class="vorschau-name">Musik-Quiz</div>
+        <div class="vorschau-sub">Songs erraten</div>
+        <div class="vorschau-bald">Bald</div>
+      </div>
+    </div>
+    <div class="vorschau-karte">
+      <div class="vorschau-icon">🃏</div>
+      <div>
+        <div class="vorschau-name">Wer bin ich?</div>
+        <div class="vorschau-sub">Begriffe erraten</div>
+        <div class="vorschau-bald">Bald</div>
+      </div>
+    </div>
+    <div class="vorschau-karte">
+      <div class="vorschau-icon">🎨</div>
+      <div>
+        <div class="vorschau-name">Skribbl</div>
+        <div class="vorschau-sub">Zeichnen & Raten</div>
+        <div class="vorschau-bald">Bald</div>
+      </div>
+    </div>
+    <div class="vorschau-karte">
+      <div class="vorschau-icon">🔢</div>
+      <div>
+        <div class="vorschau-name">Zahlen-Duell</div>
+        <div class="vorschau-sub">Wer schätzt besser?</div>
+        <div class="vorschau-bald">Bald</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="back">
+  <a href="/spielmodus">← Zurück zur Spielauswahl</a>
+</div>
+
+<script>
+const FARB_BG = {
+  '#f59e0b': '#fff8e6',
+  '#3b82f6': '#eff6ff',
+  '#E24B4A': '#fef2f2',
+  '#8b5cf6': '#f5f3ff',
+  '#16a34a': '#f0fdf4',
+};
+
+function farbeBg(hex) {
+  return FARB_BG[hex] || '#f8f8f8';
+}
+
+function renderKarte(spiel) {
+  const istInstalliert = spiel.installiert;
+  const bg = farbeBg(spiel.farbe || '#f59e0b');
+
+  const tags = (spiel.tags || []).map(t =>
+    `<span class="sk-tag">${t}</span>`
+  ).join('');
+
+  const btn = istInstalliert
+    ? `<a class="sk-btn spielen" href="${spiel.url_moderator}">▶ Spielen</a>`
+    : `<button class="sk-btn installieren" onclick="installiere('${spiel.id}')">⬇ Installieren</button>`;
+
+  const badge = istInstalliert
+    ? `<span class="sk-badge installiert">✓ Installiert</span>`
+    : `<span class="sk-badge verfuegbar">Verfügbar</span>`;
+
+  return `
+    <div class="spiel-karte">
+      <div class="sk-header">
+        <div class="sk-icon" style="background:${bg}">${spiel.icon}</div>
+        <div class="sk-meta">
+          <div class="sk-name">${spiel.name}</div>
+          <div class="sk-untertitel">${spiel.untertitel || ''}</div>
+          <div class="sk-version">v${spiel.version || '1.0'}</div>
+        </div>
+        ${badge}
+      </div>
+      <div class="sk-body">
+        <div class="sk-desc">${spiel.beschreibung}</div>
+        ${tags ? `<div class="sk-tags">${tags}</div>` : ''}
+        ${btn}
+      </div>
+    </div>
+  `;
+}
+
+async function ladeKatalog() {
+  try {
+    const r = await fetch('/api/appstore/katalog');
+    const katalog = await r.json();
+
+    const installiert = katalog.filter(s => s.installiert);
+    const verfuegbar  = katalog.filter(s => !s.installiert);
+
+    const grid = document.getElementById('installiert-grid');
+    if (installiert.length === 0) {
+      grid.innerHTML = '<div class="leer"><div class="icon">📦</div>Keine Spiele installiert</div>';
+    } else {
+      grid.innerHTML = installiert.map(renderKarte).join('');
+    }
+
+    if (verfuegbar.length > 0) {
+      document.getElementById('abschnitt-verfuegbar').style.display = '';
+      document.getElementById('verfuegbar-grid').innerHTML = verfuegbar.map(renderKarte).join('');
+    }
+  } catch (e) {
+    document.getElementById('installiert-grid').innerHTML =
+      '<div class="leer"><div class="icon">⚠️</div>Katalog konnte nicht geladen werden</div>';
+  }
+}
+
+async function installiere(id) {
+  alert(`Installation von "${id}" ist noch nicht implementiert.`);
+}
+
+ladeKatalog();
+</script>
+</body>
+</html>

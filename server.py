@@ -1210,6 +1210,37 @@ def system_update():
 def einstellungen_page():
     return send_from_directory(BASIS, "einstellungen.html")
 
+@app.route("/appstore")
+def appstore_page():
+    return send_from_directory(BASIS, "appstore.html")
+
+@app.route("/api/appstore/katalog")
+def appstore_katalog():
+    pfad = os.path.join(BASIS, "spiele_katalog.json")
+    if not os.path.exists(pfad):
+        return jsonify([])
+    with open(pfad, encoding="utf-8") as f:
+        katalog = json.load(f)
+    # Installationsstatus aus spiele/<id>/meta.json aktualisieren
+    for eintrag in katalog:
+        meta_pfad = os.path.join(BASIS, "spiele", eintrag["id"], "meta.json")
+        eintrag["installiert"] = os.path.exists(meta_pfad) or eintrag.get("installiert", False)
+    return jsonify(katalog)
+
+@app.route("/spiele/<spiel_id>/moderator")
+def spiel_moderator(spiel_id):
+    pfad = os.path.join(BASIS, "spiele", spiel_id, "moderator.html")
+    if not os.path.exists(pfad):
+        return "Spiel nicht gefunden", 404
+    return send_from_directory(os.path.join(BASIS, "spiele", spiel_id), "moderator.html")
+
+@app.route("/spiele/<spiel_id>/beamer")
+def spiel_beamer(spiel_id):
+    pfad = os.path.join(BASIS, "spiele", spiel_id, "beamer.html")
+    if not os.path.exists(pfad):
+        return "Spiel nicht gefunden", 404
+    return send_from_directory(os.path.join(BASIS, "spiele", spiel_id), "beamer.html")
+
 @app.route("/api/api-keys-status")
 def api_keys_status():
     return jsonify({
