@@ -875,6 +875,27 @@ async function lade_status() {
   setTimeout(lade_status, 60000);
 }
 
+// ══ DEBUG LOG (auf Beamer sichtbar) ══
+function _dbg(msg) {
+  let el = document.getElementById('_dbglog');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '_dbglog';
+    Object.assign(el.style, {
+      position:'fixed', bottom:'0', left:'0', right:'0', zIndex:'9999',
+      background:'rgba(0,0,0,.85)', color:'#0f0',
+      font:'13px monospace', padding:'6px 10px',
+      maxHeight:'110px', overflow:'hidden'
+    });
+    document.body.appendChild(el);
+  }
+  const t = new Date().toISOString().slice(11,22);
+  const line = document.createElement('div');
+  line.textContent = `[${t}] ${msg}`;
+  el.appendChild(line);
+  while (el.children.length > 6) el.removeChild(el.firstChild);
+}
+
 // ══ BUZZER ══
 let _popupNr = null;
 let _popupFallback = null;
@@ -882,6 +903,7 @@ let _popupFallback = null;
 const _popup_el = () => document.getElementById('buzzer-popup');
 
 function _verstecke_buzzer_popup() {
+  _dbg('HIDE popup (nr=' + _popupNr + ')');
   const p = _popup_el();
   p.classList.remove('popup-zeigen');
   p.style.transform = 'translateY(-110%)';
@@ -890,8 +912,8 @@ function _verstecke_buzzer_popup() {
 
 // CSS animationend → cleanup after animation finishes naturally
 document.getElementById('buzzer-popup').addEventListener('animationend', () => {
-  _popup_el().classList.remove('popup-zeigen');
-  // _popupNr bleibt gesetzt → state_update zeigt Popup für denselben Spieler NICHT nochmal
+  _dbg('animationend fired → hide');
+  _verstecke_buzzer_popup();
 });
 
 function zeige_buzzer(q) {
@@ -953,15 +975,18 @@ function zeige_buzzer(q) {
     p.classList.remove('popup-zeigen');
     void p.offsetWidth;
     p.classList.add('popup-zeigen');
+    _dbg('SHOW popup nr=' + e0.nr + ' classes=' + p.className);
 
     // Absoluter Fallback: nach 4s per JS verstecken falls animationend nie feuert
     if (_popupFallback) clearTimeout(_popupFallback);
-    _popupFallback = setTimeout(_verstecke_buzzer_popup, 4000);
+    _popupFallback = setTimeout(() => { _dbg('fallback-4s fired'); _verstecke_buzzer_popup(); }, 4000);
+  } else {
+    _dbg('skip show (nr=' + e0.nr + '==popupNr=' + _popupNr + ')');
   }
 }
 
 // Server schickt dieses Event nach 3s → Popup sofort ausblenden
-socket.on('buzzer_popup_ausblenden', _verstecke_buzzer_popup);
+socket.on('buzzer_popup_ausblenden', () => { _dbg('server:buzzer_popup_ausblenden'); _verstecke_buzzer_popup(); });
 
 // ══ SCORES ══
 function aktualisiere_header_scores() {
