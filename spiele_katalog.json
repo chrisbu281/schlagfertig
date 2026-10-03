@@ -4,11 +4,11 @@
     "name": "100 Leute gefragt",
     "untertitel": "Familienduell-Style",
     "icon": "👨‍👩‍👧‍👦",
-    "farbe": "#f59e0b",
+    "farbe": "#d97706",
+    "text_farbe": "#fff",
     "beschreibung": "Zwei Teams treten gegeneinander an. Umfrage-Antworten aufdecken, Punkte stehlen und im Fast Five den Sieger küren.",
     "tags": ["2 Teams", "Buzzer", "Fast Five"],
     "url_moderator": "/moderator/100leute",
-    "installiert": true,
     "version": "1.0",
     "fragen_datei": "fragen_100leute.csv"
   }

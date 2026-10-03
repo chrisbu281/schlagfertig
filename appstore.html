@@ -212,7 +212,7 @@ function renderKarte(spiel) {
 
   const btn = istInstalliert
     ? `<a class="sk-btn spielen" href="${spiel.url_moderator}">▶ Spielen</a>`
-    : `<button class="sk-btn installieren" onclick="installiere('${spiel.id}')">⬇ Installieren</button>`;
+    : `<button class="sk-btn installieren" onclick="installiere('${spiel.id}', this)">⬇ Installieren</button>`;
 
   const badge = istInstalliert
     ? `<span class="sk-badge installiert">✓ Installiert</span>`
@@ -263,8 +263,22 @@ async function ladeKatalog() {
   }
 }
 
-async function installiere(id) {
-  alert(`Installation von "${id}" ist noch nicht implementiert.`);
+async function installiere(id, btn) {
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Installiere…';
+  try {
+    const r = await fetch('/api/appstore/installieren', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id})
+    });
+    if (!r.ok) throw new Error('Fehler');
+    location.reload();
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '⬇ Installieren';
+    alert('Installation fehlgeschlagen. Bitte nochmal versuchen.');
+  }
 }
 
 ladeKatalog();

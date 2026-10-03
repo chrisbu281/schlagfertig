@@ -433,10 +433,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
         <span style="font-size:15px">Multiple Choice</span>
         <span style="font-size:11px;opacity:.8">A, B, C oder D</span>
       </button>
-      <button class="start-btn hundert" onclick="location.href='/moderator/100leute'">
-        <span class="icon">💯</span>
-        100 Leute gefragt
-      </button>
+      <div id="installierte-spiele-container"></div>
       <button class="start-btn fragen" id="btn-konto" onclick="zeigeKontoModal()">
         <span class="icon">☁️</span>
         Konto
@@ -1769,8 +1766,28 @@ async function systemNeustarten() {
   }
 }
 
+async function ladeInstalliertSpiele() {
+  try {
+    const r = await fetch('/api/appstore/katalog');
+    const katalog = await r.json();
+    const installiert = katalog.filter(s => s.installiert);
+    const container = document.getElementById('installierte-spiele-container');
+    if (!container) return;
+    container.innerHTML = installiert.map(s => `
+      <button class="start-btn"
+        style="background:${s.farbe};color:${s.text_farbe||'#fff'};box-shadow:0 8px 24px rgba(0,0,0,.25);"
+        onclick="location.href='${s.url_moderator}'">
+        <span class="icon">${s.icon}</span>
+        <span style="font-size:15px">${s.name}</span>
+        <span style="font-size:11px;opacity:.8">${s.untertitel||''}</span>
+      </button>
+    `).join('');
+  } catch(_) {}
+}
+
 async function init() {
   await ladeVomPi();
+  await ladeInstalliertSpiele();
   config.spieler.forEach(s => { if(punkte[s.nr]===undefined) punkte[s.nr]=0; });
   if(config.fragen.length > 0) gewaehlteFragen = new Set(config.fragen.map((_,i)=>i));
   try{

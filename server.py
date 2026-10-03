@@ -1214,6 +1214,19 @@ def einstellungen_page():
 def appstore_page():
     return send_from_directory(BASIS, "appstore.html")
 
+INSTALLIERT_DATEI = os.path.join(BASIS, "installierte_spiele.json")
+
+def _lade_installiert():
+    try:
+        with open(INSTALLIERT_DATEI, encoding="utf-8") as f:
+            return set(json.load(f))
+    except Exception:
+        return set()
+
+def _speichere_installiert(ids):
+    with open(INSTALLIERT_DATEI, "w", encoding="utf-8") as f:
+        json.dump(sorted(ids), f, ensure_ascii=False, indent=2)
+
 @app.route("/api/appstore/katalog")
 def appstore_katalog():
     pfad = os.path.join(BASIS, "spiele_katalog.json")
@@ -1221,11 +1234,30 @@ def appstore_katalog():
         return jsonify([])
     with open(pfad, encoding="utf-8") as f:
         katalog = json.load(f)
-    # Installationsstatus aus spiele/<id>/meta.json aktualisieren
+    installiert = _lade_installiert()
     for eintrag in katalog:
-        meta_pfad = os.path.join(BASIS, "spiele", eintrag["id"], "meta.json")
-        eintrag["installiert"] = os.path.exists(meta_pfad) or eintrag.get("installiert", False)
+        eintrag["installiert"] = eintrag["id"] in installiert
     return jsonify(katalog)
+
+@app.route("/api/appstore/installieren", methods=["POST"])
+def appstore_installieren():
+    d = request.get_json() or {}
+    spiel_id = d.get("id", "").strip()
+    if not spiel_id:
+        return jsonify({"error": "ID fehlt"}), 400
+    installiert = _lade_installiert()
+    installiert.add(spiel_id)
+    _speichere_installiert(installiert)
+    return jsonify({"status": "ok"})
+
+@app.route("/api/appstore/deinstallieren", methods=["POST"])
+def appstore_deinstallieren():
+    d = request.get_json() or {}
+    spiel_id = d.get("id", "").strip()
+    installiert = _lade_installiert()
+    installiert.discard(spiel_id)
+    _speichere_installiert(installiert)
+    return jsonify({"status": "ok"})
 
 @app.route("/spiele/<spiel_id>/moderator")
 def spiel_moderator(spiel_id):
