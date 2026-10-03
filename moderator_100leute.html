@@ -357,6 +357,27 @@ function renderSetup(el, teams, cfg) {
     </div>
   </div>
 
+  <div class="karte" id="karte-fragen">
+    <div class="karte-title">Fragenbibliothek</div>
+    <div id="fragen-info" style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:12px">Lädt…</div>
+    <div class="btn-row" style="margin-bottom:8px">
+      <label class="btn sm blau" style="cursor:pointer;text-align:center">
+        ⬆ CSV hochladen
+        <input type="file" accept=".csv" style="display:none" onchange="fragenUpload(this,'haupt')">
+      </label>
+      <button class="btn sm dunkel" onclick="fragenSync('haupt')">☁ Aus Cloud laden</button>
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,.25);margin-bottom:8px">Fast Five</div>
+    <div class="btn-row">
+      <label class="btn sm blau" style="cursor:pointer;text-align:center">
+        ⬆ CSV hochladen
+        <input type="file" accept=".csv" style="display:none" onchange="fragenUpload(this,'fastfive')">
+      </label>
+      <button class="btn sm dunkel" onclick="fragenSync('fastfive')">☁ Aus Cloud laden</button>
+    </div>
+    <div id="fragen-meldung" style="margin-top:10px;font-size:12px;color:#4ade80;min-height:16px"></div>
+  </div>
+
   <button class="btn gelb" onclick="beamerStarten()">📺 Beamer starten</button>
   <button class="btn primaer" onclick="spielStarten()">▶ Spiel starten</button>
   <a href="/editor" style="display:block;text-align:center;margin-top:12px;font-size:13px;color:rgba(255,255,255,.35);text-decoration:none">← Startseite</a>
@@ -794,8 +815,56 @@ function renderEnde(el, teams) {
 
 function neuesSpiel() { emit('reset'); }
 
+// ── Fragenbibliothek ──
+async function ladeFragenInfo() {
+  try {
+    const r = await fetch('/api/100leute/fragen-info');
+    const d = await r.json();
+    const el = document.getElementById('fragen-info');
+    if (el) el.textContent = `Hauptrunde: ${d.haupt} Fragen  ·  Fast Five: ${d.fastfive} Fragen`;
+  } catch(_) {}
+}
+
+async function fragenUpload(input, pool) {
+  const file = input.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  const meldung = document.getElementById('fragen-meldung');
+  if (meldung) meldung.textContent = '⏳ Hochladen…';
+  try {
+    const r = await fetch(`/api/100leute/fragen-upload?pool=${pool}`, {method:'POST', body: fd});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Fehler');
+    if (meldung) meldung.textContent = `✓ ${d.anzahl} Fragen geladen (${pool === 'haupt' ? 'Hauptrunde' : 'Fast Five'})`;
+    ladeFragenInfo();
+  } catch(e) {
+    if (meldung) { meldung.style.color = '#f87171'; meldung.textContent = '✗ ' + e.message; }
+  }
+  input.value = '';
+}
+
+async function fragenSync(pool) {
+  const meldung = document.getElementById('fragen-meldung');
+  if (meldung) meldung.textContent = '⏳ Lade aus Cloud…';
+  try {
+    const r = await fetch('/api/100leute/fragen-sync', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({pool})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Fehler');
+    if (meldung) meldung.textContent = `✓ ${d.anzahl} Fragen aus Cloud geladen (${pool === 'haupt' ? 'Hauptrunde' : 'Fast Five'})`;
+    ladeFragenInfo();
+  } catch(e) {
+    if (meldung) { meldung.style.color = '#f87171'; meldung.textContent = '✗ ' + e.message; }
+  }
+}
+
 // ── Init ──
 render();
+ladeFragenInfo();
 </script>
 </body>
 </html>

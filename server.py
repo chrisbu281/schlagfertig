@@ -1259,6 +1259,70 @@ def appstore_deinstallieren():
     _speichere_installiert(installiert)
     return jsonify({"status": "ok"})
 
+# ── 100 LEUTE – FRAGENVERWALTUNG ──
+SUPABASE_100LEUTE_CSV  = f"{SUPABASE_BASE}/storage/v1/object/public/sync/fragen_100leute.csv"
+SUPABASE_FASTFIVE_CSV  = f"{SUPABASE_BASE}/storage/v1/object/public/sync/fragen_fastfive.csv"
+CSV_100LEUTE  = os.path.join(BASIS, "fragen_100leute.csv")
+CSV_FASTFIVE  = os.path.join(BASIS, "fragen_fastfive.csv")
+
+@app.route("/api/100leute/fragen-info")
+def hundert_fragen_info():
+    def _zaehle(pfad):
+        if not os.path.exists(pfad):
+            return 0
+        with open(pfad, encoding="utf-8-sig", newline="") as f:
+            rows = list(csv.reader(f))
+        return max(0, len(rows) - 1)  # minus Kopfzeile
+    return jsonify({
+        "haupt":    _zaehle(CSV_100LEUTE),
+        "fastfive": _zaehle(CSV_FASTFIVE),
+    })
+
+@app.route("/api/100leute/fragen-upload", methods=["POST"])
+def hundert_fragen_upload():
+    pool = request.args.get("pool", "haupt")
+    ziel = CSV_100LEUTE if pool == "haupt" else CSV_FASTFIVE
+    if "file" not in request.files:
+        return jsonify({"error": "Keine Datei"}), 400
+    f = request.files["file"]
+    raw = f.read()
+    content = None
+    for enc in ["utf-8-sig", "utf-8", "cp1252", "latin-1"]:
+        try:
+            content = raw.decode(enc); break
+        except Exception:
+            pass
+    if content is None:
+        return jsonify({"error": "Encoding nicht erkannt"}), 400
+    rows = list(csv.reader(io.StringIO(content)))
+    if len(rows) < 2:
+        return jsonify({"error": "CSV leer oder nur Kopfzeile"}), 400
+    with open(ziel, "w", encoding="utf-8", newline="") as out:
+        out.write(content)
+    return jsonify({"status": "ok", "anzahl": len(rows) - 1})
+
+@app.route("/api/100leute/fragen-sync", methods=["POST"])
+def hundert_fragen_sync():
+    pool = (request.get_json() or {}).get("pool", "haupt")
+    url  = SUPABASE_100LEUTE_CSV if pool == "haupt" else SUPABASE_FASTFIVE_CSV
+    ziel = CSV_100LEUTE if pool == "haupt" else CSV_FASTFIVE
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Schlagfertig/1.0"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            content = r.read().decode("utf-8-sig")
+        rows = list(csv.reader(io.StringIO(content)))
+        if len(rows) < 2:
+            return jsonify({"error": "Datei aus Cloud ist leer"}), 400
+        with open(ziel, "w", encoding="utf-8", newline="") as out:
+            out.write(content)
+        return jsonify({"status": "ok", "anzahl": len(rows) - 1})
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return jsonify({"error": "Keine Cloud-Fragen gefunden. Bitte zuerst hochladen."}), 404
+        return jsonify({"error": f"HTTP {e.code}"}), 502
+    except Exception as e:
+        return jsonify({"error": str(e)}), 503
+
 @app.route("/spiele/<spiel_id>/moderator")
 def spiel_moderator(spiel_id):
     pfad = os.path.join(BASIS, "spiele", spiel_id, "moderator.html")
