@@ -769,6 +769,22 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 
       <div class="karte">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span style="font-size:18px">⬆️</span>
+          <h2 style="font-size:15px;font-weight:600">Software-Update</h2>
+        </div>
+        <div id="update-status-box" style="display:none;border-radius:8px;padding:11px 14px;font-size:13px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" id="btn-update-check" onclick="pruefeUpdate()" style="gap:8px">
+            🔍 <span>Update prüfen</span>
+          </button>
+          <button class="btn gruen" id="btn-update-install" onclick="installiereUpdate()" style="display:none;gap:8px">
+            ⬇️ <span>Jetzt installieren</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="karte">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
           <span style="font-size:18px">⚙️</span>
           <h2 style="font-size:15px;font-weight:600">System</h2>
         </div>
@@ -1679,6 +1695,60 @@ async function systemAusschalten() {
     zeigToast('🔴 Pi wird heruntergefahren...', '');
   } catch(e) {
     zeigToast('❌ Fehler', 'rot');
+  }
+}
+
+async function pruefeUpdate() {
+  const box = document.getElementById('update-status-box');
+  const btnC = document.getElementById('btn-update-check');
+  const btnI = document.getElementById('btn-update-install');
+  btnC.disabled = true;
+  btnC.innerHTML = '⏳ <span>Prüfe…</span>';
+  btnI.style.display = 'none';
+  box.style.display = 'block';
+  box.style.background = '#f5f5f0';
+  box.style.border = '1px solid #ddd';
+  box.style.color = '#555';
+  box.textContent = 'Verbinde mit GitHub…';
+  try {
+    const r = await fetch('/api/system/update-check');
+    const d = await r.json();
+    btnC.disabled = false;
+    btnC.innerHTML = '🔍 <span>Update prüfen</span>';
+    if (d.error) {
+      box.style.background = '#fff0f0'; box.style.border = '1px solid #fcc'; box.style.color = '#c00';
+      box.textContent = '✗ Fehler: ' + d.error; return;
+    }
+    if (d.update_verfuegbar) {
+      box.style.background = '#fffbe6'; box.style.border = '1px solid #f0c040'; box.style.color = '#7a5800';
+      box.innerHTML = `⬆ Neue Version: <strong>${d.neu}</strong>${d.nachricht ? ' · ' + d.nachricht : ''}`;
+      btnI.style.display = 'inline-flex';
+    } else {
+      box.style.background = '#f0fff4'; box.style.border = '1px solid #6ee7b7'; box.style.color = '#065f46';
+      box.innerHTML = `✓ Aktuell · Version <strong>${d.aktuell}</strong>`;
+    }
+  } catch(e) {
+    btnC.disabled = false; btnC.innerHTML = '🔍 <span>Update prüfen</span>';
+    box.style.background = '#fff0f0'; box.style.border = '1px solid #fcc'; box.style.color = '#c00';
+    box.textContent = '✗ Keine Verbindung – WLAN prüfen';
+  }
+}
+
+async function installiereUpdate() {
+  const box = document.getElementById('update-status-box');
+  const btnI = document.getElementById('btn-update-install');
+  const btnC = document.getElementById('btn-update-check');
+  btnI.disabled = true; btnC.disabled = true;
+  box.style.background = '#f5f5f0'; box.style.border = '1px solid #ddd'; box.style.color = '#555';
+  box.textContent = '⏳ Update wird installiert – bitte warten…';
+  try {
+    await fetch('/api/system/update', {method:'POST'});
+    box.textContent = '✓ Update fertig – Pi startet neu (ca. 15 Sek.)…';
+    setTimeout(() => location.reload(), 20000);
+  } catch(e) {
+    box.style.background = '#fff0f0'; box.style.color = '#c00';
+    box.textContent = '✗ Fehler beim Update';
+    btnI.disabled = false; btnC.disabled = false;
   }
 }
 
