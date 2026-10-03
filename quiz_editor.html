@@ -1640,6 +1640,10 @@ async function ladeSystemInfo() {
       <div>🔗 <strong>Hostname:</strong> ${d.hostname || 'schlagfertig.local'}</div>
       <div>💾 <strong>Speicher:</strong> ${d.speicher || 'Unbekannt'}</div>
       <div>🌡️ <strong>CPU Temperatur:</strong> ${d.temperatur || 'Unbekannt'}</div>
+      <div style="margin-top:6px;padding-top:6px;border-top:1px solid #eee">
+        🔖 <strong>Software-Version:</strong>
+        <code style="background:#f4f4f0;padding:2px 6px;border-radius:4px;font-size:12px">${d.version || 'unbekannt'}</code>
+      </div>
     `;
   } catch(e) {
     const el = document.getElementById('system-info');

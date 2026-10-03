@@ -1051,7 +1051,12 @@ def system_info():
     try:
         temp = subprocess.check_output("vcgencmd measure_temp", shell=True).decode().strip().replace("temp=","")
     except: temp = "Unbekannt"
-    return jsonify({"ip":ip,"wlan":wlan,"hostname":hostname,"speicher":speicher,"temperatur":temp})
+    try:
+        commit = subprocess.check_output(
+            "git -C " + BASIS + " log -1 --format='%h %s' 2>/dev/null",
+            shell=True).decode().strip()
+    except: commit = "unbekannt"
+    return jsonify({"ip":ip,"wlan":wlan,"hostname":hostname,"speicher":speicher,"temperatur":temp,"version":commit})
 
 @app.route("/api/system/passwort", methods=["POST"])
 def system_passwort():
