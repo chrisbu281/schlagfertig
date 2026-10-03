@@ -169,6 +169,20 @@ systemctl enable schlagfertig.service
 systemctl enable schlagfertig-buzzer.service
 ok "Dienste aktiviert (schlagfertig + schlagfertig-buzzer)"
 
+# .env-Datei anlegen falls noch nicht vorhanden (Platzhalter für API-Keys)
+ENV_DATEI="$INSTALL_DIR/.env"
+if [ ! -f "$ENV_DATEI" ]; then
+  cat > "$ENV_DATEI" << 'ENVEOF'
+# Schlagfertig API-Keys
+# Supabase anon key: Supabase Dashboard → Project Settings → API → anon public
+SUPABASE_ANON_KEY=
+ENVEOF
+  chown "$PI_USER:$PI_USER" "$ENV_DATEI"
+  ok ".env-Datei angelegt (bitte SUPABASE_ANON_KEY eintragen)"
+else
+  ok ".env-Datei bereits vorhanden"
+fi
+
 # sudo-Rechte für Server-interne Befehle (Update, Neustart, Shutdown)
 echo "$PI_USER ALL=(ALL) NOPASSWD: /bin/systemctl restart schlagfertig, /sbin/reboot, /sbin/shutdown, /sbin/halt" \
   > /etc/sudoers.d/schlagfertig
