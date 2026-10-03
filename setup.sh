@@ -65,15 +65,20 @@ else
   PAKETE+=(chromium-browser)
 fi
 
-apt-get install -y -qq "${PAKETE[@]}"
+# Pakete einzeln installieren – fehlende überspringen statt abbrechen
+FEHLEND=()
+for pkg in "${PAKETE[@]}"; do
+  apt-get install -y -qq "$pkg" 2>/dev/null || FEHLEND+=("$pkg")
+done
 
 # libgpiod: Paketname je nach Debian-Version unterschiedlich
 if apt-cache show libgpiod2 &>/dev/null; then
-  apt-get install -y -qq libgpiod2
+  apt-get install -y -qq libgpiod2 2>/dev/null || true
 elif apt-cache show libgpiod3 &>/dev/null; then
-  apt-get install -y -qq libgpiod3
+  apt-get install -y -qq libgpiod3 2>/dev/null || true
 fi
 
+[ ${#FEHLEND[@]} -gt 0 ] && info "Übersprungen (nicht verfügbar): ${FEHLEND[*]}"
 ok "Pakete installiert"
 
 # Chromium-Binary ermitteln
