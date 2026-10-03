@@ -84,7 +84,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 /* TOGGLE */
 .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
 .toggle input { opacity: 0; width: 0; height: 0; }
-.toggle-slider { position: absolute; inset: 0; background: #ccc; border-radius: 12px; cursor: pointer; transition: background .2s; }
+.toggle-slider { position: absolute; inset: 0; background: #999; border-radius: 12px; cursor: pointer; transition: background .2s; }
 .toggle-slider:before { content:''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s; }
 .toggle input:checked + .toggle-slider { background: #2d8a4e; }
 .toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
@@ -151,6 +151,44 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .gpio-badge { font-size: 11px; background: #f0f0f0; border-radius: 5px; padding: 2px 8px; color: #555; }
 .av-btn { width: 100%; padding: 6px; border-radius: 8px; border: 1.5px solid #ddd; background: #fff; cursor: pointer; font-size: 12px; font-weight: 500; color: #444; display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 6px; }
 .av-btn.primaer { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+
+/* Buzzer-Test */
+.buzzer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.buz-karte {
+  border-radius: 16px; border: 2px solid #e0e0e0; padding: 18px 14px;
+  text-align: center; background: #fff; transition: all .2s;
+  position: relative; overflow: hidden;
+}
+.buz-karte.inaktiv { opacity: .45; }
+.buz-karte.aktiv-flash {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34,197,94,.25), 0 0 18px rgba(34,197,94,.15);
+}
+.buz-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #e0e0e0; margin: 0 auto 10px;
+  transition: background .2s, box-shadow .2s;
+}
+.buz-dot.an { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,.6); }
+@keyframes buz-ping {
+  0%   { box-shadow: 0 0 0 0 rgba(34,197,94,.7); }
+  70%  { box-shadow: 0 0 0 12px rgba(34,197,94,0); }
+  100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
+.buz-dot.ping { animation: buz-ping .5s ease; }
+.buz-nr   { font-size: 11px; font-weight: 600; color: #aaa; margin-bottom: 3px; letter-spacing: .5px; text-transform: uppercase; }
+.buz-name { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+.buz-status { font-size: 12px; font-weight: 600; color: #aaa; }
+.buz-status.ok { color: #16a34a; }
+.buz-gpio { font-size: 10px; color: #bbb; margin-top: 5px; }
+.buz-akku { font-size: 11px; color: #888; margin-top: 4px; }
+.buz-avatar {
+  width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: #fff; overflow: hidden;
+  border: 3px solid rgba(255,255,255,.3);
+}
+.buz-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Punkte */
 .punkte-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
@@ -276,6 +314,14 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .cam-rahmen { position: absolute; inset: 10px; border-radius: 50%; border: 3px dashed rgba(255,255,255,.4); pointer-events: none; }
 .cam-buttons { display: flex; gap: 8px; margin-top: 10px; }
 
+/* TOGGLE SWITCH */
+.toggle-switch{position:relative;display:inline-block;width:44px;height:24px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#999;border-radius:24px;transition:.2s}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.toggle-slider{background:#2d8a4e}
+input:checked+.toggle-slider:before{transform:translateX(20px)}
+
 /* TOAST */
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(70px); background: #1a1a2e; color: #fff; border-radius: 28px; padding: 11px 24px; font-size: 14px; font-weight: 500; z-index: 999; transition: transform .3s, opacity .3s; opacity: 0; white-space: nowrap; }
 .toast.zeig { transform: translateX(-50%) translateY(0); opacity: 1; }
@@ -284,8 +330,77 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 
 .icon-btn { background: none; border: none; cursor: pointer; font-size: 15px; padding: 4px 6px; border-radius: 6px; }
 .icon-btn:hover { background: #eee; }
+
+/* MEME-BOARD */
+.meme-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(96px,1fr)); gap: 10px; }
+.meme-kachel { position: relative; border-radius: 14px; text-align: center; cursor: pointer; transition: transform .1s; user-select: none; }
+.meme-kachel:active { transform: scale(.95); }
+.meme-kachel.sound { border: 1.5px solid #e0e0e0; background: #fafafa; padding: 16px 6px; }
+.meme-kachel.gif { border: 1.5px solid #f0d9d8; background: #fff; overflow: hidden; box-shadow: 0 2px 8px rgba(226,75,74,.08); }
+.meme-kachel .icon-flaeche { height: 54px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: linear-gradient(135deg,#ffd166,#f77f00,#ef476f); position: relative; }
+.meme-kachel .icon-sound { font-size: 28px; margin-bottom: 6px; }
+.meme-kachel .name { font-size: 12px; font-weight: 600; color: #333; padding: 0 4px; }
+.meme-kachel.gif .name { padding: 8px 6px; }
+.meme-kachel .typ-badge { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,.4); color: #fff; font-size: 8px; font-weight: 700; padding: 1px 5px; border-radius: 5px; letter-spacing: .3px; }
+.meme-loeschen { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: #c0392b; color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; z-index: 2; }
+.meme-kachel-leer { border: 1.5px dashed #bbb; border-radius: 14px; padding: 16px 6px; text-align: center; color: #999; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+
+/* MEME TABS */
+.meme-tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:2px solid #f0f0ec;padding-bottom:0;overflow-x:auto}
+.meme-tab{padding:10px 14px;font-size:13px;font-weight:600;color:#888;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .15s,border-color .15s;flex-shrink:0}
+.meme-tab.aktiv{color:#1a1a2e;border-bottom-color:#1a1a2e}
+.meme-tab:hover:not(.aktiv){color:#555}
+.chip-leiste{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.meme-chip{padding:5px 12px;border-radius:20px;border:1.5px solid #ddd;background:#fafafa;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.meme-chip.aktiv{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.meme-chip:hover:not(.aktiv){background:#f0f0ec}
+.meme-chip-add{padding:5px 12px;border-radius:20px;border:1.5px dashed #bbb;background:none;font-size:12px;color:#888;cursor:pointer;font-family:inherit}
+.meme-chip-add:hover{background:#f0f0ec}
+.meme-kachel .edit-btn{position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;background:#1a1a2e;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;z-index:2;border:none;cursor:pointer}
+.meme-kachel.sound.playing{background:#fff3cd!important;border-color:#f59e0b!important}
+.meme-kachel.gif img.loop-preview{width:100%;height:60px;object-fit:cover;display:block}
+.pi-gif-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-top:10px}
+.pi-gif-kachel{position:relative;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;aspect-ratio:1}
+.pi-gif-kachel:hover{border-color:#E24B4A}
+.pi-gif-kachel img{width:100%;height:100%;object-fit:cover;display:block}
+.pi-gif-kachel .pi-gif-nm{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:9px;padding:3px 5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.spielsound-gruppe-titel{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px}
+.event-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#fafafa;border:1.5px solid #eee;margin-bottom:8px}
+.event-row.hat-sound{background:#f0fdf4;border-color:#86efac}
+.event-icon{font-size:20px;flex-shrink:0}
+.event-text{flex:1;min-width:0}
+.event-name{font-size:13px;font-weight:600}
+.event-desc{font-size:11px;color:#888}
+.event-controls{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.sound-select{font-size:12px;padding:5px 7px;border-radius:8px;border:1.5px solid #ddd;background:#fff;max-width:130px;font-family:inherit}
+.btn-vorschau{background:none;border:1.5px solid #ddd;border-radius:8px;width:28px;height:28px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.btn-vorschau:hover{background:#f0f0ec}
+.api-key-status{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:14px}
+.api-key-status.ok{background:#f0fdf4;border:1px solid #86efac;color:#166534}
+.api-key-status.fehlt{background:#fef2f2;border:1px solid #fca5a5;color:#c0392b}
+.api-key-status code{font-size:11px;background:rgba(0,0,0,.06);padding:2px 6px;border-radius:4px}
+.freesound-treffer{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1.5px solid #eee;margin-bottom:8px;background:#fafafa}
+.freesound-treffer .fs-name{flex:1;min-width:0}
+.freesound-treffer .fs-titel{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.freesound-treffer .fs-meta{font-size:11px;color:#888}
+.freesound-treffer .fs-btn{background:none;border:1.5px solid #ddd;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
+.freesound-treffer .fs-btn:hover{background:#f0f0ec}
+.freesound-treffer .fs-btn.aktiv{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.admin-karte{background:#fff8f0;border:1.5px solid #f59e0b}
+.admin-email-zeile{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:#fff;border:1.5px solid #eee;margin-bottom:6px}
+.admin-email-zeile span{flex:1;font-size:13px}
+
+/* START-BTN VARIANTEN */
+.start-btn.quiz { background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); color: #fff; box-shadow: 0 8px 24px rgba(67,97,238,.3); }
+.start-btn.quiz:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(67,97,238,.5); }
+.start-btn.mc { background: linear-gradient(135deg, #f72585 0%, #d946e6 100%); color: #fff; box-shadow: 0 8px 24px rgba(247,37,133,.3); }
+.start-btn.mc:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(247,37,133,.5); }
+.start-btn.hundert { background: linear-gradient(135deg, #f5c518, #e0a000); color: #1a1400; box-shadow: 0 8px 24px rgba(245,197,24,.3); }
+.start-btn.hundert:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(245,197,24,.5); }
+.start-btn.fragen-btn { background: linear-gradient(135deg, #2d8a4e 0%, #1e5c31 100%); color: #fff; box-shadow: 0 8px 24px rgba(45,138,78,.3); }
+.start-btn.fragen-btn:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(45,138,78,.5); }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<script src="/sio.js"></script>
 </head>
 <body>
 
@@ -298,25 +413,31 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
         <span class="status-dot" id="status-dot"></span>
         <span id="status-text">Prüfe...</span>
       </span>
-      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
+      <button class="btn" onclick="zeigeAnsicht('einstellungen');wechsleTab('spieler')" style="padding:6px 10px;font-size:16px" title="Einstellungen">⚙️</button>
+      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px" title="System ausschalten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:block"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
     </div>
   </header>
   <div class="start-hero">
     <h1>Schlag<span>fertig</span></h1>
     <p>Das interaktive Quiz & Entertainment System</p>
     <div class="start-buttons">
-      <button class="start-btn spielen" onclick="starteWizard()">
-        <span class="icon">🎮</span>
-        Spiel starten
+      <button class="start-btn quiz" onclick="starteWizardMitModus('frei')">
+        <span class="icon">🎤</span>
+        <span style="font-size:15px">Quiz</span>
+        <span style="font-size:11px;opacity:.8">Freie Antworten</span>
       </button>
-      <button class="start-btn fragen" id="btn-eigene-fragen" onclick="zeigeEigeneFragen()">
-        <span class="icon">➕</span>
-        <span id="btn-fragen-text">Eigene Fragen</span>
+      <button class="start-btn mc" onclick="starteWizardMitModus('mc')">
+        <span class="icon">🅰️</span>
+        <span style="font-size:15px">Multiple Choice</span>
+        <span style="font-size:11px;opacity:.8">A, B, C oder D</span>
       </button>
-      <!-- Nur im Admin Modus sichtbar -->
-      <button class="start-btn einstellungen" id="btn-einstellungen" onclick="zeigeAnsicht('einstellungen');wechsleTab('spieler')" style="display:none">
-        <span class="icon">⚙️</span>
-        Einstellungen
+      <button class="start-btn hundert" onclick="location.href='/moderator/100leute'">
+        <span class="icon">💯</span>
+        100 Leute gefragt
+      </button>
+      <button class="start-btn fragen" id="btn-konto" onclick="zeigeKontoModal()">
+        <span class="icon">☁️</span>
+        Konto
       </button>
     </div>
   </div>
@@ -329,6 +450,9 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
       </div>
       <button class="btn rot" onclick="resetPunkte()" style="font-size:12px;padding:6px 12px">Zurücksetzen</button>
     </div>
+    <div style="text-align:center;margin-top:16px">
+      <a href="/spielmodus" style="font-size:13px;color:#888;text-decoration:none">← Zurück zur Spielmodus-Auswahl</a>
+    </div>
   </div>
 </div>
 
@@ -337,8 +461,9 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
   <header>
     <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
-      <button class="btn" onclick="zeigeAnsicht('start')" style="font-size:13px">🏠 Home</button>
-      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
+      <button class="btn" onclick="homeKlick()" style="font-size:13px" title="Startseite">🏠 Home</button>
+      <button class="btn" onclick="zeigeEinstellungenModal()" style="font-size:16px;padding:6px 12px" title="Einstellungen">⚙️</button>
+      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px" title="System ausschalten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:block"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
     </div>
   </header>
   <div class="wizard-container">
@@ -389,34 +514,19 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 
     <!-- Schritt 2: Spielmodus + Optionen -->
     <div class="wizard-inhalt" id="wizard-schritt-2" style="display:none">
-      <div class="wizard-titel">🎮 Spielmodus & Optionen</div>
-      <div class="wizard-untertitel">Wähle den Modus und stelle das Spiel ein</div>
-
-      <!-- Modus -->
-      <div class="modus-wizard-grid" style="margin-bottom:20px">
-        <div class="modus-wizard-karte aktiv" id="mwk-frei" onclick="setzeWizardModus('frei')">
-          <div class="mw-icon">🎤</div>
-          <div class="mw-titel">Freie Antwort</div>
-          <div class="mw-desc">Buzzer drücken und frei antworten. Moderator entscheidet richtig/falsch.</div>
-        </div>
-        <div class="modus-wizard-karte" id="mwk-mc" onclick="setzeWizardModus('mc')">
-          <div class="mw-icon">🅰️</div>
-          <div class="mw-titel">Multiple Choice</div>
-          <div class="mw-desc">4 Antworten auf dem Bildschirm. Spieler wählt A, B, C oder D.</div>
-        </div>
-      </div>
+      <div class="wizard-titel">⚙️ Optionen</div>
+      <div class="wizard-untertitel">Stelle das Spiel nach deinen Wünschen ein</div>
 
       <!-- Optionen -->
       <div style="background:#f8f8f8;border-radius:12px;padding:16px;border:1px solid #e8e8e8">
-        <div style="font-size:13px;font-weight:700;color:#555;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">⚙️ Optionen</div>
 
         <div class="toggle-zeile" id="wiz-zeile-warteschlange">
           <div class="toggle-info"><strong>Buzzer-Warteschlange</strong><span>Moderator sieht wer zuerst gedrückt hat</span></div>
           <label class="toggle"><input type="checkbox" id="wiz-warteschlange" checked><span class="toggle-slider"></span></label>
         </div>
         <div class="toggle-zeile" id="wiz-zeile-zweite-chance">
-          <div class="toggle-info"><strong>Zweite Chance</strong><span>Nach falscher Antwort kommt der Nächste dran</span></div>
-          <label class="toggle"><input type="checkbox" id="wiz-zweite-chance" checked><span class="toggle-slider"></span></label>
+          <div class="toggle-info"><strong>Zweite Chance</strong><span>Nach falscher Antwort kommt der Nächste dran</span><span id="wiz-hint-zweite-chance" style="display:none;color:#e67e22;font-size:11px;font-weight:500">⚠️ Nicht verfügbar wenn Zeitlimit aktiv</span></div>
+          <label class="toggle"><input type="checkbox" id="wiz-zweite-chance" checked onchange="wizZweiteChanceToggle(this.checked)"><span class="toggle-slider"></span></label>
         </div>
         <div class="toggle-zeile">
           <div class="toggle-info"><strong>Reaktionszeit anzeigen</strong><span>Millisekunden in der Warteschlange</span></div>
@@ -426,12 +536,21 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
           <div class="toggle-info"><strong>Fragen mischen</strong><span>Zufällige Reihenfolge</span></div>
           <label class="toggle"><input type="checkbox" id="wiz-mischen" checked><span class="toggle-slider"></span></label>
         </div>
-
-        <div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:12px;font-weight:600;color:#555">Schwierigkeit:</span>
-          <div class="filter-chip leicht aktiv" id="wfc-leicht" onclick="toggleWizardFilter('leicht')">✓ Leicht</div>
-          <div class="filter-chip mittel aktiv" id="wfc-mittel" onclick="toggleWizardFilter('mittel')">✓ Mittel</div>
-          <div class="filter-chip schwer aktiv" id="wfc-schwer" onclick="toggleWizardFilter('schwer')">✓ Schwer</div>
+        <div class="toggle-zeile">
+          <div class="toggle-info"><strong>Auto-Weiter</strong><span>Nach richtiger Antwort automatisch zur nächsten Frage</span></div>
+          <label class="toggle"><input type="checkbox" id="wiz-auto-weiter"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-zeile">
+          <div class="toggle-info"><strong>Wiederholungen verhindern</strong><span>Bereits gespielte Fragen nicht nochmal zeigen</span></div>
+          <label class="toggle"><input type="checkbox" id="wiz-keine-wiederholung" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-zeile" id="wiz-zeile-zeitlimit">
+          <div class="toggle-info"><strong>Zeitlimit pro Frage</strong><span>Buzzer sperren nach Ablauf der Zeit</span><span id="wiz-hint-zeitlimit" style="display:none;color:#e67e22;font-size:11px;font-weight:500">⚠️ Nicht verfügbar wenn Zweite Chance aktiv</span></div>
+          <label class="toggle"><input type="checkbox" id="wiz-zeitlimit-aktiv" onchange="wizZeitlimitToggle(this.checked)"><span class="toggle-slider"></span></label>
+        </div>
+        <div id="wiz-zeitlimit-zeile" style="display:none;margin-top:8px;margin-left:4px">
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500">⏱️ Sekunden pro Frage</label>
+          <input class="num-input" type="number" id="wiz-zeitlimit-sek" value="30" min="5" max="300" style="width:100px">
         </div>
 
         <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -455,6 +574,12 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
         <input class="suche" type="text" placeholder="🔍 Suchen..." oninput="rendereFragenWizard()" id="wiz-suche">
         <select class="filter-sel" id="wiz-filter-kat" onchange="rendereFragenWizard()">
           <option value="">Alle Kategorien</option>
+        </select>
+        <select class="filter-sel" id="wiz-filter-schwer" onchange="rendereFragenWizard()">
+          <option value="">Alle Schwierigkeiten</option>
+          <option value="leicht">Leicht</option>
+          <option value="mittel">Mittel</option>
+          <option value="schwer">Schwer</option>
         </select>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
@@ -482,17 +607,19 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
   <header>
     <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
+      <button class="btn" onclick="homeKlick()" style="font-size:13px" title="Startseite">🏠 Home</button>
       <button class="btn gruen" onclick="speichereAufPi()">💾 Speichern</button>
-      <button class="btn" onclick="zeigeAnsicht('start')" style="font-size:13px">🏠 Home</button>
-      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
+      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px" title="System ausschalten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:block"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
     </div>
   </header>
   <div class="tabs">
     <div class="tab aktiv" onclick="wechsleTab('spieler')">👥 Spieler</div>
+    <div class="tab" onclick="wechsleTab('buzzer')">🔵 Buzzer</div>
     <div class="tab" onclick="wechsleTab('fragen')">📋 Fragen</div>
     <div class="tab" onclick="wechsleTab('punkte')">🏆 Punktestand</div>
     <div class="tab" onclick="wechsleTab('optionen')">🖥️ System</div>
     <div class="tab" onclick="wechsleTab('sounds')">🔊 Sounds</div>
+    <div class="tab" onclick="wechsleTab('memeboard')">🎉 Meme-Board</div>
   </div>
   <div class="einst-container">
 
@@ -505,6 +632,53 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
           <span style="font-size:12px;color:#888;margin-left:auto">Bis zu 6 Spieler möglich</span>
         </div>
         <div class="spieler-grid" id="spieler-grid"></div>
+      </div>
+    </div>
+
+    <!-- BUZZER -->
+    <div class="seite" id="seite-buzzer">
+      <!-- Test-Bereich -->
+      <div class="karte">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+          <span style="font-size:18px">🔵</span>
+          <h2 style="font-size:15px;font-weight:600">Buzzer-Test</h2>
+          <button class="btn" onclick="buzzerTestReset()" style="margin-left:auto;font-size:12px;padding:6px 12px">↺ Zurücksetzen</button>
+        </div>
+        <p style="font-size:13px;color:#888;margin-bottom:18px">Drücke einen Buzzer — der zugehörige Slot leuchtet auf. So kannst du testen, ob alle Verbindungen funktionieren.</p>
+        <div class="buzzer-grid" id="buzzer-test-grid"></div>
+      </div>
+
+      <!-- GPIO-Belegung -->
+      <div class="karte" style="margin-top:12px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:16px">🔌</span>
+          <h2 style="font-size:15px;font-weight:600">GPIO-Belegung</h2>
+        </div>
+        <p style="font-size:13px;color:#888;margin-bottom:14px">BCM-Pin pro Spieler. Die Pins werden auch im Tab <em>Spieler</em> angezeigt und dort direkt editiert.</p>
+        <div id="buzzer-gpio-liste" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+
+      <!-- Bluetooth (Vorschau) -->
+      <div class="karte" style="margin-top:12px;border:2px dashed #e0e0e0;background:#fafafa">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:16px">📡</span>
+          <h2 style="font-size:15px;font-weight:600;color:#aaa">Bluetooth-Buzzer <span style="font-size:11px;background:#f0f0f0;color:#bbb;border-radius:20px;padding:2px 9px;font-weight:700;letter-spacing:.5px;vertical-align:middle">BALD</span></h2>
+        </div>
+        <p style="font-size:13px;color:#bbb;line-height:1.6">Hier kannst du später Bluetooth-Buzzer koppeln, den Verbindungsstatus sehen und den Akkustand jedes Buzzers abrufen. Die Buzzer verbinden sich beim Start automatisch — diese Seite gibt dir den vollen Überblick.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;opacity:.5">
+          <div style="flex:1;min-width:120px;border-radius:12px;background:#fff;border:1.5px solid #e8e8e8;padding:12px;text-align:center">
+            <div style="font-size:22px;margin-bottom:4px">🔋</div>
+            <div style="font-size:11px;color:#aaa;font-weight:600">Akkustatus</div>
+          </div>
+          <div style="flex:1;min-width:120px;border-radius:12px;background:#fff;border:1.5px solid #e8e8e8;padding:12px;text-align:center">
+            <div style="font-size:22px;margin-bottom:4px">📶</div>
+            <div style="font-size:11px;color:#aaa;font-weight:600">Signalstärke</div>
+          </div>
+          <div style="flex:1;min-width:120px;border-radius:12px;background:#fff;border:1.5px solid #e8e8e8;padding:12px;text-align:center">
+            <div style="font-size:22px;margin-bottom:4px">🔗</div>
+            <div style="font-size:11px;color:#aaa;font-weight:600">Koppeln</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -603,7 +777,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
             🔄 <span><strong>Pi neu starten</strong><br><span style="font-size:12px;font-weight:400;opacity:.8">Startet das System neu (~30 Sek)</span></span>
           </button>
           <button class="btn rot" onclick="systemAusschalten()" style="justify-content:flex-start;gap:10px;padding:14px 16px">
-            ⏻ <span><strong>Pi herunterfahren</strong><br><span style="font-size:12px;font-weight:400;opacity:.8">Dann Strom trennen</span></span>
+            🔴 <span><strong>Pi herunterfahren</strong><br><span style="font-size:12px;font-weight:400;opacity:.8">Dann Strom trennen</span></span>
           </button>
         </div>
       </div>
@@ -619,6 +793,20 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
           <button class="btn primaer" onclick="aenderePasswort()">🔐 Passwort ändern</button>
         </div>
       </div>
+
+      <!-- ADMIN-PANEL – nur für Admins sichtbar -->
+      <div class="karte admin-karte" id="admin-panel-karte" hidden>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span style="font-size:18px">🛡️</span>
+          <h2 style="font-size:15px;font-weight:600">Admin-Verwaltung</h2>
+        </div>
+        <p style="font-size:12px;color:#666;margin-bottom:14px">Nutzer mit Adminrechten können API-Keys sehen, Freesound und Giphy nutzen sowie weitere Admins ernennen.</p>
+        <div id="admin-email-liste" style="margin-bottom:14px"></div>
+        <div style="display:flex;gap:8px">
+          <input id="admin-neue-email" type="email" placeholder="E-Mail-Adresse" style="flex:1;border:1.5px solid #ddd;border-radius:10px;padding:9px 13px;font-size:13px;outline:none;font-family:inherit">
+          <button class="btn primaer" onclick="adminHinzufuegen()" style="white-space:nowrap">+ Admin</button>
+        </div>
+      </div>
     </div>
 
     <!-- SOUNDS -->
@@ -630,6 +818,72 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
       </div>
     </div>
 
+    <!-- MEME-BOARD -->
+    <div class="seite" id="seite-memeboard">
+      <div class="karte">
+        <div class="meme-tabs">
+          <button class="meme-tab aktiv" id="mtab-sounds" onclick="wechsleMemeTab('sounds')">🔊 Sounds</button>
+          <button class="meme-tab" id="mtab-gifs" onclick="wechsleMemeTab('gifs')">🎬 GIFs &amp; Sticker</button>
+          <button class="meme-tab" id="mtab-giphy" onclick="wechsleMemeTab('giphy')">🔍 Giphy</button>
+          <button class="meme-tab" id="mtab-freesound" onclick="wechsleMemeTab('freesound')">🎵 Freesound</button>
+          <button class="meme-tab" id="mtab-spielsounds" onclick="wechsleMemeTab('spielsounds')">🎮 Spielsounds</button>
+        </div>
+
+        <!-- SOUNDS PANEL -->
+        <div id="meme-panel-sounds">
+          <div class="chip-leiste" id="sound-chips"></div>
+          <div class="meme-grid" id="meme-grid-sounds"></div>
+        </div>
+
+        <!-- GIFS & STICKER PANEL -->
+        <div id="meme-panel-gifs" hidden>
+          <div class="chip-leiste" id="gif-chips"></div>
+          <div class="meme-grid" id="meme-grid-gifs"></div>
+        </div>
+
+        <!-- GIPHY PANEL -->
+        <div id="meme-panel-giphy" hidden>
+          <div id="giphy-key-status" class="api-key-status fehlt">
+            <span>🔑</span><span>Giphy-API-Key nicht gesetzt — bitte <code>GIPHY_API_KEY=…</code> in <code>.env</code> auf dem Pi eintragen</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <input id="giphy-suchfeld" type="text" placeholder="z.B. Applaus, Konfetti, Sieger…" style="flex:1;border:1.5px solid #ddd;border-radius:10px;padding:10px 14px;font-size:13px;outline:none;font-family:inherit" onkeydown="if(event.key==='Enter')giphySuche()">
+            <button class="btn primaer" onclick="giphySuche()">Suchen</button>
+          </div>
+          <div id="giphy-ergebnisse" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px"></div>
+          <hr style="margin:18px 0;border:none;border-top:1.5px solid #eee">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:13px;font-weight:600;color:#555">📁 Auf dem Pi gespeichert</span>
+            <button class="btn" style="font-size:11px;padding:4px 10px;margin-left:auto" onclick="ladePiGifs()">↺ Aktualisieren</button>
+          </div>
+          <div class="pi-gif-grid" id="pi-gif-grid"></div>
+          <p style="font-size:11px;color:#999;margin-top:12px;line-height:1.5">GIFs werden dauerhaft auf den Pi heruntergeladen und stehen danach offline zur Verfügung — keine Internetverbindung während der Show nötig.</p>
+        </div>
+
+        <!-- FREESOUND PANEL -->
+        <div id="meme-panel-freesound" hidden>
+          <div id="freesound-key-status" class="api-key-status fehlt">
+            <span>🔑</span><span>Freesound-API-Key nicht gesetzt — bitte <code>FREESOUND_API_KEY=…</code> in <code>.env</code> auf dem Pi eintragen</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <input id="freesound-suchfeld" type="text" placeholder="z.B. Buzzer, Applaus, Fanfare…" style="flex:1;border:1.5px solid #ddd;border-radius:10px;padding:10px 14px;font-size:13px;outline:none;font-family:inherit" onkeydown="if(event.key==='Enter')freesoundSuche()">
+            <button class="btn primaer" onclick="freesoundSuche()">Suchen</button>
+          </div>
+          <div id="freesound-ergebnisse"></div>
+          <p style="font-size:11px;color:#999;margin-top:10px;line-height:1.5">Sounds werden als MP3-Vorschau (~128 kbps) heruntergeladen und stehen sofort im Meme-Board zur Verfügung. Quelle: <strong>freesound.org</strong></p>
+        </div>
+
+        <!-- SPIELSOUNDS PANEL -->
+        <div id="meme-panel-spielsounds" hidden>
+          <p style="font-size:12px;color:#666;margin-bottom:16px">Weise jedem Spielereignis einen Sound zu. Diese Töne werden automatisch abgespielt — unabhängig vom Meme-Board.</p>
+          <div id="spielsound-container"></div>
+          <div style="margin-top:16px">
+            <button class="btn primaer" onclick="spielsoundsSpeichern()">✓ Spielsounds speichern</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -638,8 +892,9 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
   <header>
     <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
     <div class="header-rechts">
-      <button class="btn" onclick="zeigeAnsicht('start')" style="font-size:13px">🏠 Home</button>
-      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px;font-size:13px">⏻</button>
+      <button class="btn" onclick="homeKlick()" style="font-size:13px" title="Startseite">🏠 Home</button>
+      <button class="btn" onclick="zeigeEinstellungenModal()" style="font-size:16px;padding:6px 12px" title="Einstellungen">⚙️</button>
+      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px" title="System ausschalten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:block"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
     </div>
   </header>
   <div style="max-width:700px;margin:0 auto;padding:24px;">
@@ -709,7 +964,9 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
   <div class="mod-header">
     <div class="logo" style="font-size:18px">Schlag<span style="color:#E24B4A">fertig</span> <span style="font-size:13px;color:#555;font-weight:400">Moderator</span></div>
     <div style="display:flex;gap:8px">
+      <button class="btn" onclick="homeKlickImSpiel()" style="font-size:13px" title="Startseite">🏠 Home</button>
       <button class="btn" onclick="togglePunktestand()" style="background:#f39c12;color:#fff;border-color:#f39c12">🏆 Punktestand</button>
+      <button class="btn" onclick="oeffneMemeOverlay()" style="background:#8e44ad;color:#fff;border-color:#8e44ad">🎉 Meme</button>
       <button class="btn rot" onclick="spielStoppen()">✕ Exit</button>
     </div>
   </div>
@@ -745,6 +1002,104 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
     <div class="fragen-nav">
       <div class="fragen-nav-kopf">Fragenreihenfolge</div>
       <div id="fragen-nav-liste"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EINSTELLUNGEN SEITE ═══ -->
+<div class="ansicht" id="ansicht-einst-quick">
+  <header>
+    <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
+    <div class="header-rechts">
+      <button class="btn" onclick="homeKlick()" style="font-size:13px" title="Startseite">🏠 Home</button>
+      <button class="btn" onclick="zurueckVonEinstellungen()" style="font-size:13px">← Zurück</button>
+      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px" title="System ausschalten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:block"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
+    </div>
+  </header>
+  <div style="max-width:560px;margin:0 auto;padding:24px">
+    <h2 style="font-size:22px;font-weight:700;margin-bottom:24px">⚙️ Einstellungen</h2>
+
+    <!-- SOUND -->
+    <div class="karte" style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:14px">
+        <span style="font-size:26px">🔊</span>
+        <div>
+          <div style="font-weight:600;font-size:15px">Sound</div>
+          <div style="font-size:13px;color:#888">Buzzer &amp; Effekte</div>
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="einst-sound-toggle" onchange="toggleSound(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <!-- KONTO -->
+    <div class="karte">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+        <span style="font-size:26px">☁️</span>
+        <div style="flex:1;min-width:0">
+          <div id="einst-konto-name" style="font-weight:600;font-size:15px">Laden…</div>
+          <div id="einst-konto-info" style="font-size:13px;color:#888"></div>
+        </div>
+      </div>
+      <a href="https://schlagfertig-fragen.vercel.app/" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:#1a1a2e;font-weight:600;text-decoration:none;
+                background:#f0f0ec;padding:8px 14px;border-radius:10px;border:1px solid #ddd">
+        🌐 Zur Fragenbibliothek →
+      </a>
+    </div>
+
+    <!-- GERÄT -->
+    <div class="karte">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+        <span style="font-size:26px">🖥️</span>
+        <div>
+          <div style="font-weight:600;font-size:15px">Gerät</div>
+          <div id="einst-ip" style="font-size:13px;color:#888">–</div>
+        </div>
+      </div>
+      <button class="btn rot" onclick="systemAusschalten()" style="font-size:13px">🔴 Ausschalten</button>
+    </div>
+  </div>
+</div>
+
+<!-- KONTO MODAL -->
+<div class="overlay" id="konto-overlay" onclick="if(event.target===this)schliesseKontoModal()">
+  <div class="modal" style="max-width:400px">
+    <h2>☁️ Konto & Fragenbibliothek</h2>
+    <div id="konto-modal-inhalt">
+      <div style="display:flex;align-items:center;gap:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:14px 16px;margin-bottom:16px">
+        <span style="font-size:28px">👤</span>
+        <div style="flex:1">
+          <div id="km-name" style="font-weight:700;font-size:15px;color:#166534"></div>
+          <div id="km-email" style="font-size:12px;color:#555;margin-top:2px"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#f8f8f8;border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <span style="font-size:13px;color:#555">Geladene Fragen</span>
+        <span id="km-anzahl" style="font-weight:700;font-size:16px;color:#1a1a2e">–</span>
+      </div>
+      <a id="km-link" href="https://schlagfertig-fragen.vercel.app/" target="_blank" rel="noopener"
+         style="display:flex;align-items:center;justify-content:center;gap:8px;
+                background:#1a1a2e;color:#fff;border-radius:12px;padding:12px;
+                text-decoration:none;font-weight:700;font-size:14px;margin-bottom:10px">
+        🌐 Zur Fragenbibliothek
+      </a>
+      <button class="btn" onclick="kontoAbmelden()" style="width:100%;justify-content:center;color:#c0392b;border-color:#fca5a5">
+        🔴 Abmelden
+      </button>
+    </div>
+    <div id="konto-modal-gast" style="display:none;text-align:center;padding:16px 0">
+      <div style="font-size:32px;margin-bottom:10px">🎮</div>
+      <div style="font-weight:700;margin-bottom:6px">Gastmodus aktiv</div>
+      <div style="font-size:13px;color:#888;margin-bottom:16px">Standardfragen geladen. Melde dich an für deine eigene Fragenbibliothek.</div>
+      <a href="/login" style="display:block;background:#1a1a2e;color:#fff;border-radius:12px;padding:12px;text-decoration:none;font-weight:700;font-size:14px">
+        🔐 Jetzt anmelden
+      </a>
+    </div>
+    <div class="modal-buttons" style="margin-top:16px">
+      <button class="btn" onclick="schliesseKontoModal()">Schließen</button>
     </div>
   </div>
 </div>
@@ -824,6 +1179,96 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
   </div>
 </div>
 
+<!-- MEME-BOARD OVERLAY (live, während des Spiels) -->
+<div class="overlay" id="meme-overlay">
+  <div class="modal" style="width:720px;padding:0;overflow:hidden">
+    <div style="padding:18px 22px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px">🎉 Meme-Board</div>
+      <div onclick="schliesseMemeOverlay()" style="width:32px;height:32px;border-radius:50%;background:#f0f0ec;display:flex;align-items:center;justify-content:center;font-size:15px;color:#666;cursor:pointer">✕</div>
+    </div>
+    <div style="padding:20px 22px 24px;max-height:70vh;overflow-y:auto">
+      <div id="meme-overlay-sound-wrap" style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:26px;height:26px;border-radius:8px;background:#eef0f5;display:flex;align-items:center;justify-content:center;font-size:13px">🔊</div>
+          <div style="font-size:12px;font-weight:700;color:#555;letter-spacing:.3px;text-transform:uppercase">Nur Sound</div>
+          <div style="flex:1;height:1px;background:#eee"></div>
+        </div>
+        <div class="meme-grid" id="meme-overlay-sound"></div>
+      </div>
+      <div id="meme-overlay-gif-wrap">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#ffd166,#E24B4A);display:flex;align-items:center;justify-content:center;font-size:13px">🎬</div>
+          <div style="font-size:12px;font-weight:700;color:#E24B4A;letter-spacing:.3px;text-transform:uppercase">Sticker · GIF · Video (auf dem Beamer)</div>
+          <div style="flex:1;height:1px;background:#f6d9d8"></div>
+        </div>
+        <div class="meme-grid" id="meme-overlay-gif"></div>
+      </div>
+    </div>
+    <div style="padding:0 22px 18px;font-size:11px;color:#aaa;text-align:center">Graue Kacheln spielen nur Sound beim Moderator · farbige Kacheln senden zusätzlich das Bild an den Beamer</div>
+  </div>
+</div>
+
+<!-- MEME-KACHEL BEARBEITEN -->
+<div class="overlay" id="meme-kachel-overlay">
+  <div class="modal">
+    <h2 id="meme-modal-titel">Sound-Kachel</h2>
+    <div class="zeile2">
+      <div class="feld"><label>Icon (Emoji)</label><input id="mk-icon" type="text" maxlength="4" placeholder="👏"></div>
+      <div class="feld"><label>Name</label><input id="mk-name" type="text" placeholder="z.B. Applaus"></div>
+    </div>
+    <div class="feld">
+      <label>Kategorie</label>
+      <select id="mk-kategorie" onchange="memeKatSelChange()">
+        <!-- dynamisch per JS befüllt -->
+      </select>
+    </div>
+    <div class="feld" id="mk-neue-kat-feld" hidden>
+      <label>Name der neuen Kategorie</label>
+      <input id="mk-neue-kat" type="text" placeholder="z.B. spannung, humor…" style="text-transform:lowercase">
+    </div>
+    <div class="feld">
+      <label>Sound (optional bei GIF/Sticker/Video, spielt lokal beim Moderator)</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="mk-sound" type="text" placeholder="datei.mp3" readonly style="flex:1">
+        <label style="cursor:pointer;padding:9px 12px;background:#1a1a2e;color:#fff;border-radius:8px;font-size:12px">
+          📁<input type="file" accept=".mp3,.wav,.ogg" style="display:none" onchange="memeSoundUpload(this)">
+        </label>
+      </div>
+    </div>
+    <div class="feld" id="mk-gif-feld" style="display:none">
+      <label>GIF (aus der Giphy-Bibliothek gewählt, siehe Meme-Board-Tab)</label>
+      <select id="mk-gif"></select>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn" onclick="schliesseMemeKachelModal()">Abbrechen</button>
+      <button class="btn primaer" onclick="speichereMemeKachel()">✓ Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- GIF DETAIL (von Pi-Bibliothek) -->
+<div class="overlay" id="gif-detail-overlay">
+  <div class="modal" style="max-width:420px">
+    <h2>GIF zuordnen</h2>
+    <img id="gd-img" src="" alt="" style="width:100%;border-radius:10px;margin-bottom:14px;max-height:220px;object-fit:contain;background:#f0f0ec">
+    <p id="gd-name" style="font-size:12px;color:#888;margin-bottom:12px;word-break:break-all"></p>
+    <div class="feld">
+      <label>Kategorie</label>
+      <select id="gd-kategorie" onchange="gdKatChanged()">
+        <!-- dynamisch befüllt -->
+      </select>
+    </div>
+    <div class="feld" id="gd-neue-kat-feld" hidden>
+      <label>Name der neuen Kategorie</label>
+      <input id="gd-neue-kat" type="text" placeholder="z.B. reaktion, spannung…" style="text-transform:lowercase">
+    </div>
+    <div class="modal-buttons">
+      <button class="btn" onclick="schliesseGifDetail()">Abbrechen</button>
+      <button class="btn primaer" onclick="gifDetailSpeichern()">✓ Speichern &amp; hinzufügen</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -884,16 +1329,121 @@ let modAufgeloest = false;
 // WebSocket
 let socket = null;
 
+// Buzzer-Test-Status: { nr: timestamp }
+let buzzerStatus = {};
+let buzzerTimers = {};  // Auto-Dim-Timer je Spieler
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 // ── WEBSOCKET ──
 function verbindeSocket() {
   socket = io();
-  socket.on('connect', () => console.log('WebSocket verbunden!'));
+  socket.on('connect', () => {
+    console.log('WebSocket verbunden!');
+    if(_aktiverTab === 'buzzer') socket.emit('test_start');
+  });
   socket.on('state_update', (data) => {
+    const prevLen = modWarteschlange.length;
     modWarteschlange = data.warteschlange || [];
     if(data.punkte) modPunkte = data.punkte;
+    // Toast wenn erstmals jemand buzzt
+    if(prevLen === 0 && modWarteschlange.length > 0 && config) {
+      const erster = modWarteschlange[0];
+      const s = config.spieler.find(sp => sp.nr === erster.nr);
+      if(s) zeigToast(`🔔 ${s.name} hat gebuzzert!`, 'gruen');
+    }
     rendereWarteschlange();
     rendereModPunkte();
   });
+  socket.on('buzzer_status_update', d => {
+    buzzerStatus[d.nr] = d.ts;
+    aktualisiereBuzzerKarte(d.nr);
+    // Auto-Dim nach 1,5 s falls kein Release-Event kommt
+    clearTimeout(buzzerTimers[d.nr]);
+    buzzerTimers[d.nr] = setTimeout(() => {
+      delete buzzerStatus[d.nr];
+      aktualisiereBuzzerKarte(d.nr);
+    }, 1500);
+  });
+  socket.on('buzzer_status_clear', d => {
+    clearTimeout(buzzerTimers[d.nr]);
+    delete buzzerStatus[d.nr];
+    aktualisiereBuzzerKarte(d.nr);
+  });
+  socket.on('buzzer_status_reset', () => {
+    buzzerStatus = {};
+    rendereBuzzerTab();
+  });
+}
+
+// ── BUZZER TAB ──
+function rendereBuzzerTab() {
+  rendereBuzzerGrid();
+  rendereBuzzerGPIO();
+}
+
+function rendereBuzzerGrid() {
+  const grid = document.getElementById('buzzer-test-grid');
+  if (!grid) return;
+  grid.innerHTML = config.spieler.map(s => {
+    const nr  = s.nr;
+    const ok  = buzzerStatus[nr] !== undefined;
+    const bg  = s.farbe || '#ccc';
+    const ini = (s.name || '?').charAt(0).toUpperCase();
+    const foto = s.foto ? `<img src="${s.foto}" alt="">` : ini;
+    return `
+      <div class="buz-karte${s.aktiv===false?' inaktiv':''}${ok?' aktiv-flash':''}" id="buz-karte-${nr}">
+        <div class="buz-dot${ok?' an':''}" id="buz-dot-${nr}"></div>
+        <div class="buz-avatar" style="background:${bg}" id="buz-av-${nr}">${foto}</div>
+        <div class="buz-nr">Buzzer ${nr}</div>
+        <div class="buz-name">${esc(s.name)}</div>
+        <div class="buz-status${ok?' ok':''}" id="buz-st-${nr}">${ok?'✓ Signal OK':'Warte auf Druck…'}</div>
+        <div class="buz-gpio">${s.gpio != null ? 'GPIO BCM '+s.gpio : 'Kein Pin'}</div>
+      </div>`;
+  }).join('');
+}
+
+function rendereBuzzerGPIO() {
+  const el = document.getElementById('buzzer-gpio-liste');
+  if (!el) return;
+  el.innerHTML = config.spieler.map(s => {
+    const farbe = s.farbe || '#888';
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:10px;background:#fafafa;border:1px solid #eee">
+        <div style="width:10px;height:10px;border-radius:50%;background:${farbe};flex-shrink:0"></div>
+        <span style="flex:1;font-size:13px;font-weight:600">${esc(s.name)}</span>
+        <span style="font-size:12px;color:#888">BCM ${s.gpio != null ? s.gpio : '–'}</span>
+        <span style="font-size:11px;background:#f0f0f0;border-radius:5px;padding:2px 8px;color:${s.aktiv===false?'#ccc':'#555'}">${s.aktiv===false?'inaktiv':'aktiv'}</span>
+      </div>`;
+  }).join('');
+}
+
+function aktualisiereBuzzerKarte(nr) {
+  const karte = document.getElementById('buz-karte-' + nr);
+  const dot   = document.getElementById('buz-dot-'  + nr);
+  const st    = document.getElementById('buz-st-'   + nr);
+  if (!karte) { rendereBuzzerGrid(); return; }
+  const aktiv = buzzerStatus[nr] !== undefined;
+  karte.classList.toggle('aktiv-flash', aktiv);
+  dot.classList.toggle('an', aktiv);
+  if (aktiv) {
+    dot.classList.add('ping');
+    st.className = 'buz-status ok';
+    st.textContent = '✓ Signal OK';
+    dot.addEventListener('animationend', () => dot.classList.remove('ping'), { once: true });
+  } else {
+    dot.classList.remove('ping');
+    st.className = 'buz-status';
+    st.textContent = 'Warte auf Signal…';
+  }
+}
+
+function buzzerTestReset() {
+  if (socket) socket.emit('buzzer_reset_test');
+  buzzerStatus = {};
+  rendereBuzzerGrid();
 }
 
 // ── INIT ──
@@ -926,36 +1476,68 @@ function waehlefarbe(idx, farbe, bereich) {
   // Sofort speichern
   speichereAufPi();
 }
-let logoKlicks = 0;
-let logoTimer = null;
-let adminModus = false;
+let adminModus = true;
 
-function adminLogoKlick() {
-  logoKlicks++;
-  if(logoTimer) clearTimeout(logoTimer);
-  logoTimer = setTimeout(() => logoKlicks = 0, 3000);
-  if(logoKlicks >= 5) {
-    logoKlicks = 0;
-    if(adminModus) {
-      adminModus = false;
-      document.getElementById('btn-einstellungen').style.display = 'none';
-      document.getElementById('btn-fragen-text').textContent = 'Eigene Fragen';
-      document.getElementById('btn-eigene-fragen').querySelector('.icon').textContent = '➕';
-      zeigToast('Admin Modus beendet', '');
+function adminLogoKlick() {}
+
+// ── EINSTELLUNGEN SEITE ──
+let _vorherigeAnsicht = 'start';
+async function zeigeEinstellungenModal() {
+  // aktive Ansicht merken für Zurück-Button
+  const aktiv = document.querySelector('.ansicht.aktiv');
+  _vorherigeAnsicht = aktiv ? aktiv.id.replace('ansicht-', '') : 'start';
+  zeigeAnsicht('einst-quick');
+  const soundAn = localStorage.getItem('sf_sound') !== 'aus';
+  document.getElementById('einst-sound-toggle').checked = soundAn;
+  try {
+    const r = await fetch('/api/cloud/config');
+    const d = await r.json();
+    if (d.modus === 'konto' && d.email) {
+      document.getElementById('einst-konto-name').textContent = d.name || d.email.split('@')[0];
+      document.getElementById('einst-konto-info').textContent = `${d.email} · ${d.anzahl ?? 0} Fragen`;
     } else {
-      const pw = prompt('🔐 Admin Passwort:');
-      const adminPw = config.admin_passwort || 'schlagfertig2024';
-      if(pw === adminPw) {
-        adminModus = true;
-        document.getElementById('btn-einstellungen').style.display = 'flex';
-        document.getElementById('btn-fragen-text').textContent = 'Fragen & CSV';
-        document.getElementById('btn-eigene-fragen').querySelector('.icon').textContent = '📋';
-        zeigToast('✅ Admin Modus aktiviert', 'gruen');
-      } else if(pw !== null) {
-        zeigToast('❌ Falsches Passwort', 'rot');
-      }
+      document.getElementById('einst-konto-name').textContent = 'Gastmodus';
+      document.getElementById('einst-konto-info').textContent = 'Nicht angemeldet';
     }
-  }
+  } catch(_) {}
+  try {
+    const r = await fetch('/api/setup/ip');
+    const d = await r.json();
+    document.getElementById('einst-ip').textContent = d.ip ? `http://${d.ip}:5000` : 'Keine Verbindung';
+  } catch(_) {}
+}
+function zurueckVonEinstellungen() {
+  zeigeAnsicht(_vorherigeAnsicht);
+}
+function toggleSound(an) {
+  localStorage.setItem('sf_sound', an ? 'an' : 'aus');
+  zeigToast(an ? '🔊 Sound aktiviert' : '🔇 Sound deaktiviert', '');
+}
+
+// ── KONTO MODAL ──
+async function zeigeKontoModal() {
+  document.getElementById('konto-overlay').classList.add('offen');
+  try {
+    const r = await fetch('/api/cloud/config');
+    const d = await r.json();
+    if (d.modus === 'konto' && d.email) {
+      document.getElementById('konto-modal-inhalt').style.display = 'block';
+      document.getElementById('konto-modal-gast').style.display   = 'none';
+      document.getElementById('km-name').textContent   = d.name || d.email.split('@')[0];
+      document.getElementById('km-email').textContent  = d.email;
+      document.getElementById('km-anzahl').textContent = d.anzahl ?? '–';
+    } else {
+      document.getElementById('konto-modal-inhalt').style.display = 'none';
+      document.getElementById('konto-modal-gast').style.display   = 'block';
+    }
+  } catch(_) {}
+}
+function schliesseKontoModal() {
+  document.getElementById('konto-overlay').classList.remove('offen');
+}
+async function kontoAbmelden() {
+  try { await fetch('/api/cloud/abmelden', { method: 'POST' }); } catch(_) {}
+  window.location.href = '/login';
 }
 
 // ── EIGENE FRAGEN ──
@@ -1058,6 +1640,10 @@ async function ladeSystemInfo() {
       <div>🔗 <strong>Hostname:</strong> ${d.hostname || 'schlagfertig.local'}</div>
       <div>💾 <strong>Speicher:</strong> ${d.speicher || 'Unbekannt'}</div>
       <div>🌡️ <strong>CPU Temperatur:</strong> ${d.temperatur || 'Unbekannt'}</div>
+      <div style="margin-top:6px;padding-top:6px;border-top:1px solid #eee">
+        🔖 <strong>Software-Version:</strong>
+        <code style="background:#f4f4f0;padding:2px 6px;border-radius:4px;font-size:12px">${d.version || 'unbekannt'}</code>
+      </div>
     `;
   } catch(e) {
     const el = document.getElementById('system-info');
@@ -1090,7 +1676,7 @@ async function systemAusschalten() {
   if(!confirm('Pi wirklich herunterfahren?\n\nNach dem Herunterfahren Strom trennen.')) return;
   try {
     await fetch('/api/system/shutdown', {method:'POST'});
-    zeigToast('⏻ Pi wird heruntergefahren...', '');
+    zeigToast('🔴 Pi wird heruntergefahren...', '');
   } catch(e) {
     zeigToast('❌ Fehler', 'rot');
   }
@@ -1110,10 +1696,22 @@ async function init() {
   await ladeVomPi();
   config.spieler.forEach(s => { if(punkte[s.nr]===undefined) punkte[s.nr]=0; });
   if(config.fragen.length > 0) gewaehlteFragen = new Set(config.fragen.map((_,i)=>i));
+  try{
+    const r = await fetch('/api/cloud/config');
+    const d = await r.json();
+    if(d.rolle) userRolle = d.rolle;
+  }catch(_){}
   zeigeStartPunkte();
   pruefeSpielStatus();
   setInterval(pruefeSpielStatus, 5000);
   verbindeSocket();
+
+  // Wenn ?modus=frei oder ?modus=mc → direkt in Wizard springen
+  const urlModus = new URLSearchParams(window.location.search).get('modus');
+  if (urlModus === 'frei' || urlModus === 'mc') {
+    starteWizard();
+    setzeWizardModus(urlModus);
+  }
 }
 
 // ── ANSICHTEN ──
@@ -1142,14 +1740,24 @@ function zeigeStartPunkte() {
 }
 
 // ── TABS ──
+let _aktiverTab = 'spieler';
 function wechsleTab(id) {
-  const tabs=['spieler','fragen','punkte','optionen','sounds'];
+  const tabs=['spieler','buzzer','fragen','punkte','optionen','sounds','memeboard'];
+  if(_aktiverTab==='buzzer' && id!=='buzzer' && socket) socket.emit('test_stop');
+  _aktiverTab = id;
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('aktiv',tabs[i]===id));
   document.querySelectorAll('.seite').forEach(s=>s.classList.remove('aktiv'));
   document.getElementById('seite-'+id).classList.add('aktiv');
+  if(id==='buzzer'){ rendereBuzzerTab(); if(socket) socket.emit('test_start'); }
   if(id==='punkte') renderePunkte();
   if(id==='sounds') rendereEinstellungen();
-  if(id==='optionen') ladeSystemInfo();
+  if(id==='optionen'){
+    ladeSystemInfo();
+    const adminKarte = document.getElementById('admin-panel-karte');
+    if(adminKarte){ adminKarte.hidden = userRolle!=='admin'; }
+    if(userRolle==='admin') rendereAdminPanel();
+  }
+  if(id==='memeboard'){ ladeMemeBoard().then(()=>rendereMemeVerwaltung()); }
 }
 
 // ── FLASK API ──
@@ -1208,16 +1816,30 @@ async function pruefeSpielStatus() {
 }
 
 // ── WIZARD ──
+function starteWizardMitModus(modus) {
+  starteWizard();
+  wizardModus = modus;
+  setTimeout(() => setzeWizardModus(modus), 50);
+}
+
 function starteWizard() {
   const e = config.einstellungen;
   setTimeout(() => {
     const el = id => document.getElementById(id);
     if(el('wiz-warteschlange')) el('wiz-warteschlange').checked = e.warteschlange_aktiv !== false;
-    if(el('wiz-zweite-chance')) el('wiz-zweite-chance').checked = e.zweite_chance !== false;
     if(el('wiz-reaktion')) el('wiz-reaktion').checked = e.reaktionszeit_anzeigen !== false;
     if(el('wiz-mischen')) el('wiz-mischen').checked = e.fragen_mischen !== false;
     if(el('wiz-p-richtig')) el('wiz-p-richtig').value = e.punkte_richtig || 10;
     if(el('wiz-p-falsch')) el('wiz-p-falsch').value = e.punkte_falsch || 5;
+    // Zeitlimit und Zweite Chance laden + gegenseitige Sperre anwenden
+    const zeitlimitAn = e.zeitlimit_aktiv === true;
+    if(el('wiz-zeitlimit-aktiv')) el('wiz-zeitlimit-aktiv').checked = zeitlimitAn;
+    wizZeitlimitToggle(zeitlimitAn);
+    if(!zeitlimitAn) {
+      const zweiteChanceAn = e.zweite_chance !== false;
+      if(el('wiz-zweite-chance')) el('wiz-zweite-chance').checked = zweiteChanceAn;
+      wizZweiteChanceToggle(zweiteChanceAn);
+    }
   }, 100);
   const anzahl = config.spieler.filter(s => s.aktiv !== false).length;
   wizardSchritt(1);
@@ -1267,10 +1889,6 @@ function wizardWeiter(schritt) {
   // Immer automatisch speichern beim Weiterklicken
   speichereAufPi();
 
-  if(schritt === 2) {
-    const zeile = document.getElementById('wiz-zeile-zweite-chance');
-    if(zeile) zeile.style.opacity = wizardModus === 'mc' ? '0.4' : '1';
-  }
   if(schritt === 3) {
     const el = id => document.getElementById(id);
     config.einstellungen.spielmodus = wizardModus;
@@ -1278,6 +1896,10 @@ function wizardWeiter(schritt) {
     config.einstellungen.zweite_chance = el('wiz-zweite-chance')?.checked !== false;
     config.einstellungen.reaktionszeit_anzeigen = el('wiz-reaktion')?.checked !== false;
     config.einstellungen.fragen_mischen = el('wiz-mischen')?.checked !== false;
+    config.einstellungen.auto_weiter = el('wiz-auto-weiter')?.checked === true;
+    config.einstellungen.keine_wiederholung = el('wiz-keine-wiederholung')?.checked !== false;
+    config.einstellungen.zeitlimit_aktiv = el('wiz-zeitlimit-aktiv')?.checked === true;
+    config.einstellungen.zeitlimit_sek = parseInt(el('wiz-zeitlimit-sek')?.value) || 30;
     config.einstellungen.punkte_richtig = parseInt(el('wiz-p-richtig')?.value) || 10;
     config.einstellungen.punkte_falsch = parseInt(el('wiz-p-falsch')?.value) || 5;
     const hinweis = document.getElementById('wiz-modus-hinweis');
@@ -1287,6 +1909,28 @@ function wizardWeiter(schritt) {
     rendereFragenWizard();
   }
   wizardSchritt(schritt);
+}
+
+function wizZeitlimitToggle(an) {
+  const zeile = document.getElementById('wiz-zeitlimit-zeile');
+  if(zeile) zeile.style.display = an ? 'block' : 'none';
+  // Zweite Chance sperren wenn Timer aktiv (unvereinbar)
+  const zeileZC = document.getElementById('wiz-zeile-zweite-chance');
+  const cbZC = document.getElementById('wiz-zweite-chance');
+  const hintZC = document.getElementById('wiz-hint-zweite-chance');
+  if(zeileZC) { zeileZC.style.opacity = an ? '0.4' : '1'; zeileZC.style.pointerEvents = an ? 'none' : 'auto'; }
+  if(cbZC && an) cbZC.checked = false;
+  if(hintZC) hintZC.style.display = an ? 'block' : 'none';
+}
+
+function wizZweiteChanceToggle(an) {
+  // Zeitlimit sperren wenn Zweite Chance aktiv (unvereinbar)
+  const zeileZL = document.getElementById('wiz-zeile-zeitlimit');
+  const cbZL = document.getElementById('wiz-zeitlimit-aktiv');
+  const hintZL = document.getElementById('wiz-hint-zeitlimit');
+  if(zeileZL) { zeileZL.style.opacity = an ? '0.4' : '1'; zeileZL.style.pointerEvents = an ? 'none' : 'auto'; }
+  if(cbZL && an) { cbZL.checked = false; wizZeitlimitToggle(false); }
+  if(hintZL) hintZL.style.display = an ? 'block' : 'none';
 }
 
 function wizardZurueck(schritt) {
@@ -1318,7 +1962,12 @@ function rendereSpielerwizard() {
           style="border:1.5px solid #ddd;border-radius:8px;padding:5px 8px;font-size:13px;width:100%;outline:none;text-align:center;margin-top:4px"
           oninput="updateSpieler(${i},'name',this.value)">
       </div>
-      <div class="sw-gpio" style="margin-top:4px">GPIO ${s.gpio}</div>
+      <div class="sw-gpio" style="margin-top:6px;display:flex;align-items:center;justify-content:center;gap:5px">
+        <span style="font-size:11px;color:#888">GPIO BCM</span>
+        <input type="number" min="0" max="27" value="${s.gpio||''}" placeholder="–"
+          style="width:52px;border:1.5px solid #ddd;border-radius:7px;padding:3px 5px;font-size:12px;outline:none;text-align:center"
+          oninput="updateSpieler(${i},'gpio',this.value===''?null:parseInt(this.value))">
+      </div>
       ${farbPaletteHTML(i, s.farbe, 'wizard')}
     </div>`).join('');
 }
@@ -1332,7 +1981,7 @@ function toggleSpielerAktiv(idx, aktiv) {
 
 function setzeWizardModus(modus) {
   wizardModus = modus;
-  ['frei','mc'].forEach(m => document.getElementById('mwk-'+m).classList.toggle('aktiv', m===modus));
+  ['frei','mc'].forEach(m => document.getElementById('mwk-'+m)?.classList.toggle('aktiv', m===modus));
   // Warteschlange und Zweite Chance bei MC ausgrauen
   const istMC = modus === 'mc';
   const zeileWQ = document.getElementById('wiz-zeile-warteschlange');
@@ -1351,17 +2000,24 @@ function setzeWizardModus(modus) {
 function rendereFragenWizard() {
   const suche = document.getElementById('wiz-suche').value.toLowerCase();
   const fk = document.getElementById('wiz-filter-kat').value;
+  const fs = document.getElementById('wiz-filter-schwer').value;
 
   // Nur Fragen die zum gewählten Modus passen
-  const gef = config.fragen.filter(f => {
+  let gef = config.fragen.filter(f => {
     const istMC = f.modus === 'mc';
-    // Modus Filter
     if(wizardModus==='mc' && !istMC) return false;
     if(wizardModus==='frei' && istMC) return false;
-    if(!wizardFilterAktiv[f.schwierigkeit]) return false;
-    if(fk && f.kategorie!==fk) return false;
+    if(fs && f.schwierigkeit !== fs) return false;
+    if(fk && f.kategorie !== fk) return false;
     if(suche && !f.frage.toLowerCase().includes(suche)) return false;
     return true;
+  });
+
+  // Gewählte Fragen nach oben
+  gef.sort((a, b) => {
+    const aGew = gewaehlteFragen.has(config.fragen.indexOf(a));
+    const bGew = gewaehlteFragen.has(config.fragen.indexOf(b));
+    return (bGew ? 1 : 0) - (aGew ? 1 : 0);
   });
 
   // Kategorien aktualisieren
@@ -1370,7 +2026,7 @@ function rendereFragenWizard() {
     if(wizardModus==='mc' && !istMC) return false;
     if(wizardModus==='frei' && istMC) return false;
     return true;
-  }).map(f=>f.kategorie))].sort();
+  }).map(f=>f.kategorie).filter(Boolean))].sort();
   const sel = document.getElementById('wiz-filter-kat');
   const ak = sel.value;
   sel.innerHTML = '<option value="">Alle Kategorien</option>' + kats.map(k=>`<option value="${k}" ${k===ak?'selected':''}>${k}</option>`).join('');
@@ -1417,19 +2073,22 @@ function keineWaehlenWizard() {
 }
 
 function zufaelligWaehlenWizard(n) {
+  const fk = document.getElementById('wiz-filter-kat').value;
+  const fs = document.getElementById('wiz-filter-schwer').value;
   const verfuegbar = config.fragen.map((_,i)=>i).filter(i=>{
     const f = config.fragen[i];
     const istMC = f.modus === 'mc';
     if(wizardModus==='mc' && !istMC) return false;
     if(wizardModus==='frei' && istMC) return false;
-    if(!wizardFilterAktiv[f.schwierigkeit]) return false;
+    if(fs && f.schwierigkeit !== fs) return false;
+    if(fk && f.kategorie !== fk) return false;
     return true;
   });
   if(verfuegbar.length === 0) { zeigToast('Keine passenden Fragen!','rot'); return; }
   const gemischt = [...verfuegbar].sort(()=>Math.random()-.5);
   gewaehlteFragen = new Set(gemischt.slice(0, Math.min(n, gemischt.length)));
   rendereFragenWizard();
-  zeigToast(`${gewaehlteFragen.size} Fragen gewählt`,'gruen');
+  zeigToast(`${gewaehlteFragen.size} Fragen zufällig gewählt`,'gruen');
 }
 
 function toggleWizardFilter(typ) {
@@ -1473,7 +2132,12 @@ async function spielStarten() {
       zeigToast('▶ Spiel gestartet!','gruen');
       // Nur aktive Spieler
       const aktiveSpieler = config.spieler.filter(s => s.aktiv !== false);
-      modFragenListe = config.fragen.filter((_,i) => gewaehlteFragen.has(i));
+      modFragenListe = config.fragen.filter((f,i) => {
+        if (!gewaehlteFragen.has(i)) return false;
+        if (wizardModus === 'mc'   && f.modus !== 'mc') return false;
+        if (wizardModus === 'frei' && f.modus === 'mc') return false;
+        return true;
+      });
       if(config.einstellungen.fragen_mischen) modFragenListe = modFragenListe.sort(()=>Math.random()-.5);
       modAktuellIdx = 0;
       modPunkte = {};
@@ -1489,10 +2153,21 @@ async function spielStarten() {
         punkte: modPunkte,
         gesamt: modFragenListe.length,
         spielmodus: wizardModus,
-        aktive_spieler: aktiveSpieler
+        aktive_spieler: aktiveSpieler,
+        zeitlimit_aktiv: config.einstellungen.zeitlimit_aktiv || false,
+        zeitlimit_sek: config.einstellungen.zeitlimit_sek || 30
       });
     } else zeigToast('❌ '+d.error,'rot');
   } catch(e) { zeigToast('❌ Keine Verbindung','rot'); }
+}
+
+function homeKlick() {
+  zeigeAnsicht('start');
+}
+
+async function homeKlickImSpiel() {
+  if(!confirm('Spiel wirklich abbrechen und zur Startseite gehen?')) return;
+  await spielStoppen();
 }
 
 async function spielStoppen() {
@@ -1539,18 +2214,11 @@ function rendereModFrage() {
     return;
   }
 
-  // Button zurücksetzen
+  // Button zurücksetzen – immer "Nächste Frage" beim Anzeigen der Frage
   if(naechsteBtn) {
-    // Letzte Frage? Button schon jetzt anpassen
-    if(modAktuellIdx === modFragenListe.length - 1) {
-      naechsteBtn.textContent = '🏆 Sieger verkünden!';
-      naechsteBtn.style.background = '#f39c12';
-      naechsteBtn.onclick = verkuendeSimulierer;
-    } else {
-      naechsteBtn.textContent = 'Nächste Frage →';
-      naechsteBtn.style.background = '';
-      naechsteBtn.onclick = modNaechsteFrage;
-    }
+    naechsteBtn.textContent = 'Nächste Frage →';
+    naechsteBtn.style.background = '';
+    naechsteBtn.onclick = modNaechsteFrage;
   }
   document.getElementById('mod-frage-nr').textContent = `FRAGE ${modAktuellIdx+1} / ${modFragenListe.length}`;
   document.getElementById('mod-frage-kat').textContent = f.kategorie;
@@ -1564,6 +2232,15 @@ function rendereModFrage() {
     freiButtons.style.display='none';
     aufloesen.style.display='block';
     aufloesen.disabled=true;
+    let hint = document.getElementById('mod-mc-hint');
+    if(!hint) {
+      hint = document.createElement('p');
+      hint.id = 'mod-mc-hint';
+      hint.style.cssText = 'font-size:12px;color:#aaa;margin:8px 0 2px;text-align:center;';
+      mcAuswahl.parentNode.insertBefore(hint, mcAuswahl);
+    }
+    hint.textContent = 'Tippe die Antwort an, die der Spieler gegeben hat';
+    hint.style.display = 'block';
     mcAuswahl.innerHTML = f.antworten_mc.map((a,i)=>`
       <button class="mc-auswahl-btn mc-${['a','b','c','d'][i]}" onclick="modWaehleAntwort(${i})">
         ${MC_BUCHST[i]}: ${a}
@@ -1574,6 +2251,8 @@ function rendereModFrage() {
     aufloesen.style.display='none';
     document.getElementById('mod-btn-richtig').disabled=true;
     document.getElementById('mod-btn-falsch').disabled=true;
+    const hint = document.getElementById('mod-mc-hint');
+    if(hint) hint.style.display = 'none';
   }
 }
 
@@ -1613,14 +2292,22 @@ function modMCAufloesen() {
     }
     modWarteschlange=[];
   }
+  const hint = document.getElementById('mod-mc-hint');
+  if(hint) hint.style.display = 'none';
   socket.emit('mod_mc_aufloesen', {
     gewaehlt:modGewaehlteAntwort, richtig_idx:richtigIdx,
+    falsch_idx: richtig ? null : modGewaehlteAntwort,
     richtig:richtig, punkte:modPunkte,
     delta:richtig?pr:pf
   });
   document.getElementById('mod-btn-aufloesen').disabled=true;
   rendereModPunkte();
   rendereWarteschlange();
+  const istLetzteFrage = modAktuellIdx === modFragenListe.length - 1;
+  if(istLetzteFrage) {
+    const btn = document.getElementById('mod-btn-naechste');
+    if(btn){ btn.textContent='🏆 Sieger verkünden!'; btn.style.background='#f39c12'; btn.onclick=verkuendeSimulierer; }
+  }
 }
 
 function rendereModNav() {
@@ -1665,11 +2352,20 @@ function modBewerteAntwort(richtig) {
   const pr=config.einstellungen.punkte_richtig||10;
   const pf=config.einstellungen.punkte_falsch||5;
   const name=config.spieler.find(s=>s.nr===erster.nr)?.name||'';
+  const istLetzteFrage = modAktuellIdx === modFragenListe.length - 1;
   if(richtig){
     modPunkte[erster.nr]=(modPunkte[erster.nr]||0)+pr;
     zeigToast(`+${pr} für ${name}!`,'gruen');
     modWarteschlange=[];
     socket.emit('mod_richtig',{punkte:modPunkte,delta:pr});
+    if(istLetzteFrage) {
+      // Letzte Frage beantwortet: Button auf Sieger verkünden umstellen
+      const btn = document.getElementById('mod-btn-naechste');
+      if(btn){ btn.textContent='🏆 Sieger verkünden!'; btn.style.background='#f39c12'; btn.onclick=verkuendeSimulierer; }
+    } else if(config.einstellungen.auto_weiter) {
+      // Auto-Weiter: nach Pi-Animation (3 Sek Richtig + kurz Puffer) nächste Frage
+      setTimeout(modNaechsteFrage, 3500);
+    }
   } else {
     modPunkte[erster.nr]=Math.max(0,(modPunkte[erster.nr]||0)-pf);
     zeigToast(`-${pf} für ${name}`,'rot');
@@ -1677,7 +2373,11 @@ function modBewerteAntwort(richtig) {
     socket.emit('mod_falsch',{punkte:modPunkte,delta:pf});
     if(modWarteschlange.length>0){
       const naechster=config.spieler.find(s=>s.nr===modWarteschlange[0].nr);
-      if(naechster) setTimeout(()=>zeigToast(`🥈 ${naechster.name} ist jetzt dran!`,''),500);
+      if(naechster) setTimeout(()=>zeigToast(`${naechster.name} ist jetzt dran!`,''),500);
+    } else if(istLetzteFrage) {
+      // Letzte Frage, alle falsch: Button auf Sieger verkünden
+      const btn = document.getElementById('mod-btn-naechste');
+      if(btn){ btn.textContent='🏆 Sieger verkünden!'; btn.style.background='#f39c12'; btn.onclick=verkuendeSimulierer; }
     }
   }
   rendereWarteschlange();
@@ -1700,7 +2400,9 @@ function modNaechsteFrage() {
       idx:modAktuellIdx,
       gesamt:modFragenListe.length,
       spielmodus:wizardModus,
-      aktive_spieler:config.spieler.filter(s=>s.aktiv!==false)
+      aktive_spieler:config.spieler.filter(s=>s.aktiv!==false),
+      zeitlimit_aktiv: config.einstellungen.zeitlimit_aktiv || false,
+      zeitlimit_sek: config.einstellungen.zeitlimit_sek || 30
     });
   } else {
     zeigToast('Alle Fragen gespielt!','');
@@ -1718,7 +2420,9 @@ function modSpringe(idx) {
     frage:modFragenListe[idx],idx,
     gesamt:modFragenListe.length,
     spielmodus:wizardModus,
-    aktive_spieler:config.spieler.filter(s=>s.aktiv!==false)
+    aktive_spieler:config.spieler.filter(s=>s.aktiv!==false),
+    zeitlimit_aktiv: config.einstellungen.zeitlimit_aktiv || false,
+    zeitlimit_sek: config.einstellungen.zeitlimit_sek || 30
   });
 }
 
@@ -1762,7 +2466,10 @@ function rendereSpieler(){
       <label>Farbe</label>
       <div class="farb-zeile">
         <div style="width:26px;height:26px;border-radius:50%;background:${s.farbe};border:2px solid #ddd;flex-shrink:0"></div>
-        <span class="gpio-badge">GPIO ${s.gpio}</span>
+        <label style="margin:0;font-size:12px;color:#888;font-weight:500;white-space:nowrap">GPIO BCM</label>
+        <input type="number" min="0" max="27" value="${s.gpio||''}" placeholder="–"
+          style="width:58px;border:1.5px solid #ddd;border-radius:8px;padding:4px 6px;font-size:13px;outline:none"
+          oninput="updateSpieler(${idx},'gpio',this.value===''?null:parseInt(this.value))">
       </div>
       ${farbPaletteHTML(idx, s.farbe, 'einst')}`;
     grid.appendChild(div);
@@ -2206,6 +2913,547 @@ function schliesseCam(){
 
 document.getElementById('cam-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('cam-overlay'))schliesseCam();});
 document.getElementById('frage-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('frage-overlay'))schliesseFrageModal();});
+
+// ── MEME-BOARD ──
+let memeBoard = {kacheln:[], soundKategorien:['reaktion','ergebnis','spannung'], gifKategorien:[], spielSounds:{}};
+let memeBearbeitenId = null;
+let memeGifsBibliothek = [];
+let aktivesMemeTab = 'sounds';
+let aktiveKatSound = 'alle';
+let aktiveKatGif = 'alle';
+let userRolle = 'user';
+
+const SPIELEREIGNISSE = [
+  {gruppe:'🔴 Buzzer', ereignisse:[
+    {id:'buzzer',      icon:'🔴', name:'Buzzer gedrückt',      desc:'Wenn ein Spieler den Buzzer drückt'},
+    {id:'buzzer_locked',icon:'🔒', name:'Buzzer gesperrt',      desc:'Buzzer-Klick außerhalb der Spielphase'},
+  ]},
+  {gruppe:'✅ Antworten', ereignisse:[
+    {id:'richtig',  icon:'✅', name:'Richtige Antwort',  desc:'Kandidat antwortet korrekt'},
+    {id:'falsch',   icon:'❌', name:'Falsche Antwort',   desc:'Kandidat antwortet falsch'},
+    {id:'timeout',  icon:'⏰', name:'Zeit abgelaufen',   desc:'Zeitlimit überschritten'},
+  ]},
+  {gruppe:'🎮 Spielverlauf', ereignisse:[
+    {id:'spiel_start',  icon:'🎮', name:'Spiel startet',          desc:'Zu Beginn einer neuen Spielrunde'},
+    {id:'runde_start',  icon:'▶️', name:'Neue Runde',             desc:'Nächste Runde beginnt'},
+    {id:'spieler_raus', icon:'🚫', name:'Spieler scheidet aus',   desc:'Elimination eines Kandidaten'},
+    {id:'sieger',       icon:'🏆', name:'Gewinner steht fest',    desc:'Spielende – Sieger ermittelt'},
+  ]},
+  {gruppe:'📊 100 Leute', ereignisse:[
+    {id:'hundert_antwort', icon:'📊', name:'Antwort aufgedeckt', desc:'Eine Antwort wird enthüllt'},
+    {id:'hundert_top',     icon:'🥇', name:'Top-Antwort',        desc:'Platz 1 wird aufgedeckt'},
+    {id:'hundert_strike',  icon:'💢', name:'Strike!',            desc:'Antwort nicht auf der Liste'},
+  ]},
+];
+
+async function ladeMemeBoard(){
+  try{
+    const r = await fetch('/api/meme-board');
+    if(r.ok){
+      const d = await r.json();
+      memeBoard = Object.assign({kacheln:[], soundKategorien:['reaktion','ergebnis','spannung'], gifKategorien:[], spielSounds:{}}, d);
+    }
+  }catch(e){ console.log('Meme-Board offline'); }
+  // Rückwärtskompatibilität: gespeicherte Spielsounds aus config laden
+  if(config.einstellungen.sounds && Object.keys(config.einstellungen.sounds).length){
+    memeBoard.spielSounds = Object.assign({}, config.einstellungen.sounds, memeBoard.spielSounds);
+  }
+}
+
+// ── TAB WECHSELN ──
+function wechsleMemeTab(tab){
+  aktivesMemeTab = tab;
+  ['sounds','gifs','giphy','freesound','spielsounds'].forEach(t=>{
+    document.getElementById('mtab-'+t).classList.toggle('aktiv', t===tab);
+    document.getElementById('meme-panel-'+t).hidden = t!==tab;
+  });
+  if(tab==='sounds')           rendereSoundTab();
+  else if(tab==='gifs')        rendereGifTab();
+  else if(tab==='giphy')       rendereGiphyTab();
+  else if(tab==='freesound')   rendereFreesoundTab();
+  else if(tab==='spielsounds') rendereSpielSoundsTab();
+}
+
+function rendereMemeVerwaltung(){
+  if(aktivesMemeTab==='sounds')           rendereSoundTab();
+  else if(aktivesMemeTab==='gifs')        rendereGifTab();
+  else if(aktivesMemeTab==='giphy')       rendereGiphyTab();
+  else if(aktivesMemeTab==='freesound')   rendereFreesoundTab();
+  else if(aktivesMemeTab==='spielsounds') rendereSpielSoundsTab();
+  else rendereSoundTab();
+}
+
+// ── SOUNDS TAB ──
+function rendereSoundTab(){
+  rendereSoundChips();
+  rendereSoundGrid();
+}
+function rendereSoundChips(){
+  const el = document.getElementById('sound-chips'); if(!el) return;
+  const kats = memeBoard.soundKategorien || [];
+  el.innerHTML =
+    `<button class="meme-chip${aktiveKatSound==='alle'?' aktiv':''}" onclick="filterSoundKat('alle')">Alle</button>`
+    + kats.map(k=>`<button class="meme-chip${aktiveKatSound===k?' aktiv':''}" onclick="filterSoundKat('${k}')">${k}</button>`).join('')
+    + `<button class="meme-chip-add" onclick="memeKachelModal(null,'sound')">＋ Sound</button>`;
+}
+function filterSoundKat(kat){ aktiveKatSound=kat; rendereSoundTab(); }
+function rendereSoundGrid(){
+  const el = document.getElementById('meme-grid-sounds'); if(!el) return;
+  let kacheln = memeKachelnNachTyp('sound');
+  if(aktiveKatSound!=='alle') kacheln = kacheln.filter(k=>k.kategorie===aktiveKatSound);
+  el.innerHTML = kacheln.map(k=>memeKachelHTML(k,true)).join('')
+    + `<div class="meme-kachel-leer" onclick="memeKachelModal(null,'sound')"><div style="font-size:20px">＋</div><div style="font-size:11px;font-weight:600">Sound</div></div>`;
+}
+
+// ── GIFS TAB ──
+function rendereGifTab(){
+  rendereGifChips();
+  rendereGifGrid();
+}
+function rendereGifChips(){
+  const el = document.getElementById('gif-chips'); if(!el) return;
+  const kats = memeBoard.gifKategorien || [];
+  el.innerHTML =
+    `<button class="meme-chip${aktiveKatGif==='alle'?' aktiv':''}" onclick="filterGifKat('alle')">Alle</button>`
+    + kats.map(k=>`<button class="meme-chip${aktiveKatGif===k?' aktiv':''}" onclick="filterGifKat('${k}')">${k}</button>`).join('')
+    + `<button class="meme-chip-add" onclick="memeKachelModal(null,'gif')">＋ Kachel</button>`;
+}
+function filterGifKat(kat){ aktiveKatGif=kat; rendereGifTab(); }
+function rendereGifGrid(){
+  const el = document.getElementById('meme-grid-gifs'); if(!el) return;
+  let kacheln = memeKachelnNachTyp('gif');
+  if(aktiveKatGif!=='alle') kacheln = kacheln.filter(k=>k.kategorie===aktiveKatGif);
+  el.innerHTML = kacheln.map(k=>memeKachelHTML(k,true)).join('')
+    + `<div class="meme-kachel-leer" onclick="memeKachelModal(null,'gif')"><div style="font-size:20px">＋</div><div style="font-size:11px;font-weight:600">GIF/Sticker</div></div>`;
+}
+
+// ── KACHEL HTML ──
+function memeKachelnNachTyp(typ){ return (memeBoard.kacheln||[]).filter(k=>k.typ===typ); }
+
+function memeKachelHTML(k, bearbeiten){
+  const loeschen = bearbeiten ? `<div class="meme-loeschen" onclick="event.stopPropagation();memeKachelLoeschen('${k.id}')">✕</div>` : '';
+  if(k.typ==='sound'){
+    const editBtn = bearbeiten ? `<button class="edit-btn" onclick="event.stopPropagation();memeKachelModal('${k.id}','sound')">✎</button>` : '';
+    const klick = bearbeiten ? `spieleMemeSoundVorschau('${k.id}')` : `spieleMemeKachel('${k.id}')`;
+    return `<div class="meme-kachel sound" id="mk-${k.id}" onclick="${klick}">${loeschen}${editBtn}
+      <div class="icon-sound">${k.icon||'🔊'}</div>
+      <div class="name">${k.name}</div>
+    </div>`;
+  }
+  const klick = bearbeiten ? `memeKachelModal('${k.id}','gif')` : `spieleMemeKachel('${k.id}')`;
+  const badge = k.gif ? (k.gif.endsWith('.mp4')?'VIDEO':'GIF') : 'STICKER';
+  const media = k.gif
+    ? `<img class="loop-preview" src="/gifs/${k.gif}" alt="${k.name}" loading="lazy">`
+    : `<div class="icon-flaeche">${k.icon||'🎬'}<div class="typ-badge">${badge}</div></div>`;
+  return `<div class="meme-kachel gif" onclick="${klick}">${loeschen}
+    ${media}
+    <div class="name">${k.name}</div>
+  </div>`;
+}
+
+// ── SOUND VORSCHAU (Verwaltung) ──
+function spieleMemeSoundVorschau(id){
+  const k = (memeBoard.kacheln||[]).find(x=>x.id===id);
+  if(!k || !k.sound) return;
+  const tile = document.getElementById('mk-'+id);
+  if(tile) tile.classList.add('playing');
+  const audio = new Audio('/meme-sounds/'+k.sound);
+  audio.onended = ()=>{ if(tile) tile.classList.remove('playing'); };
+  audio.play().catch(()=>{ if(tile) tile.classList.remove('playing'); zeigToast('❌ Sound nicht abspielbar','rot'); });
+}
+
+// ── MEME-OVERLAY (Moderator) ──
+async function oeffneMemeOverlay(){
+  await ladeMemeBoard();
+  rendereMemeGrids('meme-overlay-sound','meme-overlay-gif', false);
+  document.getElementById('meme-overlay').classList.add('offen');
+}
+function schliesseMemeOverlay(){ document.getElementById('meme-overlay').classList.remove('offen'); }
+
+function rendereMemeGrids(soundElId, gifElId, bearbeiten){
+  const soundEl = document.getElementById(soundElId);
+  const gifEl = document.getElementById(gifElId);
+  if(soundEl) soundEl.innerHTML = memeKachelnNachTyp('sound').map(k=>memeKachelHTML(k,bearbeiten)).join('');
+  if(gifEl) gifEl.innerHTML = memeKachelnNachTyp('gif').map(k=>memeKachelHTML(k,bearbeiten)).join('');
+}
+
+function spieleMemeKachel(id){
+  const k = (memeBoard.kacheln||[]).find(x=>x.id===id);
+  if(!k) return;
+  if(k.sound){
+    const audio = new Audio('/meme-sounds/'+k.sound);
+    audio.play().catch(()=>zeigToast('❌ Sound nicht abspielbar','rot'));
+  }
+  if(k.typ==='gif'){
+    if(k.gif) socket.emit('mod_meme', {gif:k.gif});
+    else if(!k.sound) zeigToast('⚠️ Keine Datei hinterlegt','rot');
+  } else if(!k.sound){
+    zeigToast('⚠️ Kein Sound hinterlegt','rot');
+  }
+}
+
+// ── GIPHY TAB ──
+async function rendereGiphyTab(){
+  try{
+    const r = await fetch('/api/api-keys-status');
+    const d = await r.json();
+    const el = document.getElementById('giphy-key-status');
+    if(el){
+      if(d.giphy){
+        el.className='api-key-status ok';
+        el.innerHTML='<span>✅</span><span>Giphy-API-Key konfiguriert</span>';
+      } else {
+        el.className='api-key-status fehlt';
+        el.innerHTML='<span>🔑</span><span>Giphy-API-Key nicht gesetzt — bitte <code>GIPHY_API_KEY=…</code> in <code>.env</code> auf dem Pi eintragen</span>';
+      }
+    }
+  }catch(_){}
+  ladePiGifs();
+}
+
+async function giphySuche(){
+  const q = document.getElementById('giphy-suchfeld').value.trim();
+  if(!q){ zeigToast('⚠️ Suchbegriff eingeben','rot'); return; }
+  await speichereAufPi();
+  try{
+    const r = await fetch('/api/giphy-search?q='+encodeURIComponent(q));
+    const d = await r.json();
+    if(d.error){ zeigToast('❌ '+d.error,'rot'); return; }
+    const el = document.getElementById('giphy-ergebnisse');
+    el.innerHTML = (d.results||[]).map(g=>`
+      <div style="aspect-ratio:1;border-radius:10px;overflow:hidden;position:relative;cursor:pointer" onclick='giphyDownload(${JSON.stringify(g).replace(/'/g,"&#39;")})'>
+        <img src="${g.vorschau}" style="width:100%;height:100%;object-fit:cover;display:block">
+        <div style="position:absolute;bottom:5px;right:5px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-weight:700;padding:3px 7px;border-radius:6px">⬇ Laden</div>
+      </div>`).join('') || '<p style="font-size:12px;color:#999">Keine Treffer</p>';
+  }catch(e){ zeigToast('❌ Giphy-Suche fehlgeschlagen','rot'); }
+}
+
+async function giphyDownload(g){
+  try{
+    const r = await fetch('/api/giphy-download', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({gif_url:g.gif_url, id:g.id})});
+    const d = await r.json();
+    if(d.status==='ok'){
+      zeigToast('✅ Heruntergeladen: '+d.dateiname,'gruen');
+      ladePiGifs();
+    } else zeigToast('❌ '+d.error,'rot');
+  }catch(e){ zeigToast('❌ Download fehlgeschlagen','rot'); }
+}
+
+async function ladePiGifs(){
+  const el = document.getElementById('pi-gif-grid'); if(!el) return;
+  el.innerHTML = '<p style="font-size:12px;color:#999">Lade…</p>';
+  try{
+    const r = await fetch('/api/gifs-liste');
+    const d = await r.json();
+    renderePiGifs(d.dateien||[]);
+  }catch(e){ el.innerHTML='<p style="font-size:12px;color:#999">Nicht verfügbar</p>'; }
+}
+
+function renderePiGifs(dateien){
+  const el = document.getElementById('pi-gif-grid'); if(!el) return;
+  if(!dateien.length){ el.innerHTML='<p style="font-size:12px;color:#999">Noch keine GIFs gespeichert.</p>'; return; }
+  el.innerHTML = dateien.map(f=>`
+    <div class="pi-gif-kachel" onclick="oeffneGifDetail('${f}')">
+      <img src="/gifs/${f}" alt="${f}" loading="lazy">
+      <div class="pi-gif-nm">${f}</div>
+    </div>`).join('');
+}
+
+function oeffneGifDetail(datei){
+  document.getElementById('gd-img').src = '/gifs/'+datei;
+  document.getElementById('gd-name').textContent = datei;
+  const sel = document.getElementById('gd-kategorie');
+  const kats = memeBoard.gifKategorien || [];
+  sel.innerHTML = '<option value="">— keine Kategorie —</option>'
+    + kats.map(k=>`<option value="${k}">${k}</option>`).join('')
+    + '<option value="__neu__">＋ Neue Kategorie…</option>';
+  const existing = (memeBoard.kacheln||[]).find(k=>k.typ==='gif'&&k.gif===datei);
+  if(existing && existing.kategorie) sel.value = existing.kategorie;
+  document.getElementById('gd-neue-kat-feld').hidden = true;
+  document.getElementById('gif-detail-overlay').classList.add('offen');
+  document.getElementById('gif-detail-overlay').dataset.datei = datei;
+}
+function gdKatChanged(){
+  document.getElementById('gd-neue-kat-feld').hidden = document.getElementById('gd-kategorie').value!=='__neu__';
+}
+async function gifDetailSpeichern(){
+  const datei = document.getElementById('gif-detail-overlay').dataset.datei;
+  let kat = document.getElementById('gd-kategorie').value;
+  if(kat==='__neu__'){
+    kat = document.getElementById('gd-neue-kat').value.trim().toLowerCase().replace(/\s+/g,'-');
+    if(!kat){ zeigToast('⚠️ Bitte Kategorie eingeben','rot'); return; }
+    if(!(memeBoard.gifKategorien||[]).includes(kat)){
+      if(!memeBoard.gifKategorien) memeBoard.gifKategorien=[];
+      memeBoard.gifKategorien.push(kat);
+    }
+  }
+  if(!memeBoard.kacheln) memeBoard.kacheln=[];
+  let k = memeBoard.kacheln.find(x=>x.typ==='gif'&&x.gif===datei);
+  if(!k){
+    k={id:'m'+Date.now(), name:datei.replace(/\.[^.]+$/,''), icon:'🎬', typ:'gif', gif:datei, sound:null, kategorie:kat||''};
+    memeBoard.kacheln.push(k);
+  } else { k.kategorie = kat||''; }
+  await speichereMemeBoard();
+  schliesseGifDetail();
+  zeigToast('✅ GIF gespeichert','gruen');
+  rendereGifTab();
+}
+function schliesseGifDetail(){ document.getElementById('gif-detail-overlay').classList.remove('offen'); }
+
+// ── FREESOUND TAB ──
+let fsVorschauAudio = null;
+
+async function rendereFreesoundTab(){
+  try{
+    const r = await fetch('/api/api-keys-status');
+    const d = await r.json();
+    const el = document.getElementById('freesound-key-status');
+    if(el){
+      if(d.freesound){
+        el.className='api-key-status ok';
+        el.innerHTML='<span>✅</span><span>Freesound-API-Key konfiguriert</span>';
+      } else {
+        el.className='api-key-status fehlt';
+        el.innerHTML='<span>🔑</span><span>Freesound-API-Key nicht gesetzt — bitte <code>FREESOUND_API_KEY=…</code> in <code>.env</code> auf dem Pi eintragen</span>';
+      }
+    }
+  }catch(_){}
+}
+
+async function freesoundSuche(){
+  const q = document.getElementById('freesound-suchfeld').value.trim();
+  if(!q){ zeigToast('⚠️ Suchbegriff eingeben','rot'); return; }
+  const el = document.getElementById('freesound-ergebnisse');
+  el.innerHTML = '<p style="font-size:12px;color:#999">Suche…</p>';
+  try{
+    const r = await fetch('/api/freesound-search?q='+encodeURIComponent(q));
+    const d = await r.json();
+    if(d.error){ zeigToast('❌ '+d.error,'rot'); el.innerHTML=''; return; }
+    if(!d.results||!d.results.length){ el.innerHTML='<p style="font-size:12px;color:#999">Keine Treffer</p>'; return; }
+    el.innerHTML = d.results.map(s=>`
+      <div class="freesound-treffer" id="fst-${s.id}">
+        <div class="fs-name">
+          <div class="fs-titel">${escHTML(s.name)}</div>
+          <div class="fs-meta">von ${escHTML(s.nutzer)} · ${s.dauer} s</div>
+        </div>
+        <button class="fs-btn" id="fsv-${s.id}" onclick='freesoundVorschau(${JSON.stringify(s)})'>▶ Anhören</button>
+        <button class="fs-btn" onclick='freesoundDownload(${JSON.stringify(s)})'>⬇ Laden</button>
+      </div>`).join('');
+  }catch(e){ el.innerHTML=''; zeigToast('❌ Freesound-Suche fehlgeschlagen','rot'); }
+}
+
+function freesoundVorschau(s){
+  if(fsVorschauAudio){ fsVorschauAudio.pause(); fsVorschauAudio=null; }
+  document.querySelectorAll('.fs-btn').forEach(b=>b.classList.remove('aktiv'));
+  const btn = document.getElementById('fsv-'+s.id);
+  if(btn) btn.classList.add('aktiv');
+  fsVorschauAudio = new Audio(s.vorschau);
+  fsVorschauAudio.onended = ()=>{ if(btn) btn.classList.remove('aktiv'); fsVorschauAudio=null; };
+  fsVorschauAudio.play().catch(()=>{ if(btn) btn.classList.remove('aktiv'); zeigToast('❌ Vorschau nicht verfügbar','rot'); });
+}
+
+async function freesoundDownload(s){
+  zeigToast('⬇ Lade herunter…','');
+  try{
+    const r = await fetch('/api/freesound-download', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({vorschau_url:s.vorschau, name:s.name, id:s.id})});
+    const d = await r.json();
+    if(d.status==='ok'){
+      zeigToast('✅ Heruntergeladen: '+d.dateiname,'gruen');
+      await ladeMemeBoard();
+      rendereSoundGrid();
+    } else zeigToast('❌ '+(d.error||'Fehler'),'rot');
+  }catch(e){ zeigToast('❌ Download fehlgeschlagen','rot'); }
+}
+
+function escHTML(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── ADMIN PANEL ──
+async function rendereAdminPanel(){
+  const el = document.getElementById('admin-email-liste'); if(!el) return;
+  el.innerHTML = '<p style="font-size:12px;color:#999">Lade…</p>';
+  try{
+    const r = await fetch('/api/admin/rollen');
+    const d = await r.json();
+    if(d.error){ el.innerHTML='<p style="font-size:12px;color:#c0392b">'+escHTML(d.error)+'</p>'; return; }
+    const admins = d.admins||[];
+    if(!admins.length){ el.innerHTML='<p style="font-size:12px;color:#999">Noch keine Admins eingetragen.</p>'; return; }
+    el.innerHTML = admins.map(e=>`
+      <div class="admin-email-zeile">
+        <span style="font-size:13px;flex:1">${escHTML(e)}</span>
+        <button class="fs-btn" style="color:#c0392b;border-color:#fca5a5" onclick="adminEntfernen('${escHTML(e)}')">Entfernen</button>
+      </div>`).join('');
+  }catch(err){ el.innerHTML='<p style="font-size:12px;color:#c0392b">Verbindungsfehler</p>'; }
+}
+
+async function adminHinzufuegen(){
+  const inp = document.getElementById('admin-neue-email');
+  const email = inp.value.trim().toLowerCase();
+  if(!email){ zeigToast('⚠️ Bitte E-Mail eingeben','rot'); return; }
+  try{
+    const r = await fetch('/api/admin/rollen', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({aktion:'hinzufuegen',email})});
+    const d = await r.json();
+    if(d.status==='ok'){ inp.value=''; zeigToast('✅ Admin hinzugefügt','gruen'); rendereAdminPanel(); }
+    else zeigToast('❌ '+(d.error||'Fehler'),'rot');
+  }catch(e){ zeigToast('❌ Verbindungsfehler','rot'); }
+}
+
+async function adminEntfernen(email){
+  if(!confirm('Admin entfernen: '+email+'?')) return;
+  try{
+    const r = await fetch('/api/admin/rollen', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({aktion:'entfernen',email})});
+    const d = await r.json();
+    if(d.status==='ok'){ zeigToast('✅ Admin entfernt','gruen'); rendereAdminPanel(); }
+    else zeigToast('❌ '+(d.error||'Fehler'),'rot');
+  }catch(e){ zeigToast('❌ Verbindungsfehler','rot'); }
+}
+
+// ── SPIELSOUNDS TAB ──
+function rendereSpielSoundsTab(){
+  const container = document.getElementById('spielsound-container'); if(!container) return;
+  const zuweisung = memeBoard.spielSounds || {};
+  container.innerHTML = SPIELEREIGNISSE.map(gruppe=>`
+    <div style="margin-bottom:20px">
+      <div class="spielsound-gruppe-titel">${gruppe.gruppe}</div>
+      ${gruppe.ereignisse.map(e=>{
+        const selVal = zuweisung[e.id]||'';
+        return `<div class="event-row${selVal?' hat-sound':''}" id="er-${e.id}">
+          <div class="event-icon">${e.icon}</div>
+          <div class="event-text">
+            <div class="event-name">${e.name}</div>
+            <div class="event-desc">${e.desc}</div>
+          </div>
+          <div class="event-controls">
+            <select class="sound-select" id="ss-${e.id}" onchange="spielSoundGewaehlt('${e.id}',this)">
+              ${baueSoundOptionen(selVal)}
+            </select>
+            <button class="btn-vorschau" onclick="vorschauSpielSound('${e.id}')" title="Vorschau">▶</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function baueSoundOptionen(selVal){
+  const sounds = memeKachelnNachTyp('sound').filter(k=>k.sound);
+  return '<option value=""'+(selVal===''?' selected':'')+'>— kein Sound —</option>'
+    + sounds.map(k=>`<option value="${k.sound}"${k.sound===selVal?' selected':''}>${k.icon||'🔊'} ${k.name}</option>`).join('');
+}
+
+function spielSoundGewaehlt(id, sel){
+  if(!memeBoard.spielSounds) memeBoard.spielSounds={};
+  if(sel.value) memeBoard.spielSounds[id]=sel.value; else delete memeBoard.spielSounds[id];
+  const row = document.getElementById('er-'+id);
+  if(row) row.classList.toggle('hat-sound', !!sel.value);
+}
+
+function vorschauSpielSound(id){
+  const datei = (memeBoard.spielSounds||{})[id];
+  if(!datei){ zeigToast('⚠️ Kein Sound zugewiesen','rot'); return; }
+  const audio = new Audio('/meme-sounds/'+datei);
+  audio.play().catch(()=>zeigToast('❌ Sound nicht abspielbar','rot'));
+}
+
+async function spielsoundsSpeichern(){
+  config.einstellungen.sounds = Object.assign({}, memeBoard.spielSounds);
+  await speichereMemeBoard();
+  await speichereAufPi();
+  zeigToast('✅ Spielsounds gespeichert','gruen');
+}
+
+// ── KACHEL MODAL ──
+async function memeKachelModal(id, typ){
+  memeBearbeitenId = id;
+  const k = id ? (memeBoard.kacheln||[]).find(x=>x.id===id) : null;
+  document.getElementById('meme-modal-titel').textContent = k ? 'Kachel bearbeiten' : (typ==='gif'?'GIF/Sticker/Video-Kachel':'Sound-Kachel');
+  document.getElementById('mk-icon').value = k?.icon || (typ==='gif'?'🎬':'🔊');
+  document.getElementById('mk-name').value = k?.name || '';
+  const selTyp = k?.typ || typ;
+  const kats = selTyp==='sound' ? (memeBoard.soundKategorien||['reaktion']) : (memeBoard.gifKategorien||[]);
+  const sel = document.getElementById('mk-kategorie');
+  sel.innerHTML = kats.map(kat=>`<option value="${kat}"${k?.kategorie===kat?' selected':''}>${kat}</option>`).join('')
+    + '<option value="__neu__">＋ Neue Kategorie…</option>';
+  if(k?.kategorie) sel.value = k.kategorie;
+  document.getElementById('mk-neue-kat-feld').hidden = true;
+  document.getElementById('mk-sound').value = k?.sound || '';
+  const gifFeld = document.getElementById('mk-gif-feld');
+  const istGif = selTyp==='gif';
+  gifFeld.style.display = istGif ? 'block' : 'none';
+  if(istGif){
+    try{
+      const r = await fetch('/api/gifs-liste');
+      const d = await r.json();
+      memeGifsBibliothek = d.dateien || [];
+    }catch(e){ memeGifsBibliothek=[]; }
+    const gifSel = document.getElementById('mk-gif');
+    gifSel.innerHTML = '<option value="">— kein GIF ausgewählt —</option>'
+      + memeGifsBibliothek.map(g=>`<option value="${g}"${k?.gif===g?' selected':''}>${g}</option>`).join('');
+  }
+  document.getElementById('meme-kachel-overlay').dataset.typ = selTyp;
+  document.getElementById('meme-kachel-overlay').classList.add('offen');
+}
+function schliesseMemeKachelModal(){ document.getElementById('meme-kachel-overlay').classList.remove('offen'); }
+
+function memeKatSelChange(){
+  document.getElementById('mk-neue-kat-feld').hidden = document.getElementById('mk-kategorie').value!=='__neu__';
+}
+
+async function memeSoundUpload(input){
+  const file = input.files[0]; if(!file) return;
+  const formData = new FormData(); formData.append('file', file);
+  try{
+    const r = await fetch('/api/meme-sound-upload', {method:'POST', body:formData});
+    const d = await r.json();
+    if(d.status==='ok'){ document.getElementById('mk-sound').value = d.dateiname; zeigToast('✅ Sound hochgeladen','gruen'); }
+    else zeigToast('❌ '+d.error,'rot');
+  }catch(e){ zeigToast('❌ Fehler beim Upload','rot'); }
+  input.value='';
+}
+
+async function speichereMemeKachel(){
+  const typ = document.getElementById('meme-kachel-overlay').dataset.typ;
+  const name = document.getElementById('mk-name').value.trim();
+  if(!name){ zeigToast('⚠️ Bitte einen Namen eingeben','rot'); return; }
+  let kat = document.getElementById('mk-kategorie').value;
+  if(kat==='__neu__'){
+    kat = document.getElementById('mk-neue-kat').value.trim().toLowerCase().replace(/\s+/g,'-');
+    if(!kat){ zeigToast('⚠️ Bitte Kategorie eingeben','rot'); return; }
+    const katArr = typ==='sound'?'soundKategorien':'gifKategorien';
+    if(!memeBoard[katArr]) memeBoard[katArr]=[];
+    if(!memeBoard[katArr].includes(kat)) memeBoard[katArr].push(kat);
+  }
+  const kachel = {
+    id: memeBearbeitenId || ('m'+Date.now()),
+    name,
+    icon: document.getElementById('mk-icon').value.trim() || (typ==='gif'?'🎬':'🔊'),
+    kategorie: kat || (typ==='sound'?'reaktion':''),
+    typ,
+    sound: document.getElementById('mk-sound').value || null,
+  };
+  if(typ==='gif') kachel.gif = document.getElementById('mk-gif').value || null;
+  if(!memeBoard.kacheln) memeBoard.kacheln=[];
+  const idx = memeBoard.kacheln.findIndex(k=>k.id===kachel.id);
+  if(idx>=0) memeBoard.kacheln[idx]=kachel; else memeBoard.kacheln.push(kachel);
+  await speichereMemeBoard();
+  schliesseMemeKachelModal();
+  rendereMemeVerwaltung();
+}
+
+async function memeKachelLoeschen(id){
+  if(!confirm('Diese Kachel wirklich löschen?')) return;
+  memeBoard.kacheln = (memeBoard.kacheln||[]).filter(k=>k.id!==id);
+  await speichereMemeBoard();
+  rendereMemeVerwaltung();
+}
+
+async function speichereMemeBoard(){
+  try{
+    await fetch('/api/meme-board', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(memeBoard)});
+  }catch(e){ zeigToast('❌ Meme-Board konnte nicht gespeichert werden','rot'); }
+}
+
+document.getElementById('gif-detail-overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('gif-detail-overlay')) schliesseGifDetail();
+});
 
 init();
 </script>

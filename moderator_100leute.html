@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>100 Leute – Moderator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#0d0d1a;color:#fff;
+  font-family:system-ui,-apple-system,sans-serif;overflow:hidden}
+body{display:flex;flex-direction:column}
+
+/* ══ HEADER ══ */
+.mh{
+  display:flex;align-items:center;padding:10px 16px;flex-shrink:0;
+  background:#0a0a14;border-bottom:1px solid rgba(255,255,255,.07);gap:10px;
+}
+.mh-logo{font-size:15px;font-weight:900;letter-spacing:-.3px;color:#fff}
+.mh-logo span{color:#f59e0b}
+.mh-badge{
+  background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);
+  color:#f59e0b;font-size:10px;font-weight:700;letter-spacing:1px;
+  padding:2px 8px;border-radius:20px;text-transform:uppercase;
+}
+.mh-rechts{margin-left:auto;display:flex;gap:8px;align-items:center}
+.conn-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0}
+.conn-dot.verbunden{background:#22c55e}
+.mh-btn{
+  padding:6px 12px;border-radius:8px;border:none;
+  font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:.15s;
+}
+.mh-btn.rot{background:#c0392b;color:#fff}
+.mh-btn.grau{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);
+  border:1px solid rgba(255,255,255,.1)}
+.mh-btn:hover{filter:brightness(1.15)}
+
+/* ══ SCORES ══ */
+.scores-bar{
+  display:flex;gap:8px;padding:10px 14px;flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.score-card{
+  flex:1;padding:10px 14px;border-radius:12px;
+  border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);
+  transition:.2s;
+}
+.score-card.aktiv{border-color:#f59e0b;background:rgba(245,158,11,.08)}
+.score-card.A{border-color:rgba(59,130,246,.3)}
+.score-card.B{border-color:rgba(249,115,22,.3)}
+.sc-name{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:2px;font-weight:600}
+.sc-punkte{font-size:28px;font-weight:900}
+.sc-punkte.A{color:#60a5fa}
+.sc-punkte.B{color:#fb923c}
+
+/* ══ PHASENLEISTE ══ */
+.phasenleiste{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;flex-shrink:0;
+  background:rgba(0,0,0,.2);border-bottom:1px solid rgba(255,255,255,.05);
+}
+.phase-label{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.phase-label.setup{color:rgba(255,255,255,.3)}
+.phase-label.buzzerduell{color:#c4b5fd}
+.phase-label.hauptrunde{color:#6ee7b7}
+.phase-label.stehlen{color:#fca5a5}
+.phase-label.rundenende{color:#fde68a}
+.phase-label.fastfive{color:#fb923c}
+.phase-label.ende{color:#fde68a}
+.runde-badge{font-size:11px;color:rgba(255,255,255,.3)}
+
+/* ══ CONTENT ══ */
+.content{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+
+/* ══ KARTE ══ */
+.karte{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;padding:16px;
+}
+.karte-title{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,.3);margin-bottom:12px}
+
+/* ══ BUTTONS ══ */
+.btn{
+  width:100%;padding:13px;border-radius:12px;border:none;
+  font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn:active{transform:translateY(0);filter:brightness(.95)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important;filter:none!important}
+.btn.primaer{background:#E24B4A;color:#fff}
+.btn.gelb{background:#f59e0b;color:#000}
+.btn.blau{background:#3b82f6;color:#fff}
+.btn.gruen{background:#16a34a;color:#fff}
+.btn.orange{background:#ea580c;color:#fff}
+.btn.dunkel{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);
+  border:1px solid rgba(255,255,255,.1)}
+.btn.sm{padding:9px 14px;font-size:13px;border-radius:10px;width:auto;flex:1}
+.btn-row{display:flex;gap:8px}
+
+/* ══ INPUTS ══ */
+.inp{
+  width:100%;padding:10px 14px;border-radius:10px;
+  border:1.5px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);color:#fff;
+  font-size:14px;font-family:inherit;outline:none;transition:.15s;
+}
+.inp:focus{border-color:rgba(245,158,11,.5);background:rgba(255,255,255,.08)}
+.inp-label{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:5px;font-weight:600}
+.inp-group{margin-bottom:10px}
+
+/* ══ ANTWORT-BOARD (Moderator-Ansicht) ══ */
+.mod-board{display:flex;flex-direction:column;gap:6px}
+.mod-tile{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-radius:10px;border:1.5px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);cursor:pointer;transition:.15s;
+}
+.mod-tile:hover:not(.auf){border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)}
+.mod-tile.auf{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3)}
+.mod-tile.auf.von-a{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.35)}
+.mod-tile.auf.von-b{background:rgba(249,115,22,.08);border-color:rgba(249,115,22,.35)}
+.mt-nr{font-size:11px;color:rgba(255,255,255,.25);font-weight:700;
+  width:16px;flex-shrink:0;text-align:center}
+.mt-text{font-size:14px;font-weight:600;flex:1}
+.mt-pkt{font-size:16px;font-weight:800;color:#fde68a;flex-shrink:0}
+.mt-auf{color:#22c55e;flex-shrink:0;font-size:16px}
+
+/* ══ TEAM-SELECT ══ */
+.team-select{display:flex;gap:8px}
+.ts-btn{
+  flex:1;padding:12px;border-radius:12px;border:2px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);
+  font-size:15px;font-weight:800;cursor:pointer;transition:.2s;font-family:inherit;
+}
+.ts-btn.A{border-color:rgba(59,130,246,.3)}
+.ts-btn.B{border-color:rgba(249,115,22,.3)}
+.ts-btn.A.aktiv{background:rgba(59,130,246,.2);border-color:#60a5fa;color:#fff}
+.ts-btn.B.aktiv{background:rgba(249,115,22,.2);border-color:#fb923c;color:#fff}
+
+/* ══ SETUP-FORM ══ */
+.setup-reihe{display:flex;gap:8px}
+
+/* ══ STRIKES ══ */
+.strike-anzeige{display:flex;gap:8px;justify-content:center;padding:4px 0}
+.sx{width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:900;color:transparent}
+.sx.aktiv{border-color:#E24B4A;background:rgba(226,75,74,.15);color:#E24B4A}
+
+/* ══ MELDUNG ══ */
+.meldung{padding:10px 14px;border-radius:10px;font-size:13px;font-weight:500;
+  display:none;margin-bottom:8px}
+.meldung.erfolg{background:#f0fdf4;border:1px solid #86efac;color:#166534;display:block}
+.meldung.fehler{background:#fef2f2;border:1px solid #fca5a5;color:#c0392b;display:block}
+
+/* ══ TOAST ══ */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(40px);
+  background:#1e1e2e;border:1px solid rgba(255,255,255,.15);
+  border-radius:12px;padding:10px 20px;font-size:14px;font-weight:600;
+  white-space:nowrap;opacity:0;transition:all .3s;pointer-events:none;z-index:999;
+}
+.toast.sichtbar{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Divider */
+.div{height:1px;background:rgba(255,255,255,.07);margin:4px 0}
+
+/* ══ FF-FRAGE KARTE ══ */
+.ff-tile-mod{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border-radius:8px;border:1.5px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.03);cursor:pointer;transition:.15s;font-size:13px;
+}
+.ff-tile-mod.auf.von-a{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.3)}
+.ff-tile-mod.auf.von-b{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.3)}
+.ff-tile-mod:hover:not(.auf){background:rgba(255,255,255,.07)}
+.ftm-nr{width:16px;color:rgba(255,255,255,.25);font-weight:700;flex-shrink:0}
+.ftm-text{flex:1;font-weight:600}
+.ftm-pkt{font-size:13px;font-weight:800;color:#fde68a;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<div class="mh">
+  <div class="mh-logo">100 <span>LEUTE</span></div>
+  <div class="mh-badge">Moderator</div>
+  <div class="mh-rechts">
+    <div class="conn-dot" id="conn-dot"></div>
+    <button class="mh-btn grau" onclick="resetSpiel()">↺ Reset</button>
+    <button class="mh-btn rot" onclick="beendeSpiel()">✕ Ende</button>
+  </div>
+</div>
+
+<!-- ══ SCORES ══ -->
+<div class="scores-bar">
+  <div class="score-card A" id="sc-a">
+    <div class="sc-name" id="sc-name-a">Team A</div>
+    <div class="sc-punkte A" id="sc-pts-a">0</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex-shrink:0">
+    <div style="font-size:10px;color:rgba(255,255,255,.2);letter-spacing:1px;text-transform:uppercase">Runde</div>
+    <div style="font-size:22px;font-weight:900;color:rgba(255,255,255,.5)" id="runde-anzeige">–</div>
+  </div>
+  <div class="score-card B" id="sc-b">
+    <div class="sc-name" id="sc-name-b">Team B</div>
+    <div class="sc-punkte B" id="sc-pts-b">0</div>
+  </div>
+</div>
+
+<!-- ══ PHASENLEISTE ══ -->
+<div class="phasenleiste">
+  <div class="phase-label setup" id="phase-label">SETUP</div>
+  <div class="runde-badge" id="runde-badge"></div>
+</div>
+
+<!-- ══ CONTENT ══ -->
+<div class="content" id="content"></div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast" id="toast"></div>
+
+<script src="/sio.js"></script>
+<script>
+// ══ STATE ══
+let S = null;
+
+// ══ SOCKET ══
+const socket = io('/100leute');
+
+socket.on('connect', () => {
+  document.getElementById('conn-dot').classList.add('verbunden');
+  toast('Verbunden ✓', '#22c55e');
+});
+socket.on('disconnect', () => {
+  document.getElementById('conn-dot').classList.remove('verbunden');
+});
+socket.on('state', s => { S = s; render(); });
+
+// ══ UTILS ══
+function emit(ev, data) { socket.emit(ev, data||{}); }
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function toast(msg, color) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.color = color || '#fff';
+  el.classList.add('sichtbar');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('sichtbar'), 2200);
+}
+
+// ══ HEADER-BUTTONS ══
+function resetSpiel() {
+  if (confirm('Spiel wirklich zurücksetzen?')) emit('reset');
+}
+function beendeSpiel() {
+  if (confirm('Beamer schließen und Spiel beenden?')) emit('spiel_beenden');
+}
+
+// ══ HAUPTRENDER ══
+function render() {
+  if (!S) return;
+  const phase = S.phase || 'setup';
+  const teams = S.teams || {A:{name:'Team A',punkte:0}, B:{name:'Team B',punkte:0}};
+
+  // Scores
+  document.getElementById('sc-name-a').textContent = teams.A.name;
+  document.getElementById('sc-name-b').textContent = teams.B.name;
+  document.getElementById('sc-pts-a').textContent  = teams.A.punkte;
+  document.getElementById('sc-pts-b').textContent  = teams.B.punkte;
+  document.getElementById('sc-a').classList.toggle('aktiv', S.aktives_team==='A');
+  document.getElementById('sc-b').classList.toggle('aktiv', S.aktives_team==='B');
+
+  // Runde
+  const cfg = S.config || {};
+  document.getElementById('runde-anzeige').textContent = S.runde ? `${S.runde} / ${cfg.runden||3}` : '–';
+
+  // Phase-Label
+  const pl = document.getElementById('phase-label');
+  const phasenText = {
+    setup:'SETUP', buzzerduell:'BUZZER DUELL', hauptrunde:'HAUPTRUNDE',
+    stehlen:'STEHLEN', rundenende:'RUNDENENDE', fastfive:'FAST FIVE', ende:'SPIELENDE'
+  };
+  pl.textContent = phasenText[phase] || phase.toUpperCase();
+  pl.className = 'phase-label ' + phase;
+
+  // Badge
+  document.getElementById('runde-badge').textContent = S.aktives_team
+    ? `${teams[S.aktives_team]?.name||''} ist dran` : '';
+
+  // Content
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+
+  switch(phase) {
+    case 'setup':      renderSetup(content, teams, cfg); break;
+    case 'buzzerduell':renderBuzzerduell(content, teams); break;
+    case 'hauptrunde': renderHauptrunde(content, teams); break;
+    case 'stehlen':    renderStehlen(content, teams); break;
+    case 'rundenende': renderRundenende(content, teams); break;
+    case 'fastfive':   renderFastfive(content, teams, cfg); break;
+    case 'ende':       renderEnde(content, teams); break;
+    default:           content.innerHTML = `<div class="karte"><p>Phase: ${phase}</p></div>`;
+  }
+}
+
+// ══ SETUP-PHASE ══
+function renderSetup(el, teams, cfg) {
+  el.innerHTML = `
+  <div class="karte">
+    <div class="karte-title">Teams</div>
+    <div class="setup-reihe" style="gap:8px">
+      <div style="flex:1">
+        <div class="inp-label">Team A</div>
+        <input class="inp" id="inp-team-a" value="${escHtml(teams.A.name)}" placeholder="Team A">
+      </div>
+      <div style="flex:1">
+        <div class="inp-label">Team B</div>
+        <input class="inp" id="inp-team-b" value="${escHtml(teams.B.name)}" placeholder="Team B">
+      </div>
+    </div>
+  </div>
+
+  <div class="karte">
+    <div class="karte-title">Spielkonfiguration</div>
+    <div class="setup-reihe">
+      <div style="flex:1">
+        <div class="inp-label">Runden</div>
+        <input class="inp" id="inp-runden" type="number" min="1" max="10" value="${cfg.runden||3}">
+      </div>
+      <div style="flex:1">
+        <div class="inp-label">FF Timer Runde 1 (s)</div>
+        <input class="inp" id="inp-ff1" type="number" min="10" max="60" value="${cfg.ff_zeit1||20}">
+      </div>
+      <div style="flex:1">
+        <div class="inp-label">FF Timer Runde 2 (s)</div>
+        <input class="inp" id="inp-ff2" type="number" min="10" max="60" value="${cfg.ff_zeit2||25}">
+      </div>
+    </div>
+  </div>
+
+  <div class="karte">
+    <div class="karte-title">Buzzer-Zuordnung</div>
+    <div class="setup-reihe">
+      <div style="flex:1">
+        <div class="inp-label">Team A = Spieler-Nr.</div>
+        <input class="inp" id="inp-buz-a" type="number" min="1" max="8" value="${cfg.buzzer_a||1}">
+      </div>
+      <div style="flex:1">
+        <div class="inp-label">Team B = Spieler-Nr.</div>
+        <input class="inp" id="inp-buz-b" type="number" min="1" max="8" value="${cfg.buzzer_b||2}">
+      </div>
+    </div>
+  </div>
+
+  <button class="btn gelb" onclick="beamerStarten()">📺 Beamer starten</button>
+  <button class="btn primaer" onclick="spielStarten()">▶ Spiel starten</button>
+  <a href="/spielmodus" style="display:block;text-align:center;margin-top:12px;font-size:13px;color:rgba(255,255,255,.35);text-decoration:none">← Spielmodus-Auswahl</a>
+  `;
+}
+
+function holzeSetupDaten() {
+  return {
+    config: {
+      runden:    parseInt(document.getElementById('inp-runden')?.value)||3,
+      ff_timer:  true,
+      ff_zeit1:  parseInt(document.getElementById('inp-ff1')?.value)||20,
+      ff_zeit2:  parseInt(document.getElementById('inp-ff2')?.value)||25,
+      ff_ziel:   400,
+      buzzer_a:  parseInt(document.getElementById('inp-buz-a')?.value)||1,
+      buzzer_b:  parseInt(document.getElementById('inp-buz-b')?.value)||2,
+    },
+    teams: {
+      A: {name: document.getElementById('inp-team-a')?.value.trim() || 'Team A'},
+      B: {name: document.getElementById('inp-team-b')?.value.trim() || 'Team B'},
+    }
+  };
+}
+
+function beamerStarten() {
+  const d = holzeSetupDaten();
+  emit('setup', d);
+  emit('beamer_starten');
+  toast('Beamer startet …');
+}
+
+function spielStarten() {
+  const d = holzeSetupDaten();
+  emit('spiel_starten', d);
+}
+
+// ══ BUZZERDUELL-PHASE ══
+function renderBuzzerduell(el, teams) {
+  const af  = S.aktive_frage;
+  const d   = S.duell || {};
+  const teamA = teams.A?.name||'Team A';
+  const teamB = teams.B?.name||'Team B';
+
+  if (!af) {
+    // Noch keine Frage geladen
+    el.innerHTML = `
+    <div class="karte">
+      <div class="karte-title">Buzzer Duell – Runde ${S.runde}</div>
+      <p style="color:rgba(255,255,255,.4);font-size:14px;margin-bottom:12px">
+        Frage freigeben → Buzzer geht automatisch auf. Beide Teams nennen eine Antwort.
+      </p>
+      <button class="btn gelb" onclick="frageFreigeben()">🎯 Frage freigeben + Buzzer öffnen</button>
+    </div>`;
+    return;
+  }
+
+  // Frage vorhanden → zeige Antwortboard für Moderator
+  const antworten = af.antworten || [];
+  let boardHtml = '<div class="mod-board" style="margin-bottom:12px">';
+  antworten.forEach((a, i) => {
+    const vonKlasse = a.auf ? (a.von ? 'von-'+a.von.toLowerCase() : 'auf') : '';
+    boardHtml += `
+    <div class="mod-tile ${a.auf?'auf':''} ${vonKlasse}" onclick="${a.auf?'':''}" title="${escHtml(a.text)} (${a.punkte} Pts)">
+      <span class="mt-nr">${i+1}</span>
+      <span class="mt-text">${escHtml(a.text)}</span>
+      <span class="mt-pkt">${a.punkte}</span>
+      ${a.auf ? '<span class="mt-auf">✓</span>' : ''}
+    </div>`;
+  });
+  boardHtml += '</div>';
+
+  // Wer hat zuerst gebuzzt?
+  const ersterText = d.erster_team
+    ? `🔔 ${teams[d.erster_team]?.name||d.erster_team} hat zuerst gebuzzt`
+    : `⌛ Warte auf Buzzer …`;
+
+  // Antwort-Auswahl für Team A und B
+  const antwortOptionen = antworten.map((a,i) =>
+    `<option value="${i}" ${d.antwort_a===i?'selected':''}>Nr. ${i+1}: ${a.text} (${a.punkte} Pts)</option>`
+  ).join('');
+  const antwortOptionenB = antworten.map((a,i) =>
+    `<option value="${i}" ${d.antwort_b===i?'selected':''}>Nr. ${i+1}: ${a.text} (${a.punkte} Pts)</option>`
+  ).join('');
+
+  el.innerHTML = `
+  <div class="karte">
+    <div class="karte-title">Frage</div>
+    <div style="font-size:16px;font-weight:700;line-height:1.4">${escHtml(af.frage)}</div>
+  </div>
+
+  <div class="karte">
+    <div class="karte-title">Antworten (Moderator-Sicht)</div>
+    ${boardHtml}
+  </div>
+
+  <div class="karte">
+    <div class="karte-title">Buzzer-Status</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.6);margin-bottom:12px">${ersterText}</div>
+    <div class="btn-row" style="margin-bottom:12px">
+      <button class="btn sm blau" onclick="simBuzzer('A')">🔔 Sim: ${escHtml(teamA)}</button>
+      <button class="btn sm orange" onclick="simBuzzer('B')">🔔 Sim: ${escHtml(teamB)}</button>
+    </div>
+    <div class="div"></div>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <div style="flex:1">
+        <div class="inp-label">${escHtml(teamA)} sagt</div>
+        <select class="inp" id="sel-a" onchange="duellAntwort('A',this.value)">
+          <option value="">– nicht auf der Tafel –</option>
+          ${antwortOptionen}
+        </select>
+      </div>
+      <div style="flex:1">
+        <div class="inp-label">${escHtml(teamB)} sagt</div>
+        <select class="inp" id="sel-b" onchange="duellAntwort('B',this.value)">
+          <option value="">– nicht auf der Tafel –</option>
+          ${antwortOptionenB}
+        </select>
+      </div>
+    </div>
+    ${d.gewinner ? `
+    <div style="margin-top:12px;padding:10px;border-radius:10px;background:rgba(245,158,11,.1);
+      border:1.5px solid rgba(245,158,11,.3);text-align:center">
+      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:4px">GEWINNER DES DUELLS</div>
+      <div style="font-size:22px;font-weight:900;color:#fde68a">${escHtml(teams[d.gewinner]?.name||d.gewinner)}</div>
+    </div>
+    <button class="btn gruen" style="margin-top:10px" onclick="hauptrundeStarten()">▶ Hauptrunde starten</button>
+    ` : ''}
+    <button class="btn dunkel" style="margin-top:8px" onclick="duellReset()">↺ Duell-Antworten zurücksetzen</button>
+  </div>
+  `;
+}
+
+function frageFreigeben() { emit('frage_freigeben'); }
+function simBuzzer(team) { emit('sim_buzzer', {team}); }
+function duellAntwort(team, val) {
+  const idx = val === '' ? null : parseInt(val);
+  emit('duell_antwort', {team, idx});
+}
+function duellReset() { emit('duell_reset_antworten'); }
+function hauptrundeStarten() { emit('hauptrunde_starten'); }
+
+// ══ HAUPTRUNDE-PHASE ══
+function renderHauptrunde(el, teams) {
+  const af = S.aktive_frage;
+  const aktiv = S.aktives_team || 'A';
+  const strikes = S.strikes || 0;
+
+  let boardHtml = '';
+  if (af) {
+    const antworten = af.antworten || [];
+    boardHtml = '<div class="mod-board">';
+    antworten.forEach((a, i) => {
+      if (a.auf) {
+        boardHtml += `
+        <div class="mod-tile auf">
+          <span class="mt-nr">${i+1}</span>
+          <span class="mt-text">${escHtml(a.text)}</span>
+          <span class="mt-pkt">${a.punkte}</span>
+          <span class="mt-auf">✓</span>
+        </div>`;
+      } else {
+        boardHtml += `
+        <div class="mod-tile" onclick="aufdecken(${i})">
+          <span class="mt-nr">${i+1}</span>
+          <span class="mt-text">${escHtml(a.text)}</span>
+          <span class="mt-pkt">${a.punkte}</span>
+          <span style="color:rgba(255,255,255,.2);font-size:14px">👆</span>
+        </div>`;
+      }
+    });
+    boardHtml += '</div>';
+  }
+
+  el.innerHTML = `
+  <div class="karte">
+    <div class="karte-title">Aktives Team</div>
+    <div class="team-select">
+      <button class="ts-btn A ${aktiv==='A'?'aktiv':''}" disabled>${escHtml(teams.A.name)}</button>
+      <button class="ts-btn B ${aktiv==='B'?'aktiv':''}" disabled>${escHtml(teams.B.name)}</button>
+    </div>
+  </div>
+
+  <div class="karte">
+    <div class="karte-title">Antworten – Tippe zum Aufdecken</div>
+    ${af ? boardHtml : '<p style="color:rgba(255,255,255,.3);font-size:14px">Keine Frage geladen</p>'}
+  </div>
+
+  <div class="karte">
+    <div class="karte-title">Strikes (${strikes}/3)</div>
+    <div class="strike-anzeige">
+      <div class="sx ${strikes>=1?'aktiv':''}">✕</div>
+      <div class="sx ${strikes>=2?'aktiv':''}">✕</div>
+      <div class="sx ${strikes>=3?'aktiv':''}">✕</div>
+    </div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn sm primaer" onclick="strike()">✕ Strike</button>
+    </div>
+  </div>
+
+  <div style="font-size:12px;color:rgba(255,255,255,.3);text-align:center;padding:4px">
+    Topf: ${S.rundentopf||0} Pts
+  </div>
+  `;
+}
+
+function aufdecken(idx) { emit('hauptrunde_aufdecken', {idx}); }
+function strike() { emit('hauptrunde_strike'); }
+
+// ══ STEHLEN-PHASE ══
+function renderStehlen(el, teams) {
+  const af = S.aktive_frage;
+  const aktiv = S.aktives_team || 'A';
+  const gegner = aktiv === 'A' ? 'B' : 'A';
+
+  let verbleibend = [];
+  if (af) {
+    af.antworten.forEach((a,i) => { if (!a.auf) verbleibend.push({...a, idx:i}); });
+  }
+
+  const optionen = verbleibend.map(a =>
+    `<option value="${a.idx}">Nr. ${a.idx+1}: ${a.text} (${a.punkte} Pts)</option>`
+  ).join('');
+
+  el.innerHTML = `
+  <div class="karte" style="border-color:rgba(226,75,74,.3);background:rgba(226,75,74,.05)">
+    <div class="karte-title" style="color:#fca5a5">⚡ STEHLEN</div>
+    <p style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:12px">
+      <strong style="color:#fff">${escHtml(teams[gegner]?.name||gegner)}</strong>
+      hat die Chance zu stehlen!
+    </p>
+    <div class="inp-label">Genannte Antwort (falls auf der Tafel)</div>
+    <select class="inp" id="sel-stehlen" style="margin-bottom:12px">
+      <option value="">– nicht auf der Tafel –</option>
+      ${optionen}
+    </select>
+    <div class="btn-row">
+      <button class="btn sm gruen" onclick="stehlenRichtig()">✓ Richtig → Stehlen!</button>
+      <button class="btn sm primaer" onclick="stehlenFalsch()">✕ Falsch → ${escHtml(teams[aktiv]?.name||aktiv)} gewinnt</button>
+    </div>
+  </div>
+
+  <div class="karte">
+    <div class="karte-title">Verbleibende Antworten</div>
+    <div class="mod-board">
+    ${verbleibend.map(a=>`
+      <div class="mod-tile">
+        <span class="mt-nr">${a.idx+1}</span>
+        <span class="mt-text">${escHtml(a.text)}</span>
+        <span class="mt-pkt">${a.punkte}</span>
+      </div>`).join('')}
+    </div>
+  </div>
+  `;
+}
+
+function stehlenRichtig() {
+  const sel = document.getElementById('sel-stehlen');
+  const idx = sel && sel.value !== '' ? parseInt(sel.value) : null;
+  emit('stehlen_aufdecken', {idx});
+}
+function stehlenFalsch() { emit('stehlen_falsch'); }
+
+// ══ RUNDENENDE-PHASE ══
+function renderRundenende(el, teams) {
+  const re = S.rundenende || {};
+  const gw = re.gewinner;
+  const teamName = gw ? (teams[gw]?.name||gw) : '?';
+
+  el.innerHTML = `
+  <div class="karte" style="text-align:center;border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05)">
+    <div class="karte-title">Rundengewinner</div>
+    <div style="font-size:36px;font-weight:900;color:#fde68a;margin:8px 0">${escHtml(teamName)}</div>
+    <div style="font-size:18px;color:rgba(255,255,255,.5)">+ ${re.topf||0} Punkte</div>
+  </div>
+  <div class="karte">
+    <div style="display:flex;gap:20px;justify-content:space-around;text-align:center">
+      <div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4)">${escHtml(teams.A.name)}</div>
+        <div style="font-size:32px;font-weight:900;color:#60a5fa">${teams.A.punkte}</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4)">${escHtml(teams.B.name)}</div>
+        <div style="font-size:32px;font-weight:900;color:#fb923c">${teams.B.punkte}</div>
+      </div>
+    </div>
+  </div>
+  <button class="btn gelb" onclick="naechsteRunde()">▶ Nächste Runde / Fast Five</button>
+  `;
+}
+
+function naechsteRunde() { emit('naechste_runde'); }
+
+// ══ FAST FIVE ══
+function renderFastfive(el, teams, cfg) {
+  const ff = S.ff;
+
+  if (!ff) {
+    el.innerHTML = `
+    <div class="karte">
+      <div class="karte-title">⚡ Fast Five</div>
+      <p style="font-size:14px;color:rgba(255,255,255,.4);margin-bottom:12px">
+        5 Fragen, Buzzer-Duell um jede Sekunde. Team mit den meisten Punkten gewinnt.
+      </p>
+      <button class="btn gelb" onclick="ffStarten()">🚀 Fast Five starten</button>
+    </div>`;
+    return;
+  }
+
+  const dran = ff.dran || 'A';
+  const dranName = teams[dran]?.name || dran;
+  const ak = ff.aktuell || 0;
+  const aktFrage = ff.fragen && ff.fragen[ak] ? ff.fragen[ak] : null;
+
+  // Fortschritt-Anzeige
+  let progressHtml = '<div style="display:flex;gap:6px;margin-bottom:12px">';
+  (ff.fragen||[]).forEach((_,i) => {
+    const cls = i < ak ? 'fertig' : i === ak ? 'aktiv' : '';
+    progressHtml += `<div style="height:4px;flex:1;border-radius:2px;background:${
+      cls==='fertig'?'#22c55e':cls==='aktiv'?'#f59e0b':'rgba(255,255,255,.15)'
+    }"></div>`;
+  });
+  progressHtml += '</div>';
+
+  // Timer
+  const timerHtml = cfg.ff_timer && ff.timer_rest > 0 ? `
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 14px;
+    border-radius:10px;background:rgba(245,158,11,.08);border:1.5px solid rgba(245,158,11,.2)">
+    <div style="font-size:28px;font-weight:900;color:#fde68a">${ff.timer_rest}s</div>
+    <div style="flex:1">
+      <div style="height:6px;border-radius:3px;background:rgba(255,255,255,.1)">
+        <div style="height:100%;border-radius:3px;background:#f59e0b;
+          width:${Math.round((ff.timer_rest / (dran==='A'?cfg.ff_zeit1||20:cfg.ff_zeit2||25))*100)}%"></div>
+      </div>
+    </div>
+    <button class="btn sm ${ff.timer_laueft?'primaer':'gruen'}" onclick="${ff.timer_laueft?'ffTimerStop()':'ffTimerStart()'}">
+      ${ff.timer_laueft?'⏸ Pause':'▶ Start'}
+    </button>
+  </div>` : (cfg.ff_timer ? `
+  <div class="btn-row" style="margin-bottom:12px">
+    <button class="btn sm gruen" onclick="ffTimerStart()">⏱ Timer starten</button>
+  </div>` : '');
+
+  // Antworten der aktuellen Frage
+  let antwortenHtml = '';
+  if (aktFrage) {
+    antwortenHtml = '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">';
+    (aktFrage.antworten||[]).forEach((a,i) => {
+      const auf = a.auf;
+      const vonKlasse = auf ? 'von-'+(a.von||'').toLowerCase() : '';
+      antwortenHtml += `
+      <div class="ff-tile-mod ${auf?'auf':''} ${vonKlasse}" onclick="${auf?'':'ffAufdecken('+i+')'}"
+        style="${auf?'cursor:default':''}">
+        <span class="ftm-nr">${i+1}</span>
+        <span class="ftm-text">${auf?escHtml(a.text):'─ ─ ─'}</span>
+        ${auf?`<span class="ftm-pkt">${a.punkte}</span>`:'<span style="color:rgba(255,255,255,.2);font-size:12px">👆</span>'}
+      </div>`;
+    });
+    antwortenHtml += '</div>';
+  }
+
+  el.innerHTML = `
+  <div class="karte" style="border-color:rgba(249,115,22,.25);background:rgba(249,115,22,.04)">
+    <div class="karte-title">⚡ Fast Five – ${escHtml(dranName)} ist dran</div>
+    ${progressHtml}
+    ${timerHtml}
+    <div style="font-size:15px;font-weight:700;margin-bottom:10px;line-height:1.4">
+      ${aktFrage ? escHtml(aktFrage.frage) : '–'}
+    </div>
+    ${antwortenHtml}
+    <button class="btn dunkel btn-sm" onclick="ffNaechste()" style="margin-top:4px">
+      ▶ Nächste Frage
+    </button>
+  </div>
+
+  <div class="karte">
+    <div class="karte-title">Punkte Fast Five</div>
+    <div style="display:flex;gap:12px">
+      <div style="flex:1;text-align:center;padding:12px;border-radius:10px;
+        background:rgba(59,130,246,.08);border:1.5px solid rgba(59,130,246,.2)">
+        <div style="font-size:11px;color:rgba(255,255,255,.4)">${escHtml(teams.A.name)}</div>
+        <div style="font-size:28px;font-weight:900;color:#60a5fa">${ff.punkte_a||0}</div>
+        ${ff.fertig_a?'<div style="font-size:11px;color:#22c55e">✓ fertig</div>':''}
+      </div>
+      <div style="flex:1;text-align:center;padding:12px;border-radius:10px;
+        background:rgba(249,115,22,.08);border:1.5px solid rgba(249,115,22,.2)">
+        <div style="font-size:11px;color:rgba(255,255,255,.4)">${escHtml(teams.B.name)}</div>
+        <div style="font-size:28px;font-weight:900;color:#fb923c">${ff.punkte_b||0}</div>
+        ${ff.fertig_b?'<div style="font-size:11px;color:#22c55e">✓ fertig</div>':''}
+      </div>
+    </div>
+  </div>
+
+  <button class="btn primaer" onclick="ffBeenden()">🏁 Fast Five auswerten + Sieger</button>
+  `;
+}
+
+function ffStarten() { emit('ff_starten'); }
+function ffAufdecken(idx) { emit('ff_aufdecken', {idx}); }
+function ffNaechste() { emit('ff_naechste_frage'); }
+function ffTimerStart() { emit('ff_timer_start'); }
+function ffTimerStop() { emit('ff_timer_stop'); }
+function ffBeenden() { emit('ff_beenden'); }
+
+// ══ ENDE-PHASE ══
+function renderEnde(el, teams) {
+  const ptA = teams.A.punkte;
+  const ptB = teams.B.punkte;
+  const sieger = ptA >= ptB ? 'A' : 'B';
+  const siegerName = teams[sieger]?.name || sieger;
+
+  el.innerHTML = `
+  <div class="karte" style="text-align:center;border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)">
+    <div class="karte-title">🏆 Gesamtsieger</div>
+    <div style="font-size:40px;font-weight:900;color:#fde68a;margin:10px 0">${escHtml(siegerName)}</div>
+  </div>
+  <div class="karte">
+    <div style="display:flex;gap:16px">
+      <div style="flex:1;text-align:center;padding:16px;border-radius:12px;
+        background:rgba(59,130,246,.08);border:2px solid ${sieger==='A'?'#f59e0b':'rgba(59,130,246,.2)'}">
+        <div style="font-size:13px;color:rgba(255,255,255,.4)">${escHtml(teams.A.name)}</div>
+        <div style="font-size:40px;font-weight:900;color:#60a5fa">${ptA}</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:16px;border-radius:12px;
+        background:rgba(249,115,22,.08);border:2px solid ${sieger==='B'?'#f59e0b':'rgba(249,115,22,.2)'}">
+        <div style="font-size:13px;color:rgba(255,255,255,.4)">${escHtml(teams.B.name)}</div>
+        <div style="font-size:40px;font-weight:900;color:#fb923c">${ptB}</div>
+      </div>
+    </div>
+  </div>
+  <button class="btn gelb" onclick="neuesSpiel()">🔄 Neues Spiel</button>
+  <button class="btn dunkel" onclick="beendeSpiel()">✕ Beamer beenden</button>
+  <a href="/spielmodus" style="display:block;text-align:center;margin-top:12px;font-size:13px;color:rgba(255,255,255,.45);text-decoration:none">← Zurück zur Spielmodus-Auswahl</a>
+  `;
+}
+
+function neuesSpiel() { emit('reset'); }
+
+// ── Init ──
+render();
+</script>
+</body>
+</html>

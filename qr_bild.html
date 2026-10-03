@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schlagfertig – QR-Code</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,sans-serif;
+  background:#fff;
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:32px;
+}
+.karte{
+  text-align:center;
+  max-width:380px;
+  width:100%;
+}
+.logo{
+  font-size:28px;font-weight:900;color:#1a1a2e;letter-spacing:-1px;
+  margin-bottom:24px;
+}
+.logo span{color:#E24B4A}
+.qr-rahmen{
+  background:#f8f8f8;
+  border:2px solid #e0e0e0;
+  border-radius:20px;
+  padding:24px;
+  display:inline-block;
+  margin-bottom:20px;
+}
+.qr-rahmen img, .qr-rahmen svg{
+  width:260px;height:260px;display:block;
+}
+.url{
+  font-size:15px;font-weight:700;color:#1a1a2e;
+  letter-spacing:.3px;margin-bottom:6px;
+  word-break:break-all;
+}
+.hinweis{
+  font-size:12px;color:#999;margin-bottom:24px;
+}
+.drucken{
+  background:#1a1a2e;color:#fff;border:none;
+  border-radius:10px;padding:10px 24px;
+  font-size:14px;font-weight:700;cursor:pointer;
+  font-family:inherit;
+}
+.drucken:hover{background:#2a2a4e}
+@media print{
+  .drucken{display:none}
+  body{padding:0}
+}
+</style>
+</head>
+<body>
+<div class="karte">
+  <div class="logo">SCHLAG<span>FERTIG</span></div>
+
+  <div class="qr-rahmen">
+    <img id="qr-img" src="/api/setup/qr" alt="QR-Code" onerror="qr_fallback()">
+  </div>
+
+  <div class="url" id="url-text">Lade…</div>
+  <div class="hinweis">Mit dem Handy scannen, um die App zu öffnen</div>
+
+  <button class="drucken" onclick="window.print()">🖨️ Drucken</button>
+</div>
+
+<script>
+fetch('/api/setup/ip')
+  .then(r => r.json())
+  .then(d => {
+    const ip = d.ip || window.location.hostname;
+    const url = `http://${ip}:5000`;
+    document.getElementById('url-text').textContent = url;
+  })
+  .catch(() => {
+    document.getElementById('url-text').textContent = window.location.origin;
+  });
+
+function qr_fallback() {
+  document.getElementById('url-text').style.fontSize = '13px';
+}
+</script>
+</body>
+</html>

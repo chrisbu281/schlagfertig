@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schlagfertig · 100 Leute gefragt</title>
+<style>
+  :root{
+    --gold:#f5c518; --gold-soft:#e7b62c;
+    --teamA:#2f6fed; --teamB:#e0473a;
+    --glass:rgba(255,255,255,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;background:#05070d;color:#fff;overflow:hidden;
+    font-family:'Segoe UI',system-ui,sans-serif;}
+  #buehne{position:relative;width:100vw;height:100vh;}
+
+  /* Team-Hintergrundpanels */
+  .team-bg{position:absolute;top:0;bottom:0;width:50%;overflow:hidden;}
+  .team-bg.a{left:0;}
+  .team-bg.b{right:0;}
+  .team-bg .foto{position:absolute;inset:0;background-size:cover;background-position:center;
+    filter:grayscale(.3) brightness(.32);transform:scale(1.05);}
+  .team-bg.a::after,.team-bg.b::after{content:"";position:absolute;inset:0;}
+  .team-bg.a::after{background:linear-gradient(90deg,rgba(47,111,237,.28),transparent 70%);}
+  .team-bg.b::after{background:linear-gradient(270deg,rgba(224,71,58,.28),transparent 70%);}
+  /* Buzz-/Gewinner-Hervorhebung */
+  .team-bg::before{content:"";position:absolute;inset:0;box-shadow:none;transition:box-shadow .3s;}
+  .team-bg.a.buzz::before{box-shadow:inset 0 0 130px rgba(47,111,237,.6);}
+  .team-bg.b.buzz::before{box-shadow:inset 0 0 130px rgba(224,71,58,.6);}
+  .team-bg.a.win::before{box-shadow:inset 0 0 180px rgba(47,111,237,.85);}
+  .team-bg.b.win::before{box-shadow:inset 0 0 180px rgba(224,71,58,.85);}
+  .status{font-size:clamp(20px,2.4vw,30px);color:#cdd;margin-top:22px;}
+  .gewinner-banner{margin-top:18px;font-size:clamp(26px,3.4vw,46px);font-weight:900;color:var(--gold);
+    text-shadow:0 0 40px rgba(245,197,24,.5);line-height:1.15;}
+  .gewinner-banner span{display:block;font-size:.46em;color:#fff;font-weight:600;margin-top:6px;}
+
+  /* Tafel mit verdeckten Antwort-Feldern + Flip-Animation */
+  .board-frage{font-size:clamp(20px,2.4vw,32px);font-weight:700;margin-bottom:18px;
+    text-shadow:0 3px 18px rgba(0,0,0,.6);}
+  .board{display:flex;flex-direction:column;gap:12px;width:min(760px,82vw);margin:0 auto;}
+  .tile{perspective:1200px;height:clamp(52px,7vh,72px);}
+  .tile-inner{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.2,.7,.2,1);
+    transform-style:preserve-3d;}
+  .tile.open .tile-inner{transform:rotateX(180deg);}
+  .tile-front,.tile-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;
+    display:flex;align-items:center;}
+  .tile-front{justify-content:center;background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+    font-size:clamp(22px,3vw,34px);font-weight:900;color:#7e8aa3;}
+  .tile-back{transform:rotateX(180deg);justify-content:space-between;padding:0 clamp(16px,2.4vw,30px);
+    background:linear-gradient(135deg,#1c1608,#0c0a03);border:1px solid var(--gold);
+    box-shadow:0 0 26px rgba(245,197,24,.25);}
+  .tile-back .t-text{font-size:clamp(18px,2.4vw,30px);font-weight:800;text-transform:uppercase;
+    color:#fff;letter-spacing:.5px;}
+  .tile-back .t-pkt{font-size:clamp(22px,3vw,34px);font-weight:900;color:var(--gold);
+    font-variant-numeric:tabular-nums;}
+  .duell-status{margin-top:18px;min-height:1.2em;}
+  #meme-popup{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(5,7,13,.82);opacity:0;pointer-events:none;transition:opacity .25s;z-index:50;}
+  #meme-popup.zeig{opacity:1;}
+  #meme-popup img{max-width:60vw;max-height:60vh;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.5);background:#000;}
+  .rundentopf{font-size:clamp(14px,1.5vw,19px);letter-spacing:3px;text-transform:uppercase;
+    color:#aeb6c8;margin-bottom:16px;}
+  .rundentopf b{color:var(--gold);font-size:1.55em;font-weight:900;margin-left:8px;
+    font-variant-numeric:tabular-nums;text-shadow:0 0 18px rgba(245,197,24,.4);}
+  .strikes{display:flex;gap:16px;justify-content:center;margin-top:14px;}
+  .strikes .strike{font-size:clamp(28px,4vw,46px);font-weight:900;color:#2a3142;line-height:1;
+    transition:color .2s,text-shadow .2s;}
+  .strikes .strike.an{color:#e0473a;text-shadow:0 0 18px rgba(224,71,58,.6);}
+
+  /* VS-Trennlinie */
+  #vs-linie{position:absolute;left:50%;top:0;bottom:0;width:2px;
+    background:linear-gradient(180deg,transparent,rgba(255,255,255,.25),transparent);
+    transform:translateX(-50%);}
+  #vs{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    font-size:48px;font-weight:900;color:var(--gold);
+    text-shadow:0 0 30px rgba(245,197,24,.5);letter-spacing:2px;opacity:.9;
+    display:none;}                       /* nur im Buzzer-Duell sichtbar */
+
+  /* Mittlerer Inhaltsbereich (pro Phase befuellt) */
+  #inhalt{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);
+    width:min(1100px,86vw);text-align:center;z-index:5;}
+  .titel-klein{font-size:clamp(16px,2vw,24px);letter-spacing:6px;text-transform:uppercase;
+    color:var(--gold);opacity:.85;margin-bottom:18px;}
+  .frage-gross{font-size:clamp(28px,4vw,52px);font-weight:800;line-height:1.2;
+    text-shadow:0 4px 24px rgba(0,0,0,.6);}
+  .warte{font-size:clamp(20px,2.4vw,30px);color:#aab;opacity:.8;}
+  .puls{animation:puls 2s ease-in-out infinite;}
+  @keyframes puls{0%,100%{opacity:.5}50%{opacity:1}}
+
+  /* Setup-Screen – Video mit Text */
+  #setup-screen{position:fixed;inset:0;background:#000;z-index:1000;display:flex;
+    align-items:center;justify-content:center;flex-direction:column;gap:0;overflow:hidden;}
+  #setup-video{width:100%;height:100%;object-fit:contain;position:absolute;inset:0;
+    z-index:1;}
+  .setup-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,
+    rgba(0,0,0,.7) 60%,rgba(0,0,0,.95) 100%);z-index:2;}
+  .setup-content{position:absolute;bottom:0;left:0;right:0;z-index:3;display:flex;
+    flex-direction:column;align-items:center;justify-content:flex-end;
+    padding-bottom:clamp(40px,10vh,100px);width:100%;text-align:center;}
+  .setup-logo{font-size:clamp(80px,12vw,140px);font-weight:900;letter-spacing:8px;
+    text-transform:uppercase;color:#fff;text-shadow:0 8px 50px rgba(0,0,0,.95),
+    0 0 40px rgba(245,197,24,.4);line-height:1.0;margin:0;}
+  .setup-waiting{font-size:clamp(14px,1.5vw,20px);color:#aab;letter-spacing:2px;
+    text-transform:uppercase;margin-top:clamp(16px,1.5vw,32px);
+    animation:pulse-wait 2s ease-in-out infinite;}
+  @keyframes pulse-wait{0%,100%{opacity:.6}50%{opacity:1}}
+
+  /* Spielende – Sieger-Bounce + Feuerwerk */
+  .ende-sieger{font-size:clamp(52px,8vw,100px);font-weight:900;color:var(--gold);
+    animation:bounce-sieger .7s cubic-bezier(.68,-.55,.265,1.55) infinite;
+    text-shadow:0 0 60px rgba(245,197,24,.6);line-height:1;}
+  @keyframes bounce-sieger{0%,100%{transform:translateY(0)}50%{transform:translateY(-30px)}}
+  .feuerwerk{position:absolute;width:100%;height:100%;pointer-events:none;inset:0;overflow:hidden;}
+  .spark{position:absolute;width:8px;height:8px;border-radius:50%;
+    background:var(--gold);box-shadow:0 0 12px var(--gold);pointer-events:none;}
+  .spark-anim{animation:spark-fly 1.5s ease-out forwards;}
+  @keyframes spark-fly{
+    0%{opacity:1;transform:translate(0,0) scale(1)}
+    100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}
+  }
+  .ende-foto-bg{position:fixed;inset:0;background-size:cover;background-position:center;
+    background-repeat:no-repeat;filter:brightness(.35) blur(3px);z-index:0;}
+  .ende-inhalt{position:relative;z-index:2;}
+
+  /* Permanenter Punktestand unten */
+  .score{position:absolute;bottom:34px;display:flex;align-items:center;gap:18px;z-index:6;}
+  .score.a{left:48px;}
+  .score.b{right:48px;flex-direction:row-reverse;}
+  .score .name{font-size:clamp(18px,2vw,26px);font-weight:700;letter-spacing:1px;}
+  .score .pkt{font-size:clamp(40px,5vw,68px);font-weight:900;line-height:1;
+    font-variant-numeric:tabular-nums;}
+  .score.a .pkt{color:var(--teamA);text-shadow:0 0 24px rgba(47,111,237,.45);}
+  .score.b .pkt{color:var(--teamB);text-shadow:0 0 24px rgba(224,71,58,.45);}
+  .score .pkt.bump{animation:bump .4s ease;}
+  @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.25)}100%{transform:scale(1)}}
+
+  /* Logo oben mitte */
+  #logo{position:absolute;top:26px;left:50%;transform:translateX(-50%);
+    font-size:15px;letter-spacing:4px;color:#5b6478;text-transform:uppercase;z-index:6;}
+  #logo b{color:var(--gold);}
+
+  /* Verbindungsindikator */
+  #conn{position:absolute;top:14px;right:16px;width:9px;height:9px;border-radius:50%;
+    background:#e0473a;z-index:9;transition:background .3s;}
+  #conn.on{background:#33c46a;}
+
+  /* Fast Five – Timer */
+  .ff-timer{font-size:clamp(64px,9vw,110px);font-weight:900;letter-spacing:4px;
+    font-variant-numeric:tabular-nums;color:#fff;line-height:1;margin:10px 0 14px;}
+  .ff-timer.warn{color:var(--gold);text-shadow:0 0 28px rgba(245,197,24,.45);}
+  .ff-timer.crit{color:var(--teamB);text-shadow:0 0 28px rgba(224,71,58,.55);
+    animation:ff-blink .55s steps(1) infinite;}
+  @keyframes ff-blink{0%{opacity:1}50%{opacity:.35}}
+
+  /* Fast Five – Score-Leiste */
+  .ff-score{display:flex;align-items:center;justify-content:center;gap:clamp(14px,2vw,28px);
+    margin-top:18px;font-size:clamp(15px,1.7vw,21px);}
+  .ff-score .sep{color:#4a5268;}
+  .ff-score .gesamt{color:var(--gold);font-weight:900;font-size:1.15em;
+    font-variant-numeric:tabular-nums;}
+
+  /* Fast Five – Spieler-Badge */
+  .ff-dran{font-size:clamp(18px,2.2vw,26px);font-weight:800;margin-bottom:8px;letter-spacing:1px;}
+</style>
+</head>
+<body>
+<div id="buehne">
+  <div class="team-bg a"><div class="foto" id="foto-a"></div></div>
+  <div class="team-bg b"><div class="foto" id="foto-b"></div></div>
+  <div id="vs-linie"></div>
+  <div id="vs">VS</div>
+
+  <div id="logo">SCHLAG<b>FERTIG</b> · 100 LEUTE GEFRAGT</div>
+
+  <div id="inhalt"></div>
+
+  <div class="score a"><span class="name" id="name-a">Team A</span><span class="pkt" id="pkt-a">0</span></div>
+  <div class="score b"><span class="name" id="name-b">Team B</span><span class="pkt" id="pkt-b">0</span></div>
+
+  <div id="conn"></div>
+
+  <div id="meme-popup"><img id="meme-popup-img" alt=""></div>
+</div>
+
+<script src="/sio.js"></script>
+<script>
+const socket = io('/100leute');
+let state = null;
+
+socket.on('connect',    () => document.getElementById('conn').classList.add('on'));
+socket.on('disconnect', () => document.getElementById('conn').classList.remove('on'));
+socket.on('state', (s) => { state = s; render(); });
+
+// ════ MEME-BOARD (Moderator löst per Klick ein GIF/Sticker/Video aus) ════
+let memePopupTimer = null;
+socket.on('zeige_meme', (d) => {
+  if(!d || !d.gif) return;
+  const popup = document.getElementById('meme-popup');
+  const img   = document.getElementById('meme-popup-img');
+  if(memePopupTimer) clearTimeout(memePopupTimer);
+  const pre = new Image();
+  pre.onload = () => {
+    img.src = pre.src;
+    popup.classList.add('zeig');
+    memePopupTimer = setTimeout(() => popup.classList.remove('zeig'), 3500);
+  };
+  pre.onerror = () => {
+    img.src = '/gifs/' + d.gif;
+    popup.classList.add('zeig');
+    memePopupTimer = setTimeout(() => popup.classList.remove('zeig'), 3500);
+  };
+  pre.src = '/gifs/' + d.gif;
+});
+
+// ════ SOUND (Web Audio API – alles im Browser erzeugt) ════
+let audioCtx = null;
+function getAudio(){
+  try {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+  } catch(e){}
+  return audioCtx;
+}
+function ton(freq, dauer, typ, vol, slideTo){
+  const ac = getAudio(); if(!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = typ || 'sine'; o.frequency.setValueAtTime(freq, ac.currentTime);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ac.currentTime + dauer);
+  g.gain.setValueAtTime(vol || 0.25, ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dauer);
+  o.connect(g).connect(ac.destination);
+  o.start(); o.stop(ac.currentTime + dauer);
+}
+function soundReveal(){ ton(880,0.16,'sine',0.28); setTimeout(()=>ton(1320,0.24,'sine',0.24),85); }
+function soundStrike(){ ton(190,0.32,'square',0.22,95); }
+function soundDreiStrikes(){
+  ton(300,0.2,'sawtooth',0.28);
+  setTimeout(()=>ton(225,0.22,'sawtooth',0.28),190);
+  setTimeout(()=>ton(150,0.55,'sawtooth',0.32,70),400);
+}
+function soundBuzz(){ ton(540,0.12,'triangle',0.28); }
+function soundJubel(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>ton(f,0.3,'triangle',0.26),i*110)); }
+function soundTimerUrgency(){ ton(1100,0.08,'triangle',0.16); }
+function soundTimerAblauf(){
+  ton(400,0.1,'sawtooth',0.2);
+  setTimeout(()=>ton(300,0.1,'sawtooth',0.22),100);
+  setTimeout(()=>ton(200,0.42,'sawtooth',0.3,100),210);
+}
+function soundFfSieg(){
+  const notes=[523,659,784,1046,1319,1568];
+  notes.forEach((f,i)=>setTimeout(()=>ton(f,0.36,'triangle',0.3),i*90));
+  setTimeout(()=>{ [1046,1319,1568,2093].forEach((f,i)=>setTimeout(()=>ton(f,0.42,'triangle',0.28),i*80)); },580);
+}
+
+// Feuerwerk-Animation
+function feuerwerk(){
+  const fw = document.querySelector('.feuerwerk');
+  if(!fw) return;
+  for(let i=0; i<40; i++){
+    const spark = document.createElement('div');
+    spark.className = 'spark spark-anim';
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 200 + Math.random() * 300;
+    const tx = Math.cos(angle) * dist;
+    const ty = Math.sin(angle) * dist - 200;
+    spark.style.setProperty('--tx', tx + 'px');
+    spark.style.setProperty('--ty', ty + 'px');
+    spark.style.left = '50%';
+    spark.style.top = '50%';
+    spark.style.marginLeft = '-4px';
+    spark.style.marginTop = '-4px';
+    fw.appendChild(spark);
+    setTimeout(()=>spark.remove(), 1500);
+  }
+}
+
+// Hintergrundmusik – leiser, warmer Ambient-Pad
+let musikNodes = null;
+function musikStart(){
+  const ac = getAudio(); if(!ac || musikNodes) return;
+  const master = ac.createGain(); master.gain.setValueAtTime(0.0001, ac.currentTime);
+  master.gain.exponentialRampToValueAtTime(0.05, ac.currentTime + 2.5);
+  master.connect(ac.destination);
+  const oscs = [110, 164.81, 220, 277.18].map(f => {        // warmer A-Dur-Pad
+    const o = ac.createOscillator(); o.type='sine'; o.frequency.value=f;
+    const g = ac.createGain(); g.gain.value=0.22;
+    o.connect(g).connect(master); o.start(); return o;
+  });
+  const lfo = ac.createOscillator(); lfo.frequency.value=0.07;     // langsames Schweben
+  const lfoG = ac.createGain(); lfoG.gain.value=0.018;
+  lfo.connect(lfoG).connect(master.gain); lfo.start();
+  musikNodes = { master, oscs, lfo };
+}
+function musikStop(){
+  if(!musikNodes) return;
+  const ac = getAudio(); const n = musikNodes; musikNodes = null;
+  try { n.master.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 1.2); } catch(e){}
+  setTimeout(()=>{ try { n.oscs.forEach(o=>o.stop()); n.lfo.stop(); } catch(e){} }, 1400);
+}
+
+// Zustandsänderungen -> passende Sounds
+let prevSound = { strikes:0, revealed:new Set(), erster:null, gewinner:null, phase:null, ffRest:null, ffRevealed:new Set() };
+function revealedSet(){
+  const s = new Set();
+  if(state.aktive_frage) state.aktive_frage.antworten.forEach((a,i)=>{ if(a.auf) s.add(i); });
+  return s;
+}
+function soundsUpdate(){
+  if(!state) return;
+  // Musik an/aus
+  if(state.musik && !musikNodes) musikStart();
+  if(!state.musik && musikNodes) musikStop();
+  // neu aufgedeckte Antwort (Hauptspiel)
+  const nowRev = revealedSet();
+  let neu = false; nowRev.forEach(i => { if(!prevSound.revealed.has(i)) neu = true; });
+  if(neu) soundReveal();
+  // neu aufgedeckte Antwort (Fast Five)
+  const ffRevealed = new Set();
+  if(state.phase === 'fastfive' && state.ff && state.ff.fragen && state.ff.fragen.length > 0){
+    const fq = state.ff.fragen[state.ff.aktuell || 0];
+    fq.antworten.forEach((a,i)=>{ if(a.auf) ffRevealed.add(i); });
+    let ffNeu = false; ffRevealed.forEach(i=>{ if(!prevSound.ffRevealed.has(i)) ffNeu=true; });
+    if(ffNeu) soundReveal();
+  }
+  // Strikes
+  const st = state.strikes || 0;
+  if(st > prevSound.strikes){ if(st >= 3) soundDreiStrikes(); else soundStrike(); }
+  // Buzz
+  const er = state.duell && state.duell.erster_team;
+  if(er && er !== prevSound.erster && state.phase === 'buzzerduell') soundBuzz();
+  // Rundensieg
+  const rg = state.rundenende && state.rundenende.gewinner;
+  if(rg && rg !== prevSound.gewinner) soundJubel();
+  // FF-Timer-Sounds
+  const ffRest = (state.phase==='fastfive' && state.ff) ? (state.ff.timer_rest||0) : null;
+  if(ffRest !== null && prevSound.ffRest !== null){
+    if(prevSound.ffRest > 0 && ffRest === 0) soundTimerAblauf();
+    else if(prevSound.ffRest > 10 && ffRest <= 10 && ffRest > 0) soundTimerUrgency();
+  }
+  // Spielende / FF-Sieg
+  if(state.phase === 'ende' && prevSound.phase !== 'ende'){
+    const ff = state.ff;
+    const total = ff ? (ff.punkte_a||0)+(ff.punkte_b||0) : 0;
+    if(total >= (state.config&&state.config.ff_ziel||400)) soundFfSieg(); else soundJubel();
+  }
+  prevSound = { strikes:st, revealed:nowRev, erster:er, gewinner:rg,
+                phase:state.phase, ffRest, ffRevealed };
+}
+
+function setPkt(id, wert){
+  const el = document.getElementById(id);
+  if(el.textContent !== String(wert)){
+    el.textContent = wert;
+    el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  }
+}
+
+function render(){
+  if(!state) return;
+  const a = state.teams.A, b = state.teams.B;
+  document.getElementById('name-a').textContent = a.name || 'Team A';
+  document.getElementById('name-b').textContent = b.name || 'Team B';
+  setPkt('pkt-a', a.punkte || 0);
+  setPkt('pkt-b', b.punkte || 0);
+  document.getElementById('foto-a').style.backgroundImage = a.foto ? `url(${a.foto})` : 'none';
+  document.getElementById('foto-b').style.backgroundImage = b.foto ? `url(${b.foto})` : 'none';
+  renderPhase(state.phase);
+  soundsUpdate();
+}
+
+// ── Tafel (verdeckte Antwort-Felder mit Flip) ──
+let boardFrageId = null;   // welche Frage ist gerade als Tafel gerendert
+
+function tileHTML(a, i){
+  return `<div class="tile" id="tile-${i}">
+    <div class="tile-inner">
+      <div class="tile-front">${i+1}</div>
+      <div class="tile-back"><span class="t-text">${a.text}</span><span class="t-pkt">${a.punkte}</span></div>
+    </div></div>`;
+}
+function syncTiles(af){
+  af.antworten.forEach((a,i) => {
+    const t = document.getElementById('tile-'+i);
+    if(!t) return;
+    if(a.auf) t.classList.add('open'); else t.classList.remove('open');
+  });
+}
+function duellStatusHTML(d){
+  if(d.gewinner) return `<div class="gewinner-banner">🏆 ${state.teams[d.gewinner].name}
+    <span>spielt die Hauptrunde</span></div>`;
+  if(d.erster_team) return `<div class="status">⚡ ${state.teams[d.erster_team].name} hat zuerst gebuzzert!</div>`;
+  return '';
+}
+function strikesHTML(){
+  let s = '';
+  for(let i=0;i<3;i++) s += `<span class="strike ${i < (state.strikes||0) ? 'an' : ''}">✗</span>`;
+  return `<div class="strikes">${s}</div>`;
+}
+
+// Tafel: einmal aufbauen, danach nur aktualisieren (Flip bleibt erhalten)
+function ensureBoard(){
+  const af = state.aktive_frage;
+  if(!af) return false;
+  if(boardFrageId !== af.id || !document.querySelector('.board')){
+    document.getElementById('inhalt').innerHTML =
+      `<div class="titel-klein" id="b-titel"></div>
+       <div class="board-frage" id="b-frage"></div>
+       <div class="rundentopf" id="b-topf"></div>
+       <div class="board">${af.antworten.map(tileHTML).join('')}</div>
+       <div class="duell-status" id="b-status"></div>`;
+    boardFrageId = af.id;
+  }
+  return true;
+}
+function paintBoard(titel, statusHTML){
+  document.getElementById('b-titel').textContent = titel;
+  document.getElementById('b-frage').textContent = state.aktive_frage.frage;
+  syncTiles(state.aktive_frage);
+  document.getElementById('b-topf').innerHTML = `Rundentopf <b>${state.rundentopf || 0}</b>`;
+  document.getElementById('b-status').innerHTML = statusHTML || '';
+}
+
+// ── Fast Five Board ──
+let ffBoardKey = null;   // "<frage_id>-<dran>" – verhindert unnötiges Rebuild
+
+function ensureFFBoard(){
+  const ff = state.ff;
+  if(!ff || !ff.fragen || ff.fragen.length === 0) return false;
+  const fq  = ff.fragen[ff.aktuell || 0];
+  const key = fq.id + '-' + ff.dran + '-' + ff.aktuell;
+  if(ffBoardKey !== key || !document.getElementById('ff-tile-0')){
+    const tiles = fq.antworten.map((a,i)=>`
+      <div class="tile" id="ff-tile-${i}">
+        <div class="tile-inner">
+          <div class="tile-front">${i+1}</div>
+          <div class="tile-back"><span class="t-text">${a.text}</span><span class="t-pkt">${a.punkte}</span></div>
+        </div></div>`).join('');
+    document.getElementById('inhalt').innerHTML = `
+      <div class="ff-dran" id="ff-dran"></div>
+      <div id="ff-timer-disp"></div>
+      <div class="board-frage" id="ff-frage"></div>
+      <div class="board">${tiles}</div>
+      <div class="ff-score" id="ff-score"></div>`;
+    ffBoardKey = key;
+  }
+  return true;
+}
+
+function paintFFBoard(){
+  const ff = state.ff;
+  const fq  = ff.fragen[ff.aktuell || 0];
+  const anzFragen = ff.fragen.length;
+  const dranColor = ff.dran === 'A' ? 'var(--teamA)' : 'var(--teamB)';
+
+  document.getElementById('ff-dran').innerHTML =
+    `<span style="color:${dranColor}">⚡ ${state.teams[ff.dran].name}</span>`
+    + ` · Frage ${(ff.aktuell||0)+1} / ${anzFragen}`;
+  document.getElementById('ff-frage').textContent = fq.frage;
+
+  // Tiles synchronisieren (Flip-Animation bleibt erhalten)
+  fq.antworten.forEach((a,i)=>{
+    const t = document.getElementById('ff-tile-'+i);
+    if(!t) return;
+    if(a.auf) t.classList.add('open'); else t.classList.remove('open');
+    // Kante färben: A = teamA-Farbe, B = teamB-Farbe
+    const back = t.querySelector('.tile-back');
+    if(back) back.style.borderColor = a.von==='A' ? 'var(--teamA)' : a.von==='B' ? 'var(--teamB)' : 'var(--gold)';
+  });
+
+  // Timer
+  const timerEl = document.getElementById('ff-timer-disp');
+  if(state.config && state.config.ff_timer){
+    const rest = ff.timer_rest || 0;
+    const mm = String(Math.floor(rest/60)).padStart(2,'0');
+    const ss = String(rest%60).padStart(2,'0');
+    const cls = rest<=5 ? 'crit' : rest<=10 ? 'warn' : '';
+    timerEl.innerHTML = `<div class="ff-timer ${cls}">${mm}:${ss}</div>`;
+  } else {
+    timerEl.innerHTML = '';
+  }
+
+  // FF-Score
+  const pA = ff.punkte_a||0, pB = ff.punkte_b||0;
+  const total = pA + pB;
+  const ziel  = (state.config && state.config.ff_ziel) || 400;
+  const zielHit = total >= ziel;
+  document.getElementById('ff-score').innerHTML =
+    `<span style="color:var(--teamA);font-weight:700">${state.teams.A.name}: ${pA}</span>`
+    +`<span class="sep">·</span>`
+    +`<span style="color:var(--teamB);font-weight:700">${state.teams.B.name}: ${pB}</span>`
+    +`<span class="sep">·</span>`
+    +`<span class="gesamt">${total}`
+    +(zielHit?` <span style="color:#33c46a;font-size:.7em">✓ Ziel erreicht</span>`:`/ ${ziel}`)
+    +`</span>`;
+}
+
+// Phasen-Router
+const BOARD_PHASEN = ['buzzerduell','hauptrunde','stehlen','rundenende'];
+function renderPhase(phase){
+  const inhalt = document.getElementById('inhalt');
+  const bgA = document.querySelector('.team-bg.a');
+  const bgB = document.querySelector('.team-bg.b');
+  const setupEl = document.getElementById('setup-screen');
+  const d = state.duell || {};
+
+  // Setup-Screen nur in setup-Phase anzeigen
+  if(setupEl) setupEl.style.display = (phase === 'setup') ? 'flex' : 'none';
+
+  document.getElementById('vs').style.display =
+    (phase === 'buzzerduell' && !state.aktive_frage) ? 'block' : 'none';
+
+  bgA.classList.remove('buzz','win'); bgB.classList.remove('buzz','win');
+  if(!BOARD_PHASEN.includes(phase)) boardFrageId = null;
+  if(phase !== 'fastfive') ffBoardKey = null;
+
+  // Team-Hervorhebung je Phase
+  if(phase === 'buzzerduell'){
+    bgA.classList.toggle('buzz', d.erster_team==='A' && !d.gewinner);
+    bgB.classList.toggle('buzz', d.erster_team==='B' && !d.gewinner);
+    bgA.classList.toggle('win',  d.gewinner==='A');
+    bgB.classList.toggle('win',  d.gewinner==='B');
+  } else if(phase === 'hauptrunde'){
+    if(state.aktives_team==='A') bgA.classList.add('buzz');
+    if(state.aktives_team==='B') bgB.classList.add('buzz');
+  } else if(phase === 'stehlen'){
+    const gegner = state.aktives_team==='A' ? 'B' : 'A';
+    (gegner==='A' ? bgA : bgB).classList.add('buzz');
+  } else if(phase === 'rundenende'){
+    const g = state.rundenende && state.rundenende.gewinner;
+    if(g==='A') bgA.classList.add('win');
+    if(g==='B') bgB.classList.add('win');
+  }
+
+  switch(phase){
+    case 'buzzerduell': {
+      const af = state.aktive_frage;
+      if(!af){
+        boardFrageId = null;
+        inhalt.innerHTML = `<div class="titel-klein">Buzzer-Duell · Runde ${state.runde}</div>
+          <div class="warte puls">Gleich geht's los …</div>`;
+        break;
+      }
+      const zeigeBoard = d.erster_team || d.antwort_a != null || d.antwort_b != null;
+      if(!zeigeBoard){
+        boardFrageId = null;
+        inhalt.innerHTML = `<div class="titel-klein">Buzzer-Duell · Runde ${state.runde}</div>
+          <div class="frage-gross">${af.frage}</div>
+          <div class="status puls">Wer buzzert zuerst?</div>`;
+        break;
+      }
+      ensureBoard();
+      paintBoard(`Buzzer-Duell · Runde ${state.runde}`, duellStatusHTML(d));
+      break;
+    }
+    case 'hauptrunde': {
+      if(!ensureBoard()) break;
+      const at = state.aktives_team;
+      const name = state.teams[at] ? state.teams[at].name : '';
+      paintBoard(`Hauptrunde · Runde ${state.runde}`,
+        `<div class="status">🎯 ${name} ist dran</div>` + strikesHTML());
+      break;
+    }
+    case 'stehlen': {
+      if(!ensureBoard()) break;
+      const gegner = state.aktives_team==='A' ? 'B' : 'A';
+      paintBoard(`Stehlen!`,
+        `<div class="status puls" style="color:var(--gold)">💰 ${state.teams[gegner].name} darf stehlen – eine Chance!</div>`
+        + strikesHTML());
+      break;
+    }
+    case 'rundenende': {
+      if(!ensureBoard()) break;
+      const re = state.rundenende || {};
+      const banner = re.gewinner
+        ? `<div class="gewinner-banner">🏆 ${state.teams[re.gewinner].name}<span>+${re.topf} Punkte</span></div>`
+        : `<div class="status">Keine Punkte vergeben</div>`;
+      paintBoard(`Runde ${state.runde} beendet`, banner);
+      break;
+    }
+    case 'fastfive': {
+      const ff = state.ff;
+      document.getElementById('vs').style.display = 'none';
+      if(!ff || !ff.fragen || ff.fragen.length === 0){
+        inhalt.innerHTML = `<div class="titel-klein">Fast Five</div>
+          <div class="warte puls">Warten auf Moderator …</div>`;
+        break;
+      }
+      // Team-Hervorhebung
+      if(ff.dran==='A') bgA.classList.add('buzz');
+      else bgB.classList.add('buzz');
+      ensureFFBoard();
+      paintFFBoard();
+      break;
+    }
+    case 'ende': {
+      const a = state.teams.A, b = state.teams.B;
+      const sieger = a.punkte > b.punkte ? 'A' : b.punkte > a.punkte ? 'B' : null;
+      const siegerTeam = sieger ? state.teams[sieger] : null;
+      const foto = siegerTeam ? siegerTeam.foto : '';
+      document.getElementById('buehne').style.position = 'relative';
+      if(foto){
+        let bgEl = document.getElementById('ende-bg');
+        if(!bgEl){
+          bgEl = document.createElement('div');
+          bgEl.id = 'ende-bg';
+          bgEl.className = 'ende-foto-bg';
+          document.getElementById('buehne').insertBefore(bgEl, document.getElementById('inhalt'));
+        }
+        bgEl.style.backgroundImage = `url(${foto})`;
+      }
+      if(sieger==='A') bgA.classList.add('win');
+      if(sieger==='B') bgB.classList.add('win');
+      const ff = state.ff;
+      const ffTotal = ff ? (ff.punkte_a||0)+(ff.punkte_b||0) : 0;
+      const ziel = (state.config&&state.config.ff_ziel)||400;
+      const erreicht = ffTotal >= ziel;
+      inhalt.innerHTML = `
+        <div class="feuerwerk" id="feuerwerk"></div>
+        <div class="ende-inhalt">
+          <div class="titel-klein" style="color:var(--gold)">SPIELENDE</div>
+          ${sieger
+            ? `<div class="ende-sieger">${state.teams[sieger].name}</div>
+               <div class="gewinner-banner" style="font-size:1.2em;color:#fff;text-shadow:none"><span>🏆 gewinnt das Spiel!</span></div>
+               <div style="font-size:clamp(32px,4vw,56px);color:var(--gold);font-weight:900;margin-top:14px;text-shadow:0 0 30px rgba(245,197,24,.4)">${a.punkte > b.punkte ? a.punkte : b.punkte}</div>`
+            : `<div class="gewinner-banner" style="color:#fff">Unentschieden<span>Beide Teams gleichauf</span></div>
+               <div style="font-size:clamp(32px,4vw,56px);color:var(--gold);font-weight:900;margin-top:14px">${a.punkte}</div>`}
+          ${ff ? `<div class="ff-score" style="margin-top:26px">
+            <span style="color:var(--teamA);font-weight:700">${a.name}: ${a.punkte}</span>
+            <span class="sep">·</span>
+            <span style="color:var(--teamB);font-weight:700">${b.name}: ${b.punkte}</span>
+            ${erreicht?`<span class="sep">·</span><span class="gesamt" style="color:#33c46a">✓ Fast Five Ziel ${ziel} erreicht!</span>`:''}
+          </div>` : ''}
+        </div>`;
+      setTimeout(()=>feuerwerk(), 200);
+      break;
+    }
+    default: // setup
+      let setupEl = document.getElementById('setup-screen');
+      if(!setupEl){
+        setupEl = document.createElement('div');
+        setupEl.id = 'setup-screen';
+        document.body.insertBefore(setupEl, document.getElementById('buehne'));
+      }
+      setupEl.style.display = 'flex';
+      setupEl.innerHTML = `
+        <video id="setup-video" autoplay loop muted playsinline>
+          <source src="/static/intro.mp4" type="video/mp4">
+        </video>
+        <div class="setup-overlay"></div>
+        <div class="setup-content">
+          <div class="setup-logo">SCHLAGFERTIG</div>
+          <div class="setup-waiting">⏳ Warten auf Moderator …</div>
+        </div>`;
+  }
+}
+render();
+</script>
+</body>
+</html>

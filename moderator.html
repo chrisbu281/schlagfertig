@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Schlagfertig – Moderator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#0d0d1a;color:#fff;
+  font-family:system-ui,-apple-system,sans-serif;overflow:hidden}
+body{display:flex;flex-direction:column}
+
+/* ═══ HEADER ═══ */
+.mh{
+  display:flex;align-items:center;padding:12px 20px;flex-shrink:0;
+  background:#0a0a14;border-bottom:1px solid rgba(255,255,255,.07);gap:12px;
+}
+.mh-logo{font-size:16px;font-weight:900;letter-spacing:-.3px}
+.mh-logo span{color:#E24B4A}
+.mh-badge{
+  background:rgba(226,75,74,.15);border:1px solid rgba(226,75,74,.3);
+  color:#E24B4A;font-size:11px;font-weight:700;letter-spacing:1px;
+  padding:3px 10px;border-radius:20px;
+}
+.mh-rechts{margin-left:auto;display:flex;gap:8px}
+.mh-btn{
+  padding:8px 14px;border-radius:10px;border:none;
+  font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+  display:inline-flex;align-items:center;gap:6px;transition:.15s;
+}
+.mh-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.mh-btn.gelb{background:#f59e0b;color:#000}
+.mh-btn.rot{background:#c0392b;color:#fff}
+.mh-btn.grau{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.1)}
+.einst-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
+.einst-overlay.offen{display:flex}
+.einst-modal{background:#fff;border-radius:16px;padding:26px;width:420px;max-width:100%;color:#1a1a1a}
+.einst-modal h2{font-size:17px;font-weight:700;margin-bottom:18px}
+.toggle-switch{position:relative;display:inline-block;width:44px;height:24px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#ddd;border-radius:24px;transition:.2s}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.toggle-slider{background:#2d8a4e}
+input:checked+.toggle-slider:before{transform:translateX(20px)}
+
+/* ═══ SCREENS ═══ */
+.screen{display:none;flex:1;overflow:hidden}
+.screen.aktiv{display:flex}
+
+/* ═══════════ START-SCREEN ═══════════ */
+#s-start{
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;
+}
+.start-karte{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;padding:28px;width:100%;max-width:500px;
+}
+.start-karte h2{font-size:18px;font-weight:700;margin-bottom:6px}
+.start-karte p{font-size:14px;color:rgba(255,255,255,.4);margin-bottom:20px}
+.team-liste{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;max-height:280px;overflow-y:auto}
+.team-item{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;
+  border-radius:12px;border:1.5px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);cursor:pointer;transition:.15s;
+}
+.team-item:hover{border-color:rgba(255,255,255,.2)}
+.team-item.aktiv{border-color:#E24B4A;background:rgba(226,75,74,.08)}
+.ti-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0}
+.ti-name{font-size:15px;font-weight:600;flex:1}
+.ti-check{font-size:18px;opacity:0;transition:.15s}
+.team-item.aktiv .ti-check{opacity:1}
+.start-btn{
+  width:100%;padding:16px;border-radius:14px;border:none;
+  background:#E24B4A;color:#fff;font-size:17px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:.2s;
+}
+.start-btn:hover{background:#c73c3b;transform:translateY(-1px)}
+.start-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.start-info{font-size:13px;color:rgba(255,255,255,.35);text-align:center;margin-top:10px}
+
+/* ── Buzzer-Status ── */
+.buzzer-status-karte{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+  border-radius:16px;padding:18px 20px;width:100%;max-width:500px;margin-top:12px;
+}
+.bsk-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;
+}
+.bsk-titel{font-size:13px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.5)}
+.bsk-reset{
+  padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05);color:rgba(255,255,255,.45);
+  font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;
+}
+.bsk-reset:hover{background:rgba(255,255,255,.1);color:#fff}
+.bsk-liste{display:flex;flex-direction:column;gap:6px}
+.bsk-item{
+  display:flex;align-items:center;gap:10px;padding:9px 13px;
+  border-radius:10px;background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.05);
+}
+.bsk-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+  background:rgba(255,255,255,.15);transition:.4s;
+}
+.bsk-dot.ok{background:#2d8a4e;box-shadow:0 0 8px rgba(45,138,78,.5)}
+.bsk-name{flex:1;font-size:13px;font-weight:600;color:rgba(255,255,255,.6)}
+.bsk-status{font-size:11px;font-weight:700;transition:.3s}
+.bsk-status.ok{color:#4ade80}
+.bsk-status.warten{color:rgba(255,255,255,.2)}
+.bsk-gpio{
+  font-size:10px;color:rgba(255,255,255,.18);
+  font-family:monospace;letter-spacing:.3px;
+}
+@keyframes bsk-ping{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.6);opacity:.5}
+  100%{transform:scale(1)}
+}
+.bsk-dot.ping{animation:bsk-ping .4s ease}
+
+/* ═══════════ SPIEL-SCREEN ═══════════ */
+#s-spiel{display:none;flex-direction:row;gap:0}
+#s-spiel.aktiv{display:flex}
+
+/* Linke Spalte: Frage + Aktionen */
+.sp-links{
+  flex:1;display:flex;flex-direction:column;gap:0;
+  border-right:1px solid rgba(255,255,255,.06);overflow:hidden;
+}
+
+/* Frage-Karte */
+.frage-karte{
+  flex:1;padding:20px 24px;display:flex;flex-direction:column;
+  overflow-y:auto;
+}
+.fk-meta{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.fk-nr{font-size:12px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.3)}
+.fk-kat{
+  font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;
+  border-radius:20px;background:rgba(226,75,74,.1);border:1px solid rgba(226,75,74,.2);
+  color:#E24B4A;
+}
+.fk-text{
+  font-size:20px;font-weight:700;line-height:1.4;margin-bottom:16px;
+  color:#fff;
+}
+.fk-antwort{
+  background:rgba(45,138,78,.1);border:1px solid rgba(45,138,78,.25);
+  border-radius:12px;padding:14px 18px;
+}
+.fk-a-label{font-size:11px;font-weight:700;letter-spacing:1px;color:#4ade80;margin-bottom:4px}
+.fk-a-text{font-size:16px;font-weight:700;color:#4ade80}
+
+/* MC Antworten */
+.mc-liste{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.mc-btn{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  border-radius:12px;border:1.5px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);cursor:pointer;font-family:inherit;
+  font-size:15px;font-weight:600;color:#fff;transition:.2s;text-align:left;
+}
+.mc-btn:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.08)}
+.mc-btn.aktiv{border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.1)}
+.mc-btn.richtig{border-color:#2d8a4e;background:rgba(45,138,78,.15);color:#4ade80}
+.mc-btn.falsch{border-color:rgba(226,75,74,.3);opacity:.4}
+.mc-lbl{
+  width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:14px;font-weight:900;flex-shrink:0;
+}
+
+/* Aktionen */
+.aktionen{
+  padding:14px 20px;border-top:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;gap:10px;flex-shrink:0;
+}
+.ak-reihe{display:flex;gap:10px}
+.ak-btn{
+  flex:1;padding:16px 10px;border-radius:14px;border:none;
+  font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:.15s;
+}
+.ak-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.ak-btn:active{transform:translateY(0)}
+.ak-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;filter:none}
+.ak-btn.gruen{background:#2d8a4e;color:#fff}
+.ak-btn.rot{background:#c0392b;color:#fff}
+.ak-btn.glas{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);
+  border:1px solid rgba(255,255,255,.1)}
+.ak-btn.lila{background:#7c3aed;color:#fff}
+.ak-btn.gross{padding:18px;font-size:16px}
+
+/* Rechte Spalte: Scores + Buzzer */
+.sp-rechts{
+  width:260px;flex-shrink:0;display:flex;flex-direction:column;
+  background:rgba(0,0,0,.15);overflow:hidden;
+}
+
+/* Scores */
+.scores-box{
+  padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;
+}
+.box-label{
+  font-size:11px;font-weight:700;letter-spacing:2px;
+  color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:10px;
+}
+.score-item{
+  display:flex;align-items:center;gap:10px;padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.score-item:last-child{border:none}
+.si-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.si-name{flex:1;font-size:14px;font-weight:600;color:rgba(255,255,255,.7)}
+.si-pts{font-size:18px;font-weight:900}
+.si-delta{
+  font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;
+  animation:delta-rein .4s ease;
+}
+.si-delta.plus{background:rgba(45,138,78,.2);color:#4ade80}
+.si-delta.minus{background:rgba(226,75,74,.2);color:#f87171}
+@keyframes delta-rein{from{transform:scale(0);opacity:0}to{transform:none;opacity:1}}
+
+/* Buzzer-Box */
+.buzzer-box{
+  flex:1;padding:16px;display:flex;flex-direction:column;overflow:hidden;
+}
+.wq-liste{display:flex;flex-direction:column;gap:6px;overflow-y:auto;flex:1;margin-top:8px}
+.wq-item{
+  display:flex;align-items:center;gap:8px;padding:9px 12px;
+  border-radius:10px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.06);font-size:13px;font-weight:600;
+  animation:wq-rein .3s cubic-bezier(.34,1.56,.64,1);
+}
+.wq-item:first-child{
+  background:rgba(226,75,74,.12);border-color:rgba(226,75,74,.25);color:#fff;
+}
+.wq-rang{color:rgba(255,255,255,.25);font-size:11px;font-weight:700;width:16px}
+.wq-ms{margin-left:auto;font-size:11px;color:rgba(255,255,255,.25)}
+.wq-leer{font-size:13px;color:rgba(255,255,255,.2);text-align:center;padding:12px 0}
+@keyframes wq-rein{from{transform:scale(.85) translateY(4px);opacity:0}to{transform:none;opacity:1}}
+.freigeben-btn{
+  width:100%;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);
+  font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+  margin-top:10px;flex-shrink:0;transition:.15s;
+}
+.freigeben-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+
+/* Fragennavigation */
+.fragen-nav{
+  padding:12px 16px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;
+}
+.fragen-nav-liste{
+  display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;
+  max-height:80px;overflow-y:auto;
+}
+.fn-punkt{
+  width:28px;height:28px;border-radius:6px;border:1.5px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:rgba(255,255,255,.3);cursor:pointer;transition:.15s;
+}
+.fn-punkt:hover{border-color:rgba(255,255,255,.3);color:#fff}
+.fn-punkt.aktiv{background:#E24B4A;border-color:#E24B4A;color:#fff}
+.fn-punkt.erledigt{background:rgba(45,138,78,.2);border-color:#2d8a4e;color:#4ade80}
+
+/* ═══════════ SIEGER-SCREEN ═══════════ */
+#s-sieger{
+  flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding:32px;
+}
+.sieg-pokal{font-size:64px;margin-bottom:8px}
+.sieg-name{font-size:56px;font-weight:900;
+  background:linear-gradient(135deg,#E24B4A,#f59e0b);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.sieg-pts{font-size:22px;color:rgba(255,255,255,.4);margin:4px 0 32px}
+.sieg-btn{
+  padding:16px 40px;border-radius:14px;border:none;
+  background:#E24B4A;color:#fff;font-size:17px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:.2s;margin-top:20px;
+}
+.sieg-btn:hover{background:#c73c3b;transform:translateY(-1px)}
+
+/* ═══ SPINNER + MELDUNG ═══ */
+.spinner{display:inline-block;width:16px;height:16px;
+  border:2px solid rgba(255,255,255,.2);border-top-color:#fff;
+  border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:#1a1a2e;border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:12px 20px;font-size:14px;font-weight:600;
+  opacity:0;pointer-events:none;transition:.3s;white-space:nowrap;z-index:500;
+}
+.toast.sicht{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- ══ EINSTELLUNGEN MODAL ══ -->
+<div class="einst-overlay" id="einst-overlay" onclick="if(event.target===this)schliesse_einst_modal()">
+  <div class="einst-modal">
+    <h2>⚙️ Einstellungen</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #eee">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:22px">🔊</span>
+        <div>
+          <div style="font-weight:600;font-size:14px">Sound</div>
+          <div style="font-size:12px;color:#888">Buzzer &amp; Effekte</div>
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="einst-sound-toggle" onchange="toggle_sound(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div style="padding:14px 0;border-bottom:1px solid #eee">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <span style="font-size:22px">☁️</span>
+        <div style="flex:1;min-width:0">
+          <div id="einst-konto-name" style="font-weight:600;font-size:14px">Laden…</div>
+          <div id="einst-konto-info" style="font-size:12px;color:#888"></div>
+        </div>
+      </div>
+      <a href="https://schlagfertig-fragen.vercel.app/" target="_blank" rel="noopener"
+         style="font-size:13px;color:#1a1a2e;font-weight:600;text-decoration:none">
+        🌐 Zur Fragenbibliothek →
+      </a>
+    </div>
+    <div style="padding:14px 0 8px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <span style="font-size:22px">🖥️</span>
+        <div>
+          <div style="font-weight:600;font-size:14px">Gerät</div>
+          <div id="einst-ip" style="font-size:12px;color:#888">–</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px">
+      <button onclick="schliesse_einst_modal()"
+              style="padding:8px 18px;border-radius:10px;border:1.5px solid #ddd;background:#fff;cursor:pointer;font-size:14px;font-weight:500">
+        Schließen
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HEADER ══ -->
+<div class="mh">
+  <div class="mh-logo">Schlag<span>fertig</span></div>
+  <div class="mh-badge">MODERATOR</div>
+  <div id="buzzer-header-dots" style="display:flex;align-items:center;gap:5px;margin-left:14px"></div>
+  <div class="mh-rechts" id="mh-rechts">
+    <!-- Buttons per JS -->
+  </div>
+</div>
+
+<!-- ══ START-SCREEN ══ -->
+<div class="screen aktiv" id="s-start">
+  <div class="start-karte">
+    <h2>🎮 Spiel starten</h2>
+    <p>Wähle die teilnehmenden Teams und starte das Spiel.</p>
+    <div class="team-liste" id="team-liste">
+      <div style="color:rgba(255,255,255,.3);font-size:14px;text-align:center;padding:20px">
+        Lade Teams…
+      </div>
+    </div>
+    <button class="start-btn" id="start-btn" onclick="spiel_starten()" disabled>
+      🎮 Spiel starten
+    </button>
+    <div class="start-info" id="start-info">Kein Team ausgewählt</div>
+  </div>
+</div>
+
+<!-- ══ BUZZER-STATUS ══ -->
+<div class="buzzer-status-karte" id="buzzer-status-karte" style="display:none">
+  <div class="bsk-header">
+    <div class="bsk-titel">🎛 BUZZER-STATUS</div>
+    <button class="bsk-reset" onclick="buzzer_test_reset()">↺ Test zurücksetzen</button>
+  </div>
+  <div class="bsk-liste" id="bsk-liste"></div>
+</div>
+
+<!-- ══ SPIEL-SCREEN ══ -->
+<div class="screen" id="s-spiel">
+
+  <!-- Linke Spalte -->
+  <div class="sp-links">
+
+    <div class="frage-karte" id="frage-karte">
+      <div class="fk-meta">
+        <div class="fk-nr" id="fk-nr">FRAGE 1 / 1</div>
+        <div class="fk-kat" id="fk-kat">Allgemein</div>
+      </div>
+      <div class="fk-text" id="fk-text">—</div>
+
+      <!-- MC Antworten -->
+      <div id="mc-liste" class="mc-liste" style="display:none">
+        <div class="mc-btn" id="mcb-0" onclick="mc_waehlen(0)">
+          <div class="mc-lbl" style="background:#4361ee">A</div><span id="mct-0"></span>
+        </div>
+        <div class="mc-btn" id="mcb-1" onclick="mc_waehlen(1)">
+          <div class="mc-lbl" style="background:#f72585">B</div><span id="mct-1"></span>
+        </div>
+        <div class="mc-btn" id="mcb-2" onclick="mc_waehlen(2)">
+          <div class="mc-lbl" style="background:#f4a261;color:#333">C</div><span id="mct-2"></span>
+        </div>
+        <div class="mc-btn" id="mcb-3" onclick="mc_waehlen(3)">
+          <div class="mc-lbl" style="background:#2ec4b6">D</div><span id="mct-3"></span>
+        </div>
+      </div>
+
+      <!-- Richtige Antwort -->
+      <div class="fk-antwort" id="fk-antwort">
+        <div class="fk-a-label">✓ RICHTIGE ANTWORT</div>
+        <div class="fk-a-text" id="fk-antwort-text">—</div>
+      </div>
+    </div>
+
+    <!-- Aktions-Buttons -->
+    <div class="aktionen">
+      <div class="ak-reihe" id="frei-buttons">
+        <button class="ak-btn gruen gross" id="btn-richtig" onclick="bewertet(true)"  disabled>✓ Richtig</button>
+        <button class="ak-btn rot   gross" id="btn-falsch"  onclick="bewertet(false)" disabled>✗ Falsch</button>
+      </div>
+      <button class="ak-btn lila" id="btn-aufloesen" onclick="mc_aufloesen()" style="display:none">
+        🔍 Auflösen
+      </button>
+      <div class="ak-reihe">
+        <button class="ak-btn glas" onclick="goto_frage(modIdx - 1)" id="btn-zurueck">← Zurück</button>
+        <button class="ak-btn glas" onclick="goto_frage(modIdx + 1)" id="btn-weiter">Weiter →</button>
+        <button class="ak-btn gelb" onclick="spiel_beenden()" style="background:#f59e0b;color:#000;flex:0;padding:16px 14px">🏆</button>
+      </div>
+    </div>
+
+    <!-- Fragennavigation -->
+    <div class="fragen-nav">
+      <div class="box-label">Fragennavigation</div>
+      <div class="fragen-nav-liste" id="fragen-nav"></div>
+    </div>
+  </div>
+
+  <!-- Rechte Spalte -->
+  <div class="sp-rechts">
+
+    <!-- Scores -->
+    <div class="scores-box">
+      <div class="box-label">Punkte</div>
+      <div id="score-liste"></div>
+    </div>
+
+    <!-- Buzzer -->
+    <div class="buzzer-box">
+      <div class="box-label">Buzzer</div>
+      <div class="wq-liste" id="wq-liste">
+        <div class="wq-leer">Noch kein Buzzer</div>
+      </div>
+      <button class="freigeben-btn" onclick="freigeben()">🔓 Buzzer freigeben</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SIEGER-SCREEN ══ -->
+<div class="screen" id="s-sieger">
+  <div class="sieg-pokal">🏆</div>
+  <div class="sieg-name" id="sieg-name">–</div>
+  <div class="sieg-pts"  id="sieg-pts">–</div>
+  <button class="sieg-btn" onclick="neues_spiel()">🔄 Neues Spiel</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/sio.js"></script>
+<script>
+// ══ STATE ══
+let config       = {spieler:[], fragen:[], einstellungen:{}};
+let modFragen    = [];
+let modIdx       = 0;
+let modPunkte    = {};
+let aktiveTeams  = [];
+let mcGewaehlt   = null;
+let erledigte    = new Set();
+
+const FARBEN = ['#E24B4A','#4361ee','#2d8a4e','#f59e0b','#8b5cf6','#06b6d4'];
+
+// ══ SOCKET ══
+const socket = io();
+
+socket.on('connect', () => {
+  // Wenn Server-State schon 'spiel' hat → direkt in Moderator-View
+});
+
+socket.on('state_update', d => {
+  if (d.warteschlange !== undefined) aktualisiere_wq(d.warteschlange);
+  if (d.punkte) { modPunkte = d.punkte; aktualisiere_scores(); }
+  if (d.modus === 'spiel' && !document.getElementById('s-spiel').classList.contains('aktiv')) {
+    // Spiel läuft bereits → sync
+    zeige_screen('s-spiel');
+  }
+});
+
+socket.on('zeige_ergebnis', d => {
+  if (d.punkte) { modPunkte = d.punkte; aktualisiere_scores(d.delta, d.richtig); }
+  if (!d.richtig && d.warteschlange) aktualisiere_wq(d.warteschlange);
+  // Buttons wieder bereit wenn nächste Antwort kommt
+  if (!d.richtig) {
+    const hat_wq = (d.warteschlange||[]).length > 0;
+    setze_bewert_buttons(!hat_wq ? false : true);
+  }
+});
+
+socket.on('zeige_sieger', d => zeige_sieger(d.punkte, d.spieler));
+
+// ══ BUZZER-STATUS ══
+let buzzerStatus = {};  // { nr: timestamp }
+
+socket.on('buzzer_status_update', d => {
+  buzzerStatus[d.nr] = d.ts;
+  aktualisiere_bsk(d.nr);  // Einzelnen Buzzer updaten + Animation
+});
+
+socket.on('buzzer_status_reset', () => {
+  buzzerStatus = {};
+  rendere_bsk();
+});
+
+function rendere_bsk() {
+  if (!config.spieler || !config.spieler.length) return;
+  const karte = document.getElementById('buzzer-status-karte');
+  const liste  = document.getElementById('bsk-liste');
+  karte.style.display = '';
+  liste.innerHTML = config.spieler.map(s => {
+    const nr = s.nr ?? s.nummer;
+    const ok = buzzerStatus[nr] !== undefined;
+    return `
+      <div class="bsk-item" id="bsk-${nr}">
+        <div class="bsk-dot${ok ? ' ok' : ''}" id="bsk-dot-${nr}"></div>
+        <div class="bsk-name">${esc(s.name)}</div>
+        <div class="bsk-status ${ok ? 'ok' : 'warten'}" id="bsk-st-${nr}">
+          ${ok ? '✓ Verbunden' : 'Warte…'}
+        </div>
+        ${s.gpio !== undefined ? `<div class="bsk-gpio">GPIO${s.gpio}</div>` : ''}
+      </div>`;
+  }).join('');
+  rendere_header_dots();
+}
+
+function rendere_header_dots() {
+  const bar = document.getElementById('buzzer-header-dots');
+  if (!bar || !config.spieler) return;
+  bar.innerHTML = config.spieler.map(s => {
+    const nr  = s.nr ?? s.nummer;
+    const ok  = buzzerStatus[nr] !== undefined;
+    const col = s.farbe || '#888';
+    return `<div id="hdot-${nr}" title="${esc(s.name)}" style="
+      width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:.3s;
+      background:${ok ? col : 'rgba(255,255,255,.15)'};
+      box-shadow:${ok ? '0 0 6px '+col : 'none'};
+    "></div>`;
+  }).join('');
+}
+
+function aktualisiere_header_dot(nr) {
+  const dot = document.getElementById('hdot-' + nr);
+  if (!dot) return;
+  const s = config.spieler.find(x => (x.nr ?? x.nummer) == nr);
+  if (!s) return;
+  const col = s.farbe || '#22c55e';
+  dot.style.background = col;
+  dot.style.boxShadow = '0 0 6px ' + col;
+}
+
+function aktualisiere_bsk(nr) {
+  const dot = document.getElementById('bsk-dot-' + nr);
+  const st  = document.getElementById('bsk-st-'  + nr);
+  if (!dot || !st) { rendere_bsk(); return; }
+  dot.classList.add('ok', 'ping');
+  st.className = 'bsk-status ok';
+  st.textContent = '✓ Verbunden';
+  dot.addEventListener('animationend', () => dot.classList.remove('ping'), { once: true });
+  aktualisiere_header_dot(nr);
+}
+
+function buzzer_test_reset() {
+  socket.emit('buzzer_reset_test');
+  buzzerStatus = {};
+  rendere_bsk();
+  rendere_header_dots();
+}
+
+// ══ INIT ══
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const r = await fetch('/api/config');
+    if (r.ok) {
+      config = await r.json();
+      lade_team_auswahl();
+      rendere_bsk();
+    }
+  } catch(e) {}
+
+  // Aktuellen Buzzer-Status vom Server laden
+  try {
+    const r = await fetch('/api/buzzer/status');
+    const d = await r.json();
+    buzzerStatus = {};
+    for (const [nr, info] of Object.entries(d.buzzer || {})) {
+      buzzerStatus[nr] = info.ts;
+    }
+    rendere_bsk();
+  } catch(_) {}
+
+  // Prüfen ob bereits ein Spiel läuft
+  try {
+    await fetch('/api/spiel/status');
+    // state_update kommt via socket on connect
+  } catch(_) {}
+});
+
+// ══ START ══
+function lade_team_auswahl() {
+  const liste = document.getElementById('team-liste');
+  if (!config.spieler || !config.spieler.length) {
+    liste.innerHTML = `<div style="color:rgba(255,255,255,.3);font-size:14px;text-align:center;padding:20px">
+      Keine Teams konfiguriert.<br>
+      <a href="/editor" style="color:#E24B4A;text-decoration:none">→ Im Editor einrichten</a>
+    </div>`;
+    return;
+  }
+  liste.innerHTML = config.spieler.map((s, i) => `
+    <div class="team-item aktiv" id="ti-${i}" onclick="toggle_team(${i})">
+      <div class="ti-avatar" style="background:${esc(s.farbe || FARBEN[i%FARBEN.length])}">
+        ${s.avatar || esc((s.name||'?')[0].toUpperCase())}
+      </div>
+      <div class="ti-name">${esc(s.name)}</div>
+      <div class="ti-check">✓</div>
+    </div>
+  `).join('');
+  // Alle initial aktiv
+  aktiveTeams = config.spieler.map((_, i) => i);
+  aktualisiere_start_btn();
+}
+
+function toggle_team(i) {
+  const el = document.getElementById('ti-' + i);
+  const idx = aktiveTeams.indexOf(i);
+  if (idx >= 0) {
+    aktiveTeams.splice(idx, 1);
+    el.classList.remove('aktiv');
+  } else {
+    aktiveTeams.push(i);
+    el.classList.add('aktiv');
+  }
+  aktualisiere_start_btn();
+}
+
+function aktualisiere_start_btn() {
+  const btn  = document.getElementById('start-btn');
+  const info = document.getElementById('start-info');
+  const n    = aktiveTeams.length;
+  btn.disabled = n < 1;
+  info.textContent = n > 0
+    ? `${n} Team${n!==1?'s':''} ausgewählt · ${config.fragen ? config.fragen.length : 0} Fragen`
+    : 'Mindestens 1 Team auswählen';
+}
+
+function spiel_starten() {
+  if (!config.fragen || !config.fragen.length) {
+    toast('Keine Fragen geladen. Bitte zuerst im Editor einrichten.');
+    return;
+  }
+  modFragen = [...config.fragen];
+  modIdx    = 0;
+  erledigte = new Set();
+
+  // Punkte initialisieren
+  modPunkte = {};
+  aktiveTeams.forEach(i => {
+    modPunkte[config.spieler[i].name] = 0;
+  });
+
+  const aktiveSpieler = aktiveTeams.map(i => config.spieler[i]);
+
+  socket.emit('mod_starten', {
+    frage: modFragen[0],
+    punkte: modPunkte,
+    spielmodus: modFragen[0].modus || 'frei',
+    aktive_spieler: aktiveSpieler,
+    gesamt: modFragen.length,
+  });
+
+  zeige_screen('s-spiel');
+  zeige_frage(0);
+  zeige_header_buttons(true);
+}
+
+// ══ SPIEL ══
+function zeige_frage(idx) {
+  if (!modFragen.length) return;
+  modIdx     = Math.max(0, Math.min(idx, modFragen.length - 1));
+  mcGewaehlt = null;
+  setze_bewert_buttons(false);
+
+  const f    = modFragen[modIdx];
+  const modus = f.modus || 'frei';
+
+  document.getElementById('fk-nr').textContent =
+    `FRAGE ${modIdx+1} / ${modFragen.length}`;
+  document.getElementById('fk-kat').textContent = f.kategorie || 'Allgemein';
+  document.getElementById('fk-text').textContent = f.frage || '';
+  document.getElementById('fk-antwort-text').textContent = f.antwort || '';
+
+  // MC Antworten
+  const mc = document.getElementById('mc-liste');
+  const fb = document.getElementById('frei-buttons');
+  const ba = document.getElementById('btn-aufloesen');
+  if (modus === 'mc' && f.antworten_mc) {
+    mc.style.display = '';
+    fb.style.display = 'none';
+    ba.style.display = '';
+    f.antworten_mc.forEach((a, i) => {
+      document.getElementById(`mct-${i}`).textContent = a;
+      document.getElementById(`mcb-${i}`).className = 'mc-btn';
+    });
+  } else {
+    mc.style.display = 'none';
+    fb.style.display = '';
+    ba.style.display = 'none';
+  }
+
+  // Zurück/Weiter
+  document.getElementById('btn-zurueck').disabled = modIdx <= 0;
+  document.getElementById('btn-weiter').disabled  = modIdx >= modFragen.length - 1;
+
+  // Fragennavigation aktualisieren
+  aktualisiere_fragen_nav();
+
+  // Buzzer zurücksetzen
+  aktualisiere_wq([]);
+  socket.emit('mod_freigeben');
+}
+
+function goto_frage(idx) {
+  if (idx < 0 || idx >= modFragen.length) return;
+  const f      = modFragen[idx];
+  const modus  = f.modus || 'frei';
+  const prevPts = {...modPunkte};
+
+  socket.emit('mod_naechste_frage', {
+    frage:         f,
+    idx:           idx,
+    gesamt:        modFragen.length,
+    spielmodus:    modus,
+    aktive_spieler: aktiveTeams.map(i => config.spieler[i]),
+  });
+  zeige_frage(idx);
+}
+
+function bewertet(richtig) {
+  const f     = modFragen[modIdx];
+  const modus = f.modus || 'frei';
+  const wq    = document.getElementById('wq-liste');
+  const erster = wq.querySelector('.wq-item');
+  const delta  = richtig ? 10 : 5;
+
+  if (richtig && erster) {
+    const name = erster.querySelector('.wq-name')?.textContent;
+    if (name && modPunkte.hasOwnProperty(name)) {
+      modPunkte[name] = (modPunkte[name] || 0) + delta;
+    }
+    erledigte.add(modIdx);
+  }
+
+  socket.emit(richtig ? 'mod_richtig' : 'mod_falsch', {punkte: modPunkte, delta});
+  setze_bewert_buttons(false);
+  if (richtig) aktualisiere_fragen_nav();
+}
+
+function mc_waehlen(idx) {
+  mcGewaehlt = idx;
+  document.querySelectorAll('.mc-btn').forEach(e => e.classList.remove('aktiv'));
+  document.getElementById('mcb-' + idx).classList.add('aktiv');
+  socket.emit('mod_mc_auswahl', {idx, antwort: modFragen[modIdx].antworten_mc?.[idx]});
+}
+
+function mc_aufloesen() {
+  if (mcGewaehlt === null) { toast('Bitte erst eine Antwort auswählen'); return; }
+  const f         = modFragen[modIdx];
+  const richtig   = mcGewaehlt === (f.richtige_antwort_index ?? 0);
+  const delta     = 10;
+  if (richtig) {
+    // MC: wer hat den Buzzer gedrückt?
+    const wq  = document.getElementById('wq-liste');
+    const ers = wq.querySelector('.wq-name');
+    if (ers && modPunkte.hasOwnProperty(ers.textContent)) {
+      modPunkte[ers.textContent] = (modPunkte[ers.textContent] || 0) + delta;
+    }
+    erledigte.add(modIdx);
+  }
+  socket.emit('mod_mc_aufloesen', {
+    gewaehlt:    mcGewaehlt,
+    richtig_idx: f.richtige_antwort_index ?? 0,
+    richtig,
+    delta,
+    punkte:      modPunkte,
+  });
+  // MC Buttons einfärben
+  document.querySelectorAll('.mc-btn').forEach((el, i) => {
+    el.classList.remove('aktiv');
+    if (i === (f.richtige_antwort_index ?? 0)) el.classList.add('richtig');
+    else if (i === mcGewaehlt && !richtig) el.classList.add('falsch');
+  });
+  setze_bewert_buttons(false);
+  document.getElementById('btn-aufloesen').disabled = true;
+  if (richtig) aktualisiere_fragen_nav();
+}
+
+function freigeben() {
+  setze_bewert_buttons(true);
+  socket.emit('mod_freigeben');
+}
+
+function setze_bewert_buttons(aktiv) {
+  document.getElementById('btn-richtig').disabled = !aktiv;
+  document.getElementById('btn-falsch').disabled  = !aktiv;
+}
+
+function spiel_beenden() {
+  socket.emit('mod_sieger', {
+    punkte:  modPunkte,
+    spieler: aktiveTeams.map(i => config.spieler[i]),
+  });
+}
+
+function zeige_sieger(punkte, spieler) {
+  zeige_screen('s-sieger');
+  const sp = spieler || aktiveTeams.map(i => config.spieler[i]);
+  const sorted = sp
+    .map(s => ({name: typeof s==='string'?s:s.name, pts: punkte[typeof s==='string'?s:s.name]??0}))
+    .sort((a,b) => b.pts - a.pts);
+  if (!sorted.length) return;
+  document.getElementById('sieg-name').textContent = sorted[0].name;
+  document.getElementById('sieg-pts').textContent  = `${sorted[0].pts} Punkte`;
+  zeige_header_buttons(false);
+}
+
+function neues_spiel() {
+  socket.emit('mod_stoppen');
+  modPunkte = {};
+  modIdx    = 0;
+  erledigte = new Set();
+  zeige_screen('s-start');
+  zeige_header_buttons(false);
+}
+
+// ══ UI UPDATES ══
+function aktualisiere_scores(delta, richtig) {
+  const el    = document.getElementById('score-liste');
+  const sorted = Object.entries(modPunkte)
+    .sort((a,b) => b[1]-a[1]);
+  el.innerHTML = sorted.map(([name, pts], i) => `
+    <div class="score-item">
+      <div class="si-dot" style="background:${FARBEN[i%FARBEN.length]}"></div>
+      <div class="si-name">${esc(name)}</div>
+      <div class="si-pts">${pts}</div>
+    </div>`).join('');
+}
+
+function aktualisiere_wq(q) {
+  const el = document.getElementById('wq-liste');
+  if (!q || !q.length) {
+    el.innerHTML = '<div class="wq-leer">Noch kein Buzzer</div>';
+    return;
+  }
+  el.innerHTML = q.map((e, i) => `
+    <div class="wq-item">
+      <span class="wq-rang">${i+1}</span>
+      <span class="wq-name">${esc(e.nr||'?')}</span>
+      ${e.ms ? `<span class="wq-ms">${e.ms}ms</span>` : ''}
+    </div>`).join('');
+  // Sobald jemand gedrückt hat → Bewerten freischalten
+  setze_bewert_buttons(true);
+}
+
+function aktualisiere_fragen_nav() {
+  const nav = document.getElementById('fragen-nav');
+  nav.innerHTML = modFragen.map((_, i) => {
+    let cls = 'fn-punkt';
+    if (i === modIdx) cls += ' aktiv';
+    else if (erledigte.has(i)) cls += ' erledigt';
+    return `<div class="${cls}" onclick="goto_frage(${i})" title="Frage ${i+1}">${i+1}</div>`;
+  }).join('');
+}
+
+function zeige_header_buttons(spiel) {
+  const el = document.getElementById('mh-rechts');
+  const zahnrad = `<button class="mh-btn grau" onclick="zeige_einst_modal()" style="font-size:16px;padding:6px 10px" title="Einstellungen">⚙️</button>`;
+  if (spiel) {
+    el.innerHTML = `
+      <button class="mh-btn gelb" onclick="toggle_punkte()">🏆 Punktestand</button>
+      ${zahnrad}
+      <button class="mh-btn rot"  onclick="confirm_stoppen()">✕ Stoppen</button>
+    `;
+  } else {
+    el.innerHTML = zahnrad;
+  }
+}
+
+function toggle_punkte() {
+  socket.emit('mod_toggle_punktestand', {
+    punkte:  modPunkte,
+    spieler: aktiveTeams.map(i => config.spieler[i]),
+  });
+}
+
+function confirm_stoppen() {
+  if (confirm('Spiel wirklich beenden?')) neues_spiel();
+}
+
+function zeige_screen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('aktiv'));
+  document.getElementById(id).classList.add('aktiv');
+}
+
+function toast(msg, dauer = 2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('sicht');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('sicht'), dauer);
+}
+
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── EINSTELLUNGEN MODAL ──
+async function zeige_einst_modal() {
+  document.getElementById('einst-overlay').classList.add('offen');
+  const soundAn = localStorage.getItem('sf_sound') !== 'aus';
+  document.getElementById('einst-sound-toggle').checked = soundAn;
+  try {
+    const r = await fetch('/api/cloud/config');
+    const d = await r.json();
+    if (d.modus === 'konto' && d.email) {
+      document.getElementById('einst-konto-name').textContent = d.name || d.email.split('@')[0];
+      document.getElementById('einst-konto-info').textContent = `${d.email} · ${d.anzahl ?? 0} Fragen`;
+    } else {
+      document.getElementById('einst-konto-name').textContent = 'Gastmodus';
+      document.getElementById('einst-konto-info').textContent = 'Nicht angemeldet';
+    }
+  } catch(_) {}
+  try {
+    const r = await fetch('/api/setup/ip');
+    const d = await r.json();
+    document.getElementById('einst-ip').textContent = d.ip ? `http://${d.ip}:5000` : 'Keine Verbindung';
+  } catch(_) {}
+}
+function schliesse_einst_modal() {
+  document.getElementById('einst-overlay').classList.remove('offen');
+}
+function toggle_sound(an) {
+  localStorage.setItem('sf_sound', an ? 'an' : 'aus');
+}
+</script>
+</body>
+</html>

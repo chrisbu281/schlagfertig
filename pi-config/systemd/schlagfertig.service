@@ -1,0 +1,18 @@
+[Unit]
+Description=Schlagfertig Quiz-Server
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/schlagfertig
+ExecStart=/usr/bin/python3 /home/pi/schlagfertig/server.py
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

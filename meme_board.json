@@ -1,0 +1,13 @@
+{
+  "kacheln": [
+    {"id":"applaus",       "name":"Applaus",         "icon":"👏","kategorie":"reaktion","typ":"sound","sound":null},
+    {"id":"trommelwirbel", "name":"Trommelwirbel",   "icon":"🥁","kategorie":"spannung","typ":"sound","sound":null},
+    {"id":"lacher",        "name":"Lacher",          "icon":"😂","kategorie":"reaktion","typ":"sound","sound":null},
+    {"id":"fail",          "name":"Fail-Sound",      "icon":"💥","kategorie":"ergebnis","typ":"sound","sound":null},
+    {"id":"falsch",        "name":"Falsche Antwort", "icon":"❌","kategorie":"ergebnis","typ":"sound","sound":null},
+    {"id":"signal",        "name":"Signalton",       "icon":"🔔","kategorie":"spannung","typ":"sound","sound":null},
+    {"id":"ticktack",      "name":"Tick-Tack",       "icon":"⏳","kategorie":"spannung","typ":"sound","sound":null},
+    {"id":"fanfare",       "name":"Fanfare",         "icon":"🎺","kategorie":"ergebnis","typ":"gif","sound":null,"gif":null},
+    {"id":"konfetti",      "name":"Konfetti-Sieg",   "icon":"🎉","kategorie":"ergebnis","typ":"gif","sound":null,"gif":null}
+  ]
+}
