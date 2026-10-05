@@ -15,6 +15,7 @@ header { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; al
 .header-rechts { margin-left: auto; display: flex; gap: 8px; align-items: center; }
 .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #555; display: inline-block; margin-right: 5px; transition: background .3s; }
 .status-dot.aktiv { background: #2d8a4e; animation: puls 1.5s ease infinite; }
+.status-dot.bereit { background: #3b82f6; }
 @keyframes puls { 0%,100%{opacity:1}50%{opacity:.4} }
 
 /* ANSICHTEN */
@@ -1897,8 +1898,8 @@ async function pruefeSpielStatus() {
       dot.className='status-dot aktiv';
       txt.textContent = d.state==='spiel' ? 'Spiel läuft' : 'Bereit';
     } else {
-      dot.className='status-dot';
-      txt.textContent='Offline';
+      dot.className='status-dot bereit';
+      txt.textContent='Bereit';
     }
   } catch(e) {
     document.getElementById('status-dot').className='status-dot';
