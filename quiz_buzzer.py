@@ -824,6 +824,7 @@ def buzzer_thread(spieler):
                 # Nur innerhalb von 2 Sekunden nach erstem Buzzer erlauben
                 if erster_buzz_zeit is None or (time.time() - erster_buzz_zeit) < 2.0:
                     buzzer_warteschlange_lokal.append({'nr': nr, 'ms': ms})
+                    print(f"SPIEL: Buzzer {nr} gedrückt (ms={ms})")
                     try:
                         sio.emit('buzzer_gedrueckt', {'nr': nr, 'ms': ms})
                     except: pass

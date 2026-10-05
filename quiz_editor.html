@@ -1808,6 +1808,10 @@ async function init() {
 
 // ── ANSICHTEN ──
 function zeigeAnsicht(id) {
+  if(_aktiverTab === 'buzzer' && id !== 'einstellungen' && socket) {
+    socket.emit('test_stop');
+    _aktiverTab = 'spieler';
+  }
   document.querySelectorAll('.ansicht').forEach(a => a.classList.remove('aktiv'));
   document.getElementById('ansicht-'+id).classList.add('aktiv');
   if(id === 'einstellungen') {
