@@ -22,7 +22,7 @@ step() { echo -e "\n${BOLD}[$1]${NC} $2"; }
 
 echo ""
 echo -e "  ${BOLD}╔══════════════════════════════════╗${NC}"
-echo -e "  ${BOLD}║  SCHLAG${RED}FERTIG${NC}${BOLD}  Setup v1.0       ║${NC}"
+echo -e "  ${BOLD}║  SCHLAG${RED}FERTIG${NC}${BOLD}  Setup v1.1       ║${NC}"
 echo -e "  ${BOLD}╚══════════════════════════════════╝${NC}"
 echo ""
 
@@ -56,6 +56,8 @@ PAKETE=(
   fonts-noto-core fonts-noto-extra
   alsa-utils
   python3-pygame
+  swig
+  liblgpio-dev
 )
 
 # Chromium: Name unterscheidet sich je nach OS-Version
@@ -142,23 +144,25 @@ Environment=PYTHONUNBUFFERED=1
 WantedBy=multi-user.target
 EOF
 
-# Buzzer-Display (pygame auf DSI)
+# Buzzer-Display (pygame via HDMI/kmsdrm, Fallback dummy)
 cat > /etc/systemd/system/schlagfertig-buzzer.service << EOF
 [Unit]
-Description=Schlagfertig Buzzer Display (DSI)
-After=schlagfertig.service
-Requires=schlagfertig.service
+Description=Schlagfertig Quiz Buzzer Display
+After=network.target schlagfertig.service
+Wants=schlagfertig.service
 
 [Service]
-Type=simple
 User=$PI_USER
 WorkingDirectory=$INSTALL_DIR
-Environment=SDL_VIDEODRIVER=fbcon
-Environment=SDL_FBDEV=/dev/fb0
+Environment=SDL_AUDIODRIVER=alsa
+Environment=PYTHONUNBUFFERED=1
+SupplementaryGroups=video render
 ExecStartPre=/bin/sleep 10
-ExecStart=$INSTALL_DIR/env/bin/python quiz_buzzer.py
-Restart=on-failure
-RestartSec=10
+ExecStart=$INSTALL_DIR/env/bin/python $INSTALL_DIR/quiz_buzzer.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
