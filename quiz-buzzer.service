@@ -8,6 +8,7 @@ User=pi
 WorkingDirectory=/home/pi/schlagfertig
 Environment=SDL_VIDEODRIVER=dummy
 Environment=SDL_AUDIODRIVER=alsa
+Environment=PYTHONUNBUFFERED=1
 ExecStartPre=/bin/sleep 10
 ExecStart=/home/pi/schlagfertig/env/bin/python /home/pi/schlagfertig/quiz_buzzer.py
 Restart=always
