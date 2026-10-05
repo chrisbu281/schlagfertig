@@ -5,4 +5,5 @@ pillow
 requests
 pygame
 python-socketio[client]
+websocket-client
 rpi-lgpio
