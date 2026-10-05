@@ -284,10 +284,23 @@ def zeichne_neon_button(x, y, w, h, text, farbe, buchstabe=None, selected=False,
 
 def display_setup():
     global SF_GR, SF_MI, SF_KL, SF_EMOJI, BR, HO, screen
-    pygame.init()
-    info = pygame.display.Info()
-    BR, HO = info.current_w, info.current_h
-    screen = pygame.display.set_mode((BR, HO), pygame.FULLSCREEN)
+    for driver in ['kmsdrm', 'dummy']:
+        try:
+            os.environ['SDL_VIDEODRIVER'] = driver
+            pygame.init()
+            if not pygame.display.get_init():
+                raise Exception("Display-Subsystem nicht initialisiert")
+            info = pygame.display.Info()
+            w, h = info.current_w, info.current_h
+            if w <= 0 or h <= 0:
+                w, h = 1920, 1080
+            screen = pygame.display.set_mode((w, h), pygame.FULLSCREEN)
+            BR, HO = w, h
+            print(f"Display: {driver} {BR}x{HO}")
+            break
+        except Exception as e:
+            print(f"Display Fehler ({driver}): {e}")
+            pygame.quit()
     pygame.display.set_caption("Schlagfertig")
     SF_GR = pygame.font.SysFont("DejaVu Sans", 96, bold=True)
     SF_MI = pygame.font.SysFont("DejaVu Sans", 56, bold=True)

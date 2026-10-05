@@ -6,9 +6,9 @@ Wants=schlagfertig.service
 [Service]
 User=pi
 WorkingDirectory=/home/pi/schlagfertig
-Environment=SDL_VIDEODRIVER=dummy
 Environment=SDL_AUDIODRIVER=alsa
 Environment=PYTHONUNBUFFERED=1
+SupplementaryGroups=video render
 ExecStartPre=/bin/sleep 10
 ExecStart=/home/pi/schlagfertig/env/bin/python /home/pi/schlagfertig/quiz_buzzer.py
 Restart=always
