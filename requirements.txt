@@ -1,3 +1,8 @@
 flask
 flask-socketio
-qrcode
+qrcode[pil]
+pillow
+requests
+pygame
+python-socketio[client]
+rpi-lgpio
