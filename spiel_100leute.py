@@ -174,7 +174,7 @@ def _neuer_state():
             "B": {"name": "Team B", "foto": "", "punkte": 0},
         },
         "runde": 0, "aktive_frage": None, "duell": _neue_duell(),
-        "strikes": 0, "aktives_team": None, "rundentopf": 0,
+        "strikes": 0, "aktives_team": None, "rundentopf": 0, "runde_vorab": 0,
         "rundenende": None, "musik": False, "beamer_aktiv": False, "ff": None,
         "fragen_queue": [],
     }
@@ -265,14 +265,24 @@ def _aktualisiere_rundentopf():
     state["rundentopf"] = sum(a["punkte"] for a in af["antworten"] if a.get("auf")) if af else 0
 
 def _runde_beenden(gewinner):
-    topf = state.get("rundentopf", 0)
+    topf  = state.get("rundentopf", 0)
+    vorab = state.get("runde_vorab", 0)
     if gewinner in ("A", "B"):
-        state["teams"][gewinner]["punkte"] += topf
+        aktives = state.get("aktives_team") or gewinner
+        if gewinner == aktives:
+            # aktives_team wins: already credited vorab live, add the rest (duell points)
+            state["teams"][gewinner]["punkte"] += (topf - vorab)
+        else:
+            # steal: remove live credits from aktives_team, give full topf to opponent
+            state["teams"][aktives]["punkte"] -= vorab
+            state["teams"][gewinner]["punkte"] += topf
+    state["runde_vorab"] = 0
     state["rundenende"] = {"gewinner": gewinner, "topf": topf}
     state["phase"] = "rundenende"
 
 def _naechste_runde():
     state["rundentopf"]   = 0
+    state["runde_vorab"]  = 0
     state["strikes"]      = 0
     state["aktive_frage"] = None
     state["aktives_team"] = None
@@ -469,6 +479,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         state["runde"]        = 1
         state["strikes"]      = 0
         state["rundentopf"]   = 0
+        state["runde_vorab"]  = 0
         state["aktive_frage"] = None
         state["aktives_team"] = None
         state["duell"]        = _neue_duell()
@@ -563,9 +574,13 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         if af["antworten"][idx]["auf"]:
             return
         af["antworten"][idx]["auf"] = True
+        pts = af["antworten"][idx]["punkte"]
+        aktives = state.get("aktives_team") or "A"
+        state["teams"][aktives]["punkte"] += pts
+        state["runde_vorab"] = state.get("runde_vorab", 0) + pts
         _aktualisiere_rundentopf()
         if all(a["auf"] for a in af["antworten"]):
-            _runde_beenden(state.get("aktives_team") or "A")
+            _runde_beenden(aktives)
         _broadcast()
 
     @socketio.on("hauptrunde_strike", namespace=NAMESPACE)
