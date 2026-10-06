@@ -1336,8 +1336,8 @@ CSV_100LEUTE  = os.path.join(BASIS, "fragen_100leute.csv")
 CSV_FASTFIVE  = os.path.join(BASIS, "fragen_fastfive.csv")
 
 def _sb_familienduell_fragen(token=None):
-    """Lädt öffentliche Einträge aus fragen_familienduell via Supabase REST."""
-    url = f"{SUPABASE_BASE}/rest/v1/fragen_familienduell?select=*&ist_oeffentlich=eq.true&order=frage.asc"
+    """Lädt alle Einträge aus fragen_familienduell via Supabase REST."""
+    url = f"{SUPABASE_BASE}/rest/v1/fragen_familienduell?select=*&order=frage.asc"
     req = urllib.request.Request(url, headers=_sb_headers(token))
     with urllib.request.urlopen(req, timeout=20) as r:
         return json.loads(r.read().decode())
@@ -1425,6 +1425,24 @@ def hundert_fragen_upload():
     with open(ziel, "w", encoding="utf-8", newline="") as out:
         out.write(content)
     return jsonify({"status": "ok", "anzahl": len(rows) - 1})
+
+@app.route("/api/100leute/fragen-db-test")
+def hundert_fragen_db_test():
+    """Diagnose: zeigt was aus fragen_familienduell geladen werden kann."""
+    cfg   = lese_cloud_config()
+    token = cfg.get("access_token") or None
+    try:
+        fragen = _sb_familienduell_fragen(token)
+        return jsonify({"status": "ok", "anzahl": len(fragen),
+                        "erste_frage": fragen[0].get("frage") if fragen else None,
+                        "token_vorhanden": bool(token)})
+    except urllib.error.HTTPError as e:
+        body = e.read().decode() if hasattr(e, 'read') else ""
+        return jsonify({"status": "fehler", "http_code": e.code, "details": body,
+                        "token_vorhanden": bool(token)}), 200
+    except Exception as e:
+        return jsonify({"status": "fehler", "details": str(e),
+                        "token_vorhanden": bool(token)}), 200
 
 @app.route("/api/100leute/fragen-sync", methods=["POST"])
 def hundert_fragen_sync():
