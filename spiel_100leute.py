@@ -369,7 +369,6 @@ def starte_beamer():
             _steuerung["stop_pygame"]()
         except Exception as e:
             print(f"100leute: stop_pygame Fehler: {e}")
-    subprocess.run(["pkill", "-f", "chromium"], capture_output=True)
     _time.sleep(0.5)
     _starte_buzzer_reader()
 
