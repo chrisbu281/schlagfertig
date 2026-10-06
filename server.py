@@ -1154,27 +1154,42 @@ def system_reboot():
     threading.Thread(target=do_reboot, daemon=True).start()
     return jsonify({"status": "ok"})
 
+def _git(args, timeout=10):
+    """Run a git command with safe.directory=* to avoid ownership errors."""
+    return subprocess.check_output(
+        ["git", "-c", "safe.directory=*", "-C", BASIS] + args,
+        timeout=timeout, stderr=subprocess.DEVNULL
+    ).decode().strip()
+
+def _git_run(args, timeout=15):
+    subprocess.run(
+        ["git", "-c", "safe.directory=*", "-C", BASIS] + args,
+        timeout=timeout, capture_output=True
+    )
+
 @app.route("/api/system/update-check")
 def system_update_check():
     try:
-        subprocess.run(
-            ["git", "-C", BASIS, "fetch", "origin", "main"],
-            timeout=15, capture_output=True
-        )
-        aktuell = subprocess.check_output(
-            ["git", "-C", BASIS, "rev-parse", "--short", "HEAD"], timeout=5
-        ).decode().strip()
-        neu = subprocess.check_output(
-            ["git", "-C", BASIS, "rev-parse", "--short", "origin/main"], timeout=5
-        ).decode().strip()
-        msg = subprocess.check_output(
-            ["git", "-C", BASIS, "log", "-1", "--format=%s", "origin/main"], timeout=5
-        ).decode().strip()
-        # Versionsnummer aus der neuen Version lesen
+        _git_run(["fetch", "origin", "main"])
+        aktuell = _git(["rev-parse", "--short", "HEAD"])
         try:
-            neue_version = subprocess.check_output(
-                ["git", "-C", BASIS, "show", f"origin/main:VERSION"], timeout=5
-            ).decode().strip()
+            neu = _git(["rev-parse", "--short", "origin/main"])
+        except Exception:
+            # fetch failed / no remote tracking — report current as latest
+            version_datei = os.path.join(BASIS, "VERSION")
+            akt_version = open(version_datei).read().strip() if os.path.exists(version_datei) else ""
+            return jsonify({
+                "aktuell": aktuell, "neu": aktuell,
+                "version_aktuell": f"v{akt_version}" if akt_version else aktuell,
+                "version_neu": "", "update_verfuegbar": False,
+                "nachricht": "", "fetch_fehler": True,
+            })
+        try:
+            msg = _git(["log", "-1", "--format=%s", "origin/main"])
+        except Exception:
+            msg = ""
+        try:
+            neue_version = _git(["show", "origin/main:VERSION"])
         except Exception:
             neue_version = ""
         try:
@@ -1198,7 +1213,7 @@ def system_update():
     def do_update():
         import time
         try:
-            subprocess.run(["git", "-C", BASIS, "pull", "origin", "main"], timeout=60, capture_output=True)
+            _git_run(["pull", "origin", "main"], timeout=60)
             venv_pip = os.path.join(BASIS, "env", "bin", "pip")
             if os.path.exists(venv_pip):
                 subprocess.run(
