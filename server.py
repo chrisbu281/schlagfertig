@@ -1428,12 +1428,16 @@ def hundert_fragen_upload():
 
 @app.route("/api/100leute/fragen-db-test")
 def hundert_fragen_db_test():
-    """Diagnose: zeigt was aus fragen_familienduell geladen werden kann."""
+    """Diagnose + Sync: lädt fragen_familienduell und speichert als CSV."""
     cfg   = lese_cloud_config()
     token = cfg.get("access_token") or None
     try:
         fragen = _sb_familienduell_fragen(token)
-        return jsonify({"status": "ok", "anzahl": len(fragen),
+        if fragen:
+            n = _speichere_familienduell_csv(fragen)
+        else:
+            n = 0
+        return jsonify({"status": "ok", "geladen": len(fragen), "gespeichert": n,
                         "erste_frage": fragen[0].get("frage") if fragen else None,
                         "token_vorhanden": bool(token)})
     except urllib.error.HTTPError as e:
