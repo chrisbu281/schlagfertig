@@ -90,7 +90,7 @@
   @keyframes puls{0%,100%{opacity:.5}50%{opacity:1}}
 
   /* Setup-Screen – Video mit Text */
-  #setup-screen{position:fixed;inset:0;background:#000;z-index:1000;display:flex;
+  #setup-screen{position:fixed;inset:0;background:#000;z-index:1000;display:none;
     align-items:center;justify-content:center;flex-direction:column;gap:0;overflow:hidden;}
   #setup-video{width:100%;height:100%;object-fit:contain;position:absolute;inset:0;
     z-index:1;}
@@ -533,22 +533,42 @@ function paintFFBoard(){
 // Phasen-Router
 const BOARD_PHASEN = ['buzzerduell','hauptrunde','stehlen','rundenende'];
 function renderPhase(phase){
+  // ── Setup-Screen: completely independent of the game-phase switch ──
+  {
+    let sEl = document.getElementById('setup-screen');
+    if(phase === 'setup') {
+      if(!sEl) {
+        sEl = document.createElement('div');
+        sEl.id = 'setup-screen';
+        document.body.insertBefore(sEl, document.getElementById('buehne'));
+        sEl.innerHTML = `
+          <video id="setup-video" autoplay loop muted playsinline>
+            <source src="/static/intro.mp4" type="video/mp4">
+          </video>
+          <div class="setup-overlay"></div>
+          <div class="setup-content">
+            <div class="setup-logo">SCHLAGFERTIG</div>
+            <div class="setup-waiting">⏳ Warten auf Moderator …</div>
+          </div>`;
+      }
+      sEl.style.display = 'flex';
+      return; // nothing else to render in setup phase
+    } else {
+      if(sEl) { sEl.style.display = 'none'; }
+    }
+  }
+
   const inhalt = document.getElementById('inhalt');
   inhalt.style.top = '';   // CSS-Default (48%) wiederherstellen
   const bgA = document.querySelector('.team-bg.a');
   const bgB = document.querySelector('.team-bg.b');
-  const setupEl = document.getElementById('setup-screen');
   const d = state.duell || {};
-
-  // Setup-Screen nur in setup-Phase anzeigen
-  if(setupEl) setupEl.style.display = (phase === 'setup') ? 'flex' : 'none';
 
   // Ende-Artefakte beim Verlassen der Ende-Phase aufräumen
   if(phase !== 'ende') {
     const oldEndeBg = document.getElementById('ende-bg');
     if(oldEndeBg) oldEndeBg.remove();
     if(document.getElementById('buehne').style.position) document.getElementById('buehne').style.position = '';
-    if(phase === 'setup') inhalt.innerHTML = '';
   }
 
   document.getElementById('vs').style.display =
@@ -693,23 +713,6 @@ function renderPhase(phase){
       setTimeout(()=>feuerwerk(), 200);
       break;
     }
-    default: // setup
-      let sEl = document.getElementById('setup-screen');
-      if(!sEl){
-        sEl = document.createElement('div');
-        sEl.id = 'setup-screen';
-        document.body.insertBefore(sEl, document.getElementById('buehne'));
-      }
-      sEl.style.display = 'flex';
-      sEl.innerHTML = `
-        <video id="setup-video" autoplay loop muted playsinline>
-          <source src="/static/intro.mp4" type="video/mp4">
-        </video>
-        <div class="setup-overlay"></div>
-        <div class="setup-content">
-          <div class="setup-logo">SCHLAGFERTIG</div>
-          <div class="setup-waiting">⏳ Warten auf Moderator …</div>
-        </div>`;
   }
 }
 render();
