@@ -275,7 +275,10 @@ function resetSpiel() {
   if (confirm('Spiel wirklich zurücksetzen?')) emit('reset');
 }
 function beendeSpiel() {
-  if (confirm('Beamer schließen und Spiel beenden?')) emit('spiel_beenden');
+  if (confirm('Beamer schließen und Spiel beenden?')) {
+    emit('spiel_beenden');
+    setTimeout(() => { window.location.href = '/editor'; }, 800);
+  }
 }
 
 // ══ HAUPTRENDER ══
@@ -471,14 +474,6 @@ function renderBuzzerduell(el, teams) {
     ? `🔔 ${teams[d.erster_team]?.name||d.erster_team} hat zuerst gebuzzt`
     : `⌛ Warte auf Buzzer …`;
 
-  // Antwort-Auswahl für Team A und B
-  const antwortOptionen = antworten.map((a,i) =>
-    `<option value="${i}" ${d.antwort_a===i?'selected':''}>Nr. ${i+1}: ${a.text} (${a.punkte} Pts)</option>`
-  ).join('');
-  const antwortOptionenB = antworten.map((a,i) =>
-    `<option value="${i}" ${d.antwort_b===i?'selected':''}>Nr. ${i+1}: ${a.text} (${a.punkte} Pts)</option>`
-  ).join('');
-
   el.innerHTML = `
   <div class="karte">
     <div class="karte-title">Frage</div>
@@ -493,26 +488,16 @@ function renderBuzzerduell(el, teams) {
   <div class="karte">
     <div class="karte-title">Buzzer-Status</div>
     <div style="font-size:14px;color:rgba(255,255,255,.6);margin-bottom:12px">${ersterText}</div>
-    <div class="btn-row" style="margin-bottom:12px">
-      <button class="btn sm blau" onclick="simBuzzer('A')">🔔 Sim: ${escHtml(teamA)}</button>
-      <button class="btn sm orange" onclick="simBuzzer('B')">🔔 Sim: ${escHtml(teamB)}</button>
+    ${!d.erster_team ? `
+    <div class="btn-row" style="margin-bottom:6px">
+      <button class="btn sm blau" onclick="simBuzzer('A')">🔔 ${escHtml(teamA)} hat gebuzzt</button>
+      <button class="btn sm orange" onclick="simBuzzer('B')">🔔 ${escHtml(teamB)} hat gebuzzt</button>
     </div>
-    <div class="div"></div>
-    <div style="display:flex;gap:10px;margin-top:10px">
-      <div style="flex:1">
-        <div class="inp-label">${escHtml(teamA)} sagt</div>
-        <select class="inp" id="sel-a" onchange="duellAntwort('A',this.value)">
-          <option value="">– nicht auf der Tafel –</option>
-          ${antwortOptionen}
-        </select>
-      </div>
-      <div style="flex:1">
-        <div class="inp-label">${escHtml(teamB)} sagt</div>
-        <select class="inp" id="sel-b" onchange="duellAntwort('B',this.value)">
-          <option value="">– nicht auf der Tafel –</option>
-          ${antwortOptionenB}
-        </select>
-      </div>
+    <div style="font-size:11px;color:rgba(255,255,255,.28);margin-bottom:10px">Manuell auslösen, falls kein Buzzer verbunden</div>
+    ` : ''}
+    <div style="display:flex;flex-direction:column;gap:14px;margin-top:4px">
+      <div>${_renderAntwortSection('A', teamA, antworten, d.antwort_a ?? null, d.antwort_b ?? null)}</div>
+      <div>${_renderAntwortSection('B', teamB, antworten, d.antwort_b ?? null, d.antwort_a ?? null)}</div>
     </div>
     ${d.gewinner ? `
     <div style="margin-top:12px;padding:10px;border-radius:10px;background:rgba(245,158,11,.1);
@@ -530,8 +515,27 @@ function renderBuzzerduell(el, teams) {
 function frageFreigeben() { emit('frage_freigeben'); }
 function simBuzzer(team) { emit('sim_buzzer', {team}); }
 function duellAntwort(team, val) {
-  const idx = val === '' ? null : parseInt(val);
+  // -1 = Nicht auf der Tafel (unterscheidbar von null = noch nicht beantwortet)
+  const idx = (val === '' || val === -1 || val === '-1') ? -1 : parseInt(val);
   emit('duell_antwort', {team, idx});
+}
+
+function _renderAntwortSection(team, name, antworten, gewaehlt, andereAntwort) {
+  if (gewaehlt !== null && gewaehlt !== undefined) {
+    const label = gewaehlt === -1
+      ? '<span style="color:#f87171">✗ Nicht auf der Tafel</span>'
+      : `<span style="color:#6ee7b7">✓ ${escHtml(antworten[gewaehlt]?.text||'')} <span style="color:#fde68a">(${antworten[gewaehlt]?.punkte||0} Pts)</span></span>`;
+    return `<div class="inp-label">${escHtml(name)}:</div>
+      <div style="padding:8px 12px;background:rgba(255,255,255,.07);border-radius:8px;font-size:13px">${label}</div>`;
+  }
+  const btns = antworten.map((a,i) =>
+    `<button class="btn sm dunkel" ${andereAntwort === i ? 'disabled style="opacity:.45"' : ''} onclick="duellAntwort('${team}',${i})">
+      <span style="color:rgba(255,255,255,.4);margin-right:4px">${i+1}.</span>${escHtml(a.text)} <b style="color:#fde68a;margin-left:4px">${a.punkte}</b>
+    </button>`
+  ).join('');
+  return `<div class="inp-label">${escHtml(name)} sagt:</div>
+    <div class="btn-row" style="flex-wrap:wrap;gap:5px;margin-bottom:8px">${btns}</div>
+    <button class="btn rot" onclick="duellAntwort('${team}',-1)" style="width:100%;margin-top:2px">✗ Nicht auf der Tafel</button>`;
 }
 function duellReset() { emit('duell_reset_antworten'); }
 function hauptrundeStarten() { emit('hauptrunde_starten'); }

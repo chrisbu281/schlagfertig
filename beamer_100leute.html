@@ -500,6 +500,7 @@ function paintFFBoard(){
 const BOARD_PHASEN = ['buzzerduell','hauptrunde','stehlen','rundenende'];
 function renderPhase(phase){
   const inhalt = document.getElementById('inhalt');
+  inhalt.style.top = '';   // CSS-Default (48%) wiederherstellen
   const bgA = document.querySelector('.team-bg.a');
   const bgB = document.querySelector('.team-bg.b');
   const setupEl = document.getElementById('setup-screen');
@@ -537,6 +538,7 @@ function renderPhase(phase){
     case 'buzzerduell': {
       const af = state.aktive_frage;
       if(!af){
+        inhalt.style.top = '74%';  // unter das VS-Zeichen schieben
         boardFrageId = null;
         inhalt.innerHTML = `<div class="titel-klein">Buzzer-Duell · Runde ${state.runde}</div>
           <div class="warte puls">Gleich geht's los …</div>`;
