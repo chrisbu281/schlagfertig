@@ -457,7 +457,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
             print(f"100leute: Team-Foto Fehler: {e}")
 
     @socketio.on("beamer_starten", namespace=NAMESPACE)
-    def _on_beamer_starten():
+    def _on_beamer_starten(data=None):
         starte_beamer()
 
     @socketio.on("spiel_starten", namespace=NAMESPACE)
@@ -480,7 +480,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
             _broadcast()
 
     @socketio.on("frage_freigeben", namespace=NAMESPACE)
-    def _on_frage_freigeben():
+    def _on_frage_freigeben(data=None):
         if state.get("fragen_queue"):
             state["aktive_frage"] = state["fragen_queue"].pop(0)
         else:
@@ -542,7 +542,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         _broadcast()
 
     @socketio.on("hauptrunde_starten", namespace=NAMESPACE)
-    def _on_hauptrunde_starten():
+    def _on_hauptrunde_starten(data=None):
         d = state.get("duell") or {}
         state["aktives_team"] = d.get("gewinner") or "A"
         state["strikes"]      = 0
@@ -569,7 +569,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         _broadcast()
 
     @socketio.on("hauptrunde_strike", namespace=NAMESPACE)
-    def _on_hauptrunde_strike():
+    def _on_hauptrunde_strike(data=None):
         if state.get("phase") != "hauptrunde":
             return
         state["strikes"] = min(3, state.get("strikes", 0) + 1)
@@ -591,31 +591,31 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         _broadcast()
 
     @socketio.on("stehlen_falsch", namespace=NAMESPACE)
-    def _on_stehlen_falsch():
+    def _on_stehlen_falsch(data=None):
         if state.get("phase") != "stehlen":
             return
         _runde_beenden(state.get("aktives_team") or "A")
         _broadcast()
 
     @socketio.on("naechste_runde", namespace=NAMESPACE)
-    def _on_naechste_runde():
+    def _on_naechste_runde(data=None):
         if state.get("phase") != "rundenende":
             return
         _naechste_runde()
         _broadcast()
 
     @socketio.on("musik_toggle", namespace=NAMESPACE)
-    def _on_musik_toggle():
+    def _on_musik_toggle(data=None):
         state["musik"] = not state.get("musik", False)
         _broadcast()
 
     @socketio.on("spiel_beenden", namespace=NAMESPACE)
-    def _on_spiel_beenden():
+    def _on_spiel_beenden(data=None):
         state["phase"] = "setup"
         stoppe_beamer()
 
     @socketio.on("reset", namespace=NAMESPACE)
-    def _on_reset():
+    def _on_reset(data=None):
         global state
         _ff_timer_stoppen()
         beamer_war_aktiv = state.get("beamer_aktiv", False)
@@ -624,7 +624,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         _broadcast()
 
     @socketio.on("ff_starten", namespace=NAMESPACE)
-    def _on_ff_starten():
+    def _on_ff_starten(data=None):
         if state.get("phase") != "fastfive":
             return
         fragen = hole_naechste(FF_ANZAHL_FRAGEN, "fastfive")
@@ -666,7 +666,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         _broadcast()
 
     @socketio.on("ff_naechste_frage", namespace=NAMESPACE)
-    def _on_ff_naechste_frage():
+    def _on_ff_naechste_frage(data=None):
         ff = state.get("ff")
         if not ff or state.get("phase") != "fastfive":
             return
@@ -689,12 +689,12 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
             _broadcast()
 
     @socketio.on("ff_timer_start", namespace=NAMESPACE)
-    def _on_ff_timer_start():
+    def _on_ff_timer_start(data=None):
         if state.get("phase") == "fastfive":
             _ff_timer_starten()
 
     @socketio.on("ff_timer_stop", namespace=NAMESPACE)
-    def _on_ff_timer_stop():
+    def _on_ff_timer_stop(data=None):
         ff = state.get("ff")
         if ff:
             _ff_timer_stoppen()
@@ -702,7 +702,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
             _broadcast()
 
     @socketio.on("ff_beenden", namespace=NAMESPACE)
-    def _on_ff_beenden():
+    def _on_ff_beenden(data=None):
         if state.get("phase") == "fastfive":
             _ff_beenden_intern()
 
