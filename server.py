@@ -1211,6 +1211,70 @@ def system_update():
     threading.Thread(target=do_update, daemon=True).start()
     return jsonify({"status": "ok"})
 
+@app.route("/api/system/logs")
+def system_logs():
+    try:
+        result = subprocess.run(
+            ["journalctl", "-u", "schlagfertig", "-u", "schlagfertig-buzzer",
+             "--no-pager", "-n", "500", "--output=short-iso"],
+            capture_output=True, text=True, timeout=10
+        )
+        inhalt = result.stdout or "(keine Logs verfügbar)"
+        hostname = subprocess.check_output(["hostname"], timeout=3).decode().strip()
+        from datetime import datetime
+        ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+        dateiname = f"schlagfertig-log-{hostname}-{ts}.txt"
+        from flask import Response
+        return Response(
+            inhalt,
+            mimetype="text/plain; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{dateiname}"'}
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/system/logs/upload", methods=["POST"])
+def system_logs_upload():
+    try:
+        result = subprocess.run(
+            ["journalctl", "-u", "schlagfertig", "-u", "schlagfertig-buzzer",
+             "--no-pager", "-n", "500", "--output=short-iso"],
+            capture_output=True, text=True, timeout=10
+        )
+        inhalt = result.stdout or "(keine Logs verfügbar)"
+        hostname = subprocess.check_output(["hostname"], timeout=3).decode().strip()
+        from datetime import datetime
+        ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+        dateiname = f"{hostname}-{ts}.txt"
+
+        if not SUPABASE_ANON_KEY:
+            return jsonify({"error": "SUPABASE_ANON_KEY nicht gesetzt"}), 503
+
+        import urllib.request as _ur
+        upload_url = f"{SUPABASE_BASE}/storage/v1/object/logs/{dateiname}"
+        req = _ur.Request(
+            upload_url,
+            data=inhalt.encode("utf-8"),
+            headers={
+                "apikey": SUPABASE_ANON_KEY,
+                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "Content-Type": "text/plain",
+            },
+            method="POST"
+        )
+        with _ur.urlopen(req, timeout=15) as r:
+            r.read()
+
+        public_url = f"{SUPABASE_BASE}/storage/v1/object/public/logs/{dateiname}"
+        return jsonify({"status": "ok", "url": public_url, "dateiname": dateiname})
+    except Exception as e:
+        body = getattr(e, "read", lambda: b"")()
+        if hasattr(body, "decode"):
+            body = body.decode("utf-8", errors="replace")
+        if "bucket" in body.lower() or "not found" in body.lower():
+            return jsonify({"error": "Supabase-Bucket 'logs' fehlt. Bitte im Supabase-Dashboard anlegen (öffentlich, anon-Insert erlaubt)."}), 503
+        return jsonify({"error": str(e)}), 502
+
 @app.route("/einstellungen")
 def einstellungen_page():
     return send_from_directory(BASIS, "einstellungen.html")

@@ -4,5 +4,6 @@ package.json
 __pycache__/
 *.pyc
 *.pyo
+env/
 .env
 installierte_spiele.json
