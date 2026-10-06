@@ -536,7 +536,7 @@ function renderPhase(phase){
   // ── Setup-Screen: completely independent of the game-phase switch ──
   {
     let sEl = document.getElementById('setup-screen');
-    if(phase === 'setup') {
+    if(!phase || phase === 'setup') {
       if(!sEl) {
         sEl = document.createElement('div');
         sEl.id = 'setup-screen';
