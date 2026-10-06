@@ -428,6 +428,18 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 .hw-buzzer-label { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
 .hw-buzzer-label.A { color: #1d4ed8; }
 .hw-buzzer-label.B { color: #c2410c; }
+.hw-foto-bereich { padding: 10px 12px; border-top: 1px solid #eee; }
+.hw-foto-vorschau { width: 72px; height: 72px; border-radius: 10px; border: 2px dashed #ddd; background: #f8f8f8; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; font-size: 26px; flex-shrink: 0; transition: border-color .15s; }
+.hw-foto-vorschau:hover { border-color: #aaa; }
+.hw-foto-vorschau img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+.hw-foto-zeile { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.hw-avatar-reihe { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.hw-avatar-option { font-size: 22px; cursor: pointer; border-radius: 8px; padding: 3px 5px; transition: background .1s; line-height: 1; }
+.hw-avatar-option:hover { background: #f0f0f0; }
+.hw-avatar-option.aktiv { background: #e8f4ff; box-shadow: 0 0 0 2px #60a5fa; }
+.hw-hintergrund-zeile { display: flex; align-items: center; gap: 10px; background: #f8f8f8; border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+.hw-toggle-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; flex: 1; }
+.hw-toggle-label input[type=checkbox] { width: 16px; height: 16px; accent-color: #2d8a4e; cursor: pointer; }
 .hw-fragen-toolbar { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
 .hw-fragen-liste { max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 10px; }
 .hw-frage-zeile { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background .1s; }
@@ -712,17 +724,71 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
     <!-- Schritt 2: Teams -->
     <div class="wizard-inhalt" id="hw-schritt-2" style="display:none">
       <div class="wizard-titel">👥 Teams</div>
-      <div class="wizard-untertitel">Teamnamen und Buzzer-Nummern festlegen</div>
+      <div class="wizard-untertitel">Teamnamen, Buzzer und Teambilder festlegen</div>
       <div class="hw-team-grid">
         <div class="hw-team-karte A">
           <div class="hw-team-kopf A">🔵 Team A</div>
           <input class="hw-team-input" type="text" id="hw-team-a" placeholder="Teamname" value="Team A" maxlength="20">
+          <div class="hw-foto-bereich">
+            <div class="hw-foto-zeile">
+              <div class="hw-foto-vorschau" id="hw-foto-vorschau-A" onclick="hwFotoWaehlen('A')" title="Foto hochladen">
+                <span id="hw-foto-ph-A">📷</span>
+                <img id="hw-foto-img-A" style="display:none;width:100%;height:100%;object-fit:cover">
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+                <button class="btn sm" style="font-size:12px;padding:5px 8px" onclick="hwFotoWaehlen('A')">📷 Foto wählen</button>
+                <button class="btn sm rot" id="hw-foto-reset-A" style="font-size:12px;padding:5px 8px;display:none" onclick="hwFotoReset('A')">✕ Entfernen</button>
+              </div>
+            </div>
+            <div class="hw-avatar-reihe">
+              <span style="font-size:11px;color:#888;margin-right:2px">Avatare:</span>
+              <span class="hw-avatar-option" id="hw-av-A-0" onclick="hwAvatarWaehlen('A',0)">🦁</span>
+              <span class="hw-avatar-option" id="hw-av-A-1" onclick="hwAvatarWaehlen('A',1)">🐯</span>
+              <span class="hw-avatar-option" id="hw-av-A-2" onclick="hwAvatarWaehlen('A',2)">🦅</span>
+              <span class="hw-avatar-option" id="hw-av-A-3" onclick="hwAvatarWaehlen('A',3)">🔥</span>
+              <span class="hw-avatar-option" id="hw-av-A-4" onclick="hwAvatarWaehlen('A',4)">⚡</span>
+              <span class="hw-avatar-option" id="hw-av-A-5" onclick="hwAvatarWaehlen('A',5)">🏆</span>
+            </div>
+          </div>
+          <input type="file" id="hw-foto-input-A" accept="image/*" style="display:none" onchange="hwFotoLesen('A', this)">
         </div>
         <div class="hw-team-karte B">
           <div class="hw-team-kopf B">🟠 Team B</div>
           <input class="hw-team-input" type="text" id="hw-team-b" placeholder="Teamname" value="Team B" maxlength="20">
+          <div class="hw-foto-bereich">
+            <div class="hw-foto-zeile">
+              <div class="hw-foto-vorschau" id="hw-foto-vorschau-B" onclick="hwFotoWaehlen('B')" title="Foto hochladen">
+                <span id="hw-foto-ph-B">📷</span>
+                <img id="hw-foto-img-B" style="display:none;width:100%;height:100%;object-fit:cover">
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+                <button class="btn sm" style="font-size:12px;padding:5px 8px" onclick="hwFotoWaehlen('B')">📷 Foto wählen</button>
+                <button class="btn sm rot" id="hw-foto-reset-B" style="font-size:12px;padding:5px 8px;display:none" onclick="hwFotoReset('B')">✕ Entfernen</button>
+              </div>
+            </div>
+            <div class="hw-avatar-reihe">
+              <span style="font-size:11px;color:#888;margin-right:2px">Avatare:</span>
+              <span class="hw-avatar-option" id="hw-av-B-0" onclick="hwAvatarWaehlen('B',0)">🦁</span>
+              <span class="hw-avatar-option" id="hw-av-B-1" onclick="hwAvatarWaehlen('B',1)">🐯</span>
+              <span class="hw-avatar-option" id="hw-av-B-2" onclick="hwAvatarWaehlen('B',2)">🦅</span>
+              <span class="hw-avatar-option" id="hw-av-B-3" onclick="hwAvatarWaehlen('B',3)">🔥</span>
+              <span class="hw-avatar-option" id="hw-av-B-4" onclick="hwAvatarWaehlen('B',4)">⚡</span>
+              <span class="hw-avatar-option" id="hw-av-B-5" onclick="hwAvatarWaehlen('B',5)">🏆</span>
+            </div>
+          </div>
+          <input type="file" id="hw-foto-input-B" accept="image/*" style="display:none" onchange="hwFotoLesen('B', this)">
         </div>
       </div>
+
+      <!-- Hintergrund-Toggle + Vorschau -->
+      <div class="hw-hintergrund-zeile">
+        <label class="hw-toggle-label">
+          <input type="checkbox" id="hw-foto-hintergrund" checked>
+          <span>Teambilder als Beamer-Hintergrund anzeigen</span>
+        </label>
+        <button class="btn sm lila" onclick="hwBeamerVorschau()" style="font-size:12px;padding:5px 10px;white-space:nowrap">👁 Vorschau</button>
+      </div>
+
       <div class="hw-buzzer-grid">
         <div class="hw-buzzer-box A">
           <div class="hw-buzzer-label A">🔵 Team A = Spieler-Nr.</div>
@@ -739,6 +805,18 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
       </div>
     </div>
 
+    <!-- Beamer-Vorschau Modal -->
+    <div id="hw-vorschau-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center" onclick="document.getElementById('hw-vorschau-modal').style.display='none'">
+      <div style="background:#111827;border-radius:16px;padding:20px;max-width:520px;width:92%;position:relative" onclick="event.stopPropagation()">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <span style="color:#fff;font-weight:700;font-size:15px">📺 Beamer-Vorschau</span>
+          <button onclick="document.getElementById('hw-vorschau-modal').style.display='none'" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer;line-height:1">✕</button>
+        </div>
+        <canvas id="hw-vorschau-canvas" width="800" height="450" style="width:100%;border-radius:10px;display:block"></canvas>
+        <p style="color:#888;font-size:12px;text-align:center;margin-top:10px">So sieht der Beamer beim Start aus</p>
+      </div>
+    </div>
+
     <!-- Schritt 3: Fragen -->
     <div class="wizard-inhalt" id="hw-schritt-3" style="display:none">
       <div class="wizard-titel">📋 Fragen auswählen</div>
@@ -747,10 +825,6 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
         <button class="btn" id="hw-btn-empfohlen" onclick="hwZufaelligEmpfohlen()" style="font-size:12px;padding:6px 10px;background:#f5c518;color:#1a1400;border-color:#c9a000;font-weight:700">⭐ Empfohlen</button>
         <button class="btn" onclick="hwAlleWaehlen()" style="font-size:12px;padding:6px 10px">Alle</button>
         <button class="btn" onclick="hwKeineWaehlen()" style="font-size:12px;padding:6px 10px">Keine</button>
-        <span style="font-size:12px;color:#888;margin-left:2px">Zufall:</span>
-        <button class="btn lila" onclick="hwZufaellig(3)" style="font-size:12px;padding:6px 10px">3</button>
-        <button class="btn lila" onclick="hwZufaellig(5)" style="font-size:12px;padding:6px 10px">5</button>
-        <button class="btn lila" onclick="hwZufaellig(10)" style="font-size:12px;padding:6px 10px">10</button>
         <span class="hw-auswahl-info" id="hw-fragen-zaehler"></span>
       </div>
       <div class="hw-fragen-liste" id="hw-fragen-liste">
@@ -2068,6 +2142,9 @@ const hwRunden = { kurz: 2, standard: 3, lang: 5 };
 function starteHundertWizard() {
   hwLaenge = null;
   hwGewaehltIds = new Set();
+  hwFotos.A = null; hwFotos.B = null;
+  hwAktiveAvatare.A = -1; hwAktiveAvatare.B = -1;
+  ['A','B'].forEach(t => { hwFotoAnzeigen(t); hwAvatarHighlight(t); });
   ['kurz','standard','lang'].forEach(l => document.getElementById('hwm-'+l)?.classList.remove('aktiv'));
   const btn1 = document.getElementById('hwbtn1');
   if(btn1) btn1.disabled = true;
@@ -2217,6 +2294,150 @@ function hwRendereUebersicht() {
   `;
 }
 
+// ── Team-Fotos (Wizard Schritt 2) ──
+const hwFotos = { A: null, B: null };
+let hwAktiveAvatare = { A: -1, B: -1 };
+const hwAvatarEmojis = ['🦁','🐯','🦅','🔥','⚡','🏆'];
+const hwTeamFarben = { A: '#1d4ed8', B: '#c2410c' };
+
+function hwFotoWaehlen(team) {
+  document.getElementById('hw-foto-input-' + team)?.click();
+}
+
+function hwFotoLesen(team, input) {
+  const file = input.files?.[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    hwFotos[team] = e.target.result;
+    hwAktiveAvatare[team] = -1;
+    hwFotoAnzeigen(team);
+    hwAvatarHighlight(team);
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function hwFotoAnzeigen(team) {
+  const ph   = document.getElementById('hw-foto-ph-'    + team);
+  const img  = document.getElementById('hw-foto-img-'   + team);
+  const rst  = document.getElementById('hw-foto-reset-' + team);
+  const data = hwFotos[team];
+  if(!ph && !img) return;
+  if(data) {
+    if(ph)  ph.style.display  = 'none';
+    if(img) { img.src = data; img.style.display = ''; }
+    if(rst) rst.style.display = '';
+  } else {
+    if(ph)  ph.style.display  = '';
+    if(img) { img.src = ''; img.style.display = 'none'; }
+    if(rst) rst.style.display = 'none';
+  }
+}
+
+function hwFotoReset(team) {
+  hwFotos[team] = null;
+  hwAktiveAvatare[team] = -1;
+  hwFotoAnzeigen(team);
+  hwAvatarHighlight(team);
+}
+
+function hwAvatarWaehlen(team, idx) {
+  const emoji = hwAvatarEmojis[idx];
+  const farbe = hwTeamFarben[team];
+  const cv = document.createElement('canvas');
+  cv.width = 200; cv.height = 200;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = farbe;
+  ctx.fillRect(0, 0, 200, 200);
+  ctx.font = '110px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, 100, 105);
+  hwFotos[team] = cv.toDataURL('image/png');
+  hwAktiveAvatare[team] = idx;
+  hwFotoAnzeigen(team);
+  hwAvatarHighlight(team);
+}
+
+function hwAvatarHighlight(team) {
+  hwAvatarEmojis.forEach((_, i) => {
+    const el = document.getElementById(`hw-av-${team}-${i}`);
+    if(el) el.classList.toggle('aktiv', i === hwAktiveAvatare[team]);
+  });
+}
+
+function hwBeamerVorschau() {
+  const teamA  = (document.getElementById('hw-team-a')?.value||'').trim() || 'Team A';
+  const teamB  = (document.getElementById('hw-team-b')?.value||'').trim() || 'Team B';
+  const fotoAn = document.getElementById('hw-foto-hintergrund')?.checked !== false;
+  const cv = document.getElementById('hw-vorschau-canvas');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = 800, H = 450;
+  ctx.clearRect(0, 0, W, H);
+
+  function drawTeamSide(team, x, w, teamName, foto) {
+    const clr = team === 'A' ? 'rgba(30,64,175,0.85)' : 'rgba(154,52,18,0.85)';
+    const bdr = team === 'A' ? '#60a5fa' : '#fb923c';
+    if(foto && fotoAn) {
+      const img = new Image();
+      img.onload = () => {
+        ctx.save();
+        ctx.rect(x, 0, w, H);
+        ctx.clip();
+        ctx.drawImage(img, x, 0, w, H);
+        ctx.fillStyle = clr;
+        ctx.fillRect(x, 0, w, H);
+        ctx.restore();
+        ctx.fillStyle = bdr;
+        ctx.fillRect(x + (team==='A'?w-3:0), 0, 3, H);
+        drawTeamLabel(x, w, teamName, bdr);
+      };
+      img.onerror = () => {
+        ctx.fillStyle = team==='A' ? '#172554' : '#431407';
+        ctx.fillRect(x, 0, w, H);
+        drawTeamLabel(x, w, teamName, bdr);
+      };
+      img.src = foto;
+    } else {
+      ctx.fillStyle = team==='A' ? '#172554' : '#431407';
+      ctx.fillRect(x, 0, w, H);
+      ctx.fillStyle = bdr;
+      ctx.fillRect(x + (team==='A'?w-3:0), 0, 3, H);
+      drawTeamLabel(x, w, teamName, bdr);
+    }
+  }
+
+  function drawTeamLabel(x, w, name, color) {
+    ctx.fillStyle = color;
+    ctx.font = 'bold 22px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(name, x + w/2, H - 20);
+  }
+
+  // Background
+  ctx.fillStyle = '#0f0f23';
+  ctx.fillRect(0, 0, W, H);
+
+  drawTeamSide('A', 0, W/2, teamA, hwFotos.A);
+  drawTeamSide('B', W/2, W/2, teamB, hwFotos.B);
+
+  // VS sign
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 60px system-ui,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = '#000';
+  ctx.shadowBlur = 15;
+  ctx.fillText('VS', W/2, H/2 - 20);
+  ctx.shadowBlur = 0;
+
+  const modal = document.getElementById('hw-vorschau-modal');
+  if(modal) modal.style.display = 'flex';
+}
+
 function hundertStarten() {
   const teamA  = (document.getElementById('hw-team-a')?.value||'').trim() || 'Team A';
   const teamB  = (document.getElementById('hw-team-b')?.value||'').trim() || 'Team B';
@@ -2226,8 +2447,16 @@ function hundertStarten() {
   const ff1    = parseInt(document.getElementById('hw-ff1')?.value)||20;
   const ff2    = parseInt(document.getElementById('hw-ff2')?.value)||25;
   const ziel   = parseInt(document.getElementById('hw-ff-ziel')?.value)||400;
+  const fotoAn = document.getElementById('hw-foto-hintergrund')?.checked !== false;
   const fragenIds = [...hwGewaehltIds];
   const runden = fragenIds.length || hwRunden[hwLaenge] || 3;
+  // Store photos separately (can be large)
+  try {
+    if(fotoAn && hwFotos.A) localStorage.setItem('hundert_foto_A', hwFotos.A);
+    else localStorage.removeItem('hundert_foto_A');
+    if(fotoAn && hwFotos.B) localStorage.setItem('hundert_foto_B', hwFotos.B);
+    else localStorage.removeItem('hundert_foto_B');
+  } catch(_) {}
   const cfg = {
     config:    { runden, ff_timer: timerAn, ff_zeit1: ff1, ff_zeit2: ff2, ff_ziel: ziel, buzzer_a: buzA, buzzer_b: buzB },
     teams:     { A: { name: teamA }, B: { name: teamB } },

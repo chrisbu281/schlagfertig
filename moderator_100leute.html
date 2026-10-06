@@ -249,6 +249,18 @@ socket.on('state', s => {
         localStorage.removeItem('hundert_wizard_config');
         const cfg = JSON.parse(raw);
         emit('spiel_starten', cfg);
+        // Emit team photos after a short delay so game state is ready
+        setTimeout(() => {
+          ['A','B'].forEach(t => {
+            try {
+              const foto = localStorage.getItem('hundert_foto_' + t);
+              if(foto) {
+                emit('team_foto', {team: t, data: foto});
+                localStorage.removeItem('hundert_foto_' + t);
+              }
+            } catch(_) {}
+          });
+        }, 600);
         return;
       }
     } catch(_) {}
