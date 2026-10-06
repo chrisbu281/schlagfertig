@@ -806,14 +806,32 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
     </div>
 
     <!-- Beamer-Vorschau Modal -->
-    <div id="hw-vorschau-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center" onclick="document.getElementById('hw-vorschau-modal').style.display='none'">
-      <div style="background:#111827;border-radius:16px;padding:20px;max-width:520px;width:92%;position:relative" onclick="event.stopPropagation()">
+    <div id="hw-vorschau-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.82);z-index:9999;align-items:center;justify-content:center" onclick="document.getElementById('hw-vorschau-modal').style.display='none'">
+      <div style="background:#111827;border-radius:16px;padding:20px;max-width:min(860px,94vw);width:92%;position:relative" onclick="event.stopPropagation()">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           <span style="color:#fff;font-weight:700;font-size:15px">📺 Beamer-Vorschau</span>
           <button onclick="document.getElementById('hw-vorschau-modal').style.display='none'" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer;line-height:1">✕</button>
         </div>
         <canvas id="hw-vorschau-canvas" width="800" height="450" style="width:100%;border-radius:10px;display:block"></canvas>
         <p style="color:#888;font-size:12px;text-align:center;margin-top:10px">So sieht der Beamer beim Start aus</p>
+      </div>
+    </div>
+
+    <!-- Foto Pan+Zoom Editor -->
+    <div id="hw-foto-editor-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:10000;align-items:center;justify-content:center">
+      <div style="background:#111827;border-radius:16px;padding:20px;max-width:420px;width:95%;position:relative" onclick="event.stopPropagation()">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <span style="color:#fff;font-weight:700;font-size:15px">✂ Foto anpassen</span>
+          <button onclick="hwEditorAbbrechen()" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer;line-height:1">✕</button>
+        </div>
+        <div id="hw-editor-wrap" style="position:relative;overflow:hidden;border-radius:10px;cursor:grab;touch-action:none;user-select:none">
+          <canvas id="hw-editor-canvas" width="360" height="405" style="display:block;width:100%"></canvas>
+        </div>
+        <p style="color:#888;font-size:12px;text-align:center;margin:10px 0 8px">Ziehen zum Verschieben · Scrollen zum Zoomen</p>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" style="flex:1" onclick="hwEditorAbbrechen()">Abbrechen</button>
+          <button class="btn sm gruen" style="flex:1" onclick="hwEditorUebernehmen()">✓ Übernehmen</button>
+        </div>
       </div>
     </div>
 
@@ -2307,12 +2325,12 @@ function hwFotoWaehlen(team) {
 function hwFotoLesen(team, input) {
   const file = input.files?.[0];
   if(!file) return;
+  input.value = '';
   const reader = new FileReader();
   reader.onload = e => {
-    hwFotos[team] = e.target.result;
+    hwEditorTeam = team;
     hwAktiveAvatare[team] = -1;
-    hwFotoAnzeigen(team);
-    hwAvatarHighlight(team);
+    hwEditorOeffnen(e.target.result);
   };
   reader.readAsDataURL(file);
   input.value = '';
@@ -2378,7 +2396,7 @@ function hwBeamerVorschau() {
   ctx.clearRect(0, 0, W, H);
 
   function drawTeamSide(team, x, w, teamName, foto) {
-    const clr = team === 'A' ? 'rgba(30,64,175,0.85)' : 'rgba(154,52,18,0.85)';
+    const clr = team === 'A' ? 'rgba(30,64,175,0.5)' : 'rgba(154,52,18,0.5)';
     const bdr = team === 'A' ? '#60a5fa' : '#fb923c';
     if(foto && fotoAn) {
       const img = new Image();
@@ -2436,6 +2454,125 @@ function hwBeamerVorschau() {
 
   const modal = document.getElementById('hw-vorschau-modal');
   if(modal) modal.style.display = 'flex';
+}
+
+// ── Foto Pan+Zoom Editor ──
+let hwEditorTeam  = null;
+let hwEditorImg   = null;
+let hwEditorScale = 1;
+let hwEditorOffX  = 0;
+let hwEditorOffY  = 0;
+const HW_ED_W = 360, HW_ED_H = 405;
+let hwEditorDrag = false;
+let hwEditorLast = {x:0, y:0};
+
+function hwEditorOeffnen(src) {
+  const img = new Image();
+  img.onload = () => {
+    hwEditorImg   = img;
+    const minS    = Math.max(HW_ED_W / img.width, HW_ED_H / img.height);
+    hwEditorScale = minS;
+    hwEditorOffX  = (HW_ED_W - img.width  * minS) / 2;
+    hwEditorOffY  = (HW_ED_H - img.height * minS) / 2;
+    hwEditorZeichnen();
+    document.getElementById('hw-foto-editor-modal').style.display = 'flex';
+  };
+  img.src = src;
+}
+
+function hwEditorZeichnen() {
+  const cv  = document.getElementById('hw-editor-canvas');
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, HW_ED_W, HW_ED_H);
+  ctx.drawImage(hwEditorImg, hwEditorOffX, hwEditorOffY,
+    hwEditorImg.width * hwEditorScale, hwEditorImg.height * hwEditorScale);
+}
+
+function hwEditorClamp() {
+  const iw = hwEditorImg.width  * hwEditorScale;
+  const ih = hwEditorImg.height * hwEditorScale;
+  hwEditorOffX = Math.min(0, Math.max(HW_ED_W - iw, hwEditorOffX));
+  hwEditorOffY = Math.min(0, Math.max(HW_ED_H - ih, hwEditorOffY));
+}
+
+function hwEditorUebernehmen() {
+  const cv = document.getElementById('hw-editor-canvas');
+  hwFotos[hwEditorTeam] = cv.toDataURL('image/jpeg', 0.85);
+  hwAktiveAvatare[hwEditorTeam] = -1;
+  hwFotoAnzeigen(hwEditorTeam);
+  hwAvatarHighlight(hwEditorTeam);
+  document.getElementById('hw-foto-editor-modal').style.display = 'none';
+}
+
+function hwEditorAbbrechen() {
+  document.getElementById('hw-foto-editor-modal').style.display = 'none';
+}
+
+function hwEditorInitEvents() {
+  const wrap = document.getElementById('hw-editor-wrap');
+  if(!wrap) return;
+
+  // Mouse drag
+  wrap.addEventListener('mousedown', e => {
+    hwEditorDrag = true;
+    hwEditorLast = {x: e.clientX, y: e.clientY};
+    wrap.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if(!hwEditorDrag || !hwEditorImg) return;
+    const cv    = document.getElementById('hw-editor-canvas');
+    const ratio = HW_ED_W / cv.getBoundingClientRect().width;
+    hwEditorOffX += (e.clientX - hwEditorLast.x) * ratio;
+    hwEditorOffY += (e.clientY - hwEditorLast.y) * ratio;
+    hwEditorClamp();
+    hwEditorZeichnen();
+    hwEditorLast = {x: e.clientX, y: e.clientY};
+  });
+  document.addEventListener('mouseup', () => {
+    hwEditorDrag = false;
+    const wrap = document.getElementById('hw-editor-wrap');
+    if(wrap) wrap.style.cursor = 'grab';
+  });
+
+  // Touch drag
+  wrap.addEventListener('touchstart', e => {
+    if(e.touches.length !== 1) return;
+    hwEditorDrag = true;
+    hwEditorLast = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+  }, {passive: true});
+  wrap.addEventListener('touchmove', e => {
+    if(!hwEditorImg || !hwEditorDrag || e.touches.length !== 1) return;
+    e.preventDefault();
+    const cv    = document.getElementById('hw-editor-canvas');
+    const ratio = HW_ED_W / cv.getBoundingClientRect().width;
+    hwEditorOffX += (e.touches[0].clientX - hwEditorLast.x) * ratio;
+    hwEditorOffY += (e.touches[0].clientY - hwEditorLast.y) * ratio;
+    hwEditorClamp();
+    hwEditorZeichnen();
+    hwEditorLast = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+  }, {passive: false});
+  wrap.addEventListener('touchend', () => { hwEditorDrag = false; });
+
+  // Scroll to zoom
+  wrap.addEventListener('wheel', e => {
+    e.preventDefault();
+    if(!hwEditorImg) return;
+    const cv     = document.getElementById('hw-editor-canvas');
+    const rect   = cv.getBoundingClientRect();
+    const ratio  = HW_ED_W / rect.width;
+    const mx     = (e.clientX - rect.left) * ratio;
+    const my     = (e.clientY - rect.top)  * ratio;
+    const minS   = Math.max(HW_ED_W / hwEditorImg.width, HW_ED_H / hwEditorImg.height);
+    const factor = e.deltaY < 0 ? 1.1 : 0.9;
+    const newS   = Math.max(minS, Math.min(hwEditorScale * factor, minS * 8));
+    const sf     = newS / hwEditorScale;
+    hwEditorOffX = mx - sf * (mx - hwEditorOffX);
+    hwEditorOffY = my - sf * (my - hwEditorOffY);
+    hwEditorScale = newS;
+    hwEditorClamp();
+    hwEditorZeichnen();
+  }, {passive: false});
 }
 
 function hundertStarten() {
@@ -4235,6 +4372,7 @@ document.getElementById('gif-detail-overlay').addEventListener('click',e=>{
 });
 
 init();
+hwEditorInitEvents();
 </script>
 </body>
 </html>
