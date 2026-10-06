@@ -636,6 +636,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
     @socketio.on("spiel_beenden", namespace=NAMESPACE)
     def _on_spiel_beenden(data=None):
         state["phase"] = "setup"
+        _broadcast()
         stoppe_beamer()
 
     @socketio.on("reset", namespace=NAMESPACE)

@@ -686,14 +686,19 @@ function renderPhase(phase){
       break;
     }
     default: // setup
-      let setupEl = document.getElementById('setup-screen');
-      if(!setupEl){
-        setupEl = document.createElement('div');
-        setupEl.id = 'setup-screen';
-        document.body.insertBefore(setupEl, document.getElementById('buehne'));
+      inhalt.innerHTML = '';
+      document.getElementById('buehne').style.position = '';
+      const endeBg = document.getElementById('ende-bg');
+      if(endeBg) endeBg.remove();
+      bgA.classList.remove('buzz','win'); bgB.classList.remove('buzz','win');
+      let sEl = document.getElementById('setup-screen');
+      if(!sEl){
+        sEl = document.createElement('div');
+        sEl.id = 'setup-screen';
+        document.body.insertBefore(sEl, document.getElementById('buehne'));
       }
-      setupEl.style.display = 'flex';
-      setupEl.innerHTML = `
+      sEl.style.display = 'flex';
+      sEl.innerHTML = `
         <video id="setup-video" autoplay loop muted playsinline>
           <source src="/static/intro.mp4" type="video/mp4">
         </video>
