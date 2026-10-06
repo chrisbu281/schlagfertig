@@ -802,6 +802,25 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 
       <div class="karte">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span style="font-size:18px">🔧</span>
+          <h2 style="font-size:15px;font-weight:600">Diagnose</h2>
+        </div>
+        <div style="font-size:13px;color:#888;margin-bottom:12px">System-Logs der letzten 500 Zeilen (beide Services)</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="/api/system/logs" download
+             style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:#1a1a2e;font-weight:600;text-decoration:none;background:#f0f0ec;padding:8px 14px;border-radius:10px;border:1px solid #ddd">
+            📥 Log herunterladen
+          </a>
+          <button onclick="logHochladen('log-upload-status-main')"
+                  style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:#fff;font-weight:600;background:#1a1a2e;padding:8px 14px;border-radius:10px;border:none;cursor:pointer">
+            ☁️ Log hochladen
+          </button>
+        </div>
+        <div id="log-upload-status-main" style="display:none;margin-top:12px;font-size:13px;line-height:1.5"></div>
+      </div>
+
+      <div class="karte">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
           <span style="font-size:18px">🔐</span>
           <h2 style="font-size:15px;font-weight:600">Admin Passwort ändern</h2>
         </div>
@@ -1786,16 +1805,16 @@ async function systemNeustarten() {
   }
 }
 
-async function logHochladen() {
-  const status = document.getElementById('log-upload-status');
-  if(!status) return;
-  status.style.display = 'block';
-  status.innerHTML = '<span style="color:#888">⏳ Log wird hochgeladen…</span>';
+async function logHochladen(statusId) {
+  const statusEl = document.getElementById(statusId || 'log-upload-status');
+  if(!statusEl) return;
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = '<span style="color:#888">⏳ Log wird hochgeladen…</span>';
   try {
     const r = await fetch('/api/system/logs/upload', {method:'POST'});
     const d = await r.json();
     if(d.url) {
-      status.innerHTML = `
+      statusEl.innerHTML = `
         <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px">
           <div style="font-weight:700;color:#166534;margin-bottom:6px">✅ Log hochgeladen</div>
           <div style="word-break:break-all;color:#166534;font-size:12px;margin-bottom:8px">${d.url}</div>
@@ -1805,10 +1824,10 @@ async function logHochladen() {
           </button>
         </div>`;
     } else {
-      status.innerHTML = `<span style="color:#c0392b">❌ ${d.error || 'Unbekannter Fehler'}</span>`;
+      statusEl.innerHTML = `<span style="color:#c0392b">❌ ${d.error || 'Unbekannter Fehler'}</span>`;
     }
   } catch(e) {
-    status.innerHTML = '<span style="color:#c0392b">❌ Netzwerkfehler</span>';
+    statusEl.innerHTML = '<span style="color:#c0392b">❌ Netzwerkfehler</span>';
   }
 }
 async function ladeInstalliertSpiele() {
