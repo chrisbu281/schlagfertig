@@ -217,8 +217,8 @@ def _ff_beenden_intern():
     _ff_timer_stoppen()
     if state.get("ff"):
         state["ff"]["timer_laueft"] = False
-    state["teams"]["A"]["punkte"] += ff.get("punkte_a", 0)
-    state["teams"]["B"]["punkte"] += ff.get("punkte_b", 0)
+    ff_team = ff.get("ff_team") or "A"
+    state["teams"][ff_team]["punkte"] += ff.get("punkte_a", 0) + ff.get("punkte_b", 0)
     state["phase"] = "ende"
     _broadcast()
 
@@ -662,8 +662,9 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
             for f in fragen
         ]
         ff["timer_rest"] = state["config"]["ff_zeit1"]
+        ff["ff_team"] = "A" if state["teams"]["A"]["punkte"] >= state["teams"]["B"]["punkte"] else "B"
         state["ff"] = ff
-        _broadcast()
+        _ff_timer_starten()
 
     @socketio.on("ff_aufdecken", namespace=NAMESPACE)
     def _on_ff_aufdecken(data):
@@ -694,17 +695,17 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         ff = state.get("ff")
         if not ff or state.get("phase") != "fastfive":
             return
-        _ff_timer_stoppen()
-        ff["timer_laueft"] = False
         ak = ff["aktuell"]
         naechste = ak + 1
         if naechste >= len(ff["fragen"]):
             if ff["dran"] == "A":
+                _ff_timer_stoppen()
+                ff["timer_laueft"] = False
                 ff["fertig_a"]     = True
                 ff["dran"]         = "B"
                 ff["aktuell"]      = 0
                 ff["timer_rest"]   = state["config"]["ff_zeit2"]
-                ff["spieler_bereit"] = False  # beamer blank until moderator confirms
+                ff["spieler_bereit"] = False
                 _broadcast()
             else:
                 ff["fertig_b"] = True
@@ -732,6 +733,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         if ff and state.get("phase") == "fastfive":
             ff["spieler_bereit"] = True
             _broadcast()
+            _ff_timer_starten()
 
     @socketio.on("ff_beenden", namespace=NAMESPACE)
     def _on_ff_beenden(data=None):
