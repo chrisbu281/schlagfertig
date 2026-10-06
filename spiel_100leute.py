@@ -535,6 +535,10 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         if d["antwort_a"] is not None and d["antwort_b"] is not None:
             d["gewinner"] = _duell_gewinner(d)
             d["buzzer_offen"] = False
+            topf = state.get("rundentopf", 0)
+            if d["gewinner"] in ("A", "B") and topf > 0:
+                state["teams"][d["gewinner"]]["punkte"] += topf
+                state["runde_vorab"] = state.get("runde_vorab", 0) + topf
         _broadcast()
 
     @socketio.on("duell_reset_antworten", namespace=NAMESPACE)
@@ -543,6 +547,11 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         af = state.get("aktive_frage")
         if not d or not af:
             return
+        alter_gewinner = d.get("gewinner")
+        alter_topf = state.get("rundentopf", 0)
+        if alter_gewinner in ("A", "B") and alter_topf > 0:
+            state["teams"][alter_gewinner]["punkte"] -= alter_topf
+            state["runde_vorab"] = max(0, state.get("runde_vorab", 0) - alter_topf)
         for idx in (d.get("antwort_a"), d.get("antwort_b")):
             if isinstance(idx, int) and 0 <= idx < len(af["antworten"]):
                 af["antworten"][idx]["auf"] = False
