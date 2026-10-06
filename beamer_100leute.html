@@ -548,8 +548,9 @@ function renderPhase(phase){
 
   // Fast Five: eigene UI-Elemente ein-/ausblenden
   const ffAktiv = phase === 'fastfive';
-  document.getElementById('ff-header').style.display   = ffAktiv ? 'flex' : 'none';
-  document.getElementById('ff-progress').style.display = ffAktiv ? 'flex' : 'none';
+  const ffVorbereitung = ffAktiv && state.ff && !state.ff.spieler_bereit;
+  document.getElementById('ff-header').style.display   = (ffAktiv && !ffVorbereitung) ? 'flex' : 'none';
+  document.getElementById('ff-progress').style.display = (ffAktiv && !ffVorbereitung) ? 'flex' : 'none';
   document.getElementById('logo').style.display        = ffAktiv ? 'none' : '';
   document.querySelectorAll('.score').forEach(el => el.style.display = ffAktiv ? 'none' : '');
 
@@ -628,6 +629,11 @@ function renderPhase(phase){
       if(!ff || !ff.fragen || ff.fragen.length === 0){
         inhalt.innerHTML = `<div class="titel-klein">Fast Five</div>
           <div class="warte puls">Warten auf Moderator …</div>`;
+        break;
+      }
+      // Blank screen between players — nothing from player 1 visible
+      if(!ff.spieler_bereit){
+        inhalt.innerHTML = '';
         break;
       }
       // Team-Hervorhebung

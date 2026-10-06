@@ -162,7 +162,7 @@ def _neue_duell():
 def _neuer_ff():
     return {"fragen": [], "aktuell": 0, "dran": "A", "timer_laueft": False,
             "timer_rest": 0, "punkte_a": 0, "punkte_b": 0,
-            "fertig_a": False, "fertig_b": False}
+            "fertig_a": False, "fertig_b": False, "spieler_bereit": True}
 
 def _neuer_state():
     return {
@@ -700,10 +700,11 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         naechste = ak + 1
         if naechste >= len(ff["fragen"]):
             if ff["dran"] == "A":
-                ff["fertig_a"] = True
-                ff["dran"]     = "B"
-                ff["aktuell"]  = 0
-                ff["timer_rest"] = state["config"]["ff_zeit2"]
+                ff["fertig_a"]     = True
+                ff["dran"]         = "B"
+                ff["aktuell"]      = 0
+                ff["timer_rest"]   = state["config"]["ff_zeit2"]
+                ff["spieler_bereit"] = False  # beamer blank until moderator confirms
                 _broadcast()
             else:
                 ff["fertig_b"] = True
@@ -723,6 +724,13 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         if ff:
             _ff_timer_stoppen()
             ff["timer_laueft"] = False
+            _broadcast()
+
+    @socketio.on("ff_spieler_bereit", namespace=NAMESPACE)
+    def _on_ff_spieler_bereit(data=None):
+        ff = state.get("ff")
+        if ff and state.get("phase") == "fastfive":
+            ff["spieler_bereit"] = True
             _broadcast()
 
     @socketio.on("ff_beenden", namespace=NAMESPACE)
