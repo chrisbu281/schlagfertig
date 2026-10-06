@@ -161,8 +161,35 @@
   .ff-score .gesamt{color:var(--gold);font-weight:900;font-size:1.15em;
     font-variant-numeric:tabular-nums;}
 
-  /* Fast Five – Spieler-Badge */
-  .ff-dran{font-size:clamp(18px,2.2vw,26px);font-weight:800;margin-bottom:8px;letter-spacing:1px;}
+  /* Fast Five – Top-Header (ersetzt Logo + ff-dran) */
+  #ff-header{position:absolute;top:0;left:0;right:0;display:none;
+    justify-content:space-between;align-items:center;
+    padding:14px 36px;z-index:7;
+    background:linear-gradient(180deg,rgba(5,7,13,.88) 0%,transparent 100%);}
+  .ff-h-left{font-size:clamp(18px,2.4vw,30px);font-weight:900;letter-spacing:3px;
+    text-transform:uppercase;color:var(--gold);
+    text-shadow:0 0 20px rgba(245,197,24,.3);}
+  .ff-h-right{font-size:clamp(12px,1.5vw,18px);color:rgba(255,255,255,.45);
+    letter-spacing:2px;text-transform:uppercase;}
+
+  /* Fast Five – Fortschrittsbalken unten (ersetzt permanente Team-Scores) */
+  #ff-progress{position:absolute;bottom:0;left:0;right:0;display:none;
+    align-items:center;gap:20px;padding:0 40px;height:68px;
+    background:rgba(5,7,13,.75);z-index:7;}
+  .ff-prog-label{font-size:clamp(10px,1.2vw,13px);text-transform:uppercase;
+    letter-spacing:.6px;color:rgba(255,255,255,.4);white-space:nowrap;flex-shrink:0;}
+  .ff-prog-track{flex:1;height:14px;background:rgba(255,255,255,.07);
+    border-radius:20px;overflow:hidden;}
+  .ff-prog-fill{height:100%;border-radius:20px;
+    background:linear-gradient(90deg,#16a34a,#4ade80);
+    transition:width .6s cubic-bezier(.34,1.56,.64,1);position:relative;}
+  .ff-prog-fill::after{content:'';position:absolute;right:0;top:0;bottom:0;
+    width:4px;background:rgba(255,255,255,.5);border-radius:2px;}
+  .ff-prog-score{font-size:clamp(18px,2.8vw,32px);font-weight:900;
+    font-variant-numeric:tabular-nums;letter-spacing:1px;white-space:nowrap;flex-shrink:0;}
+  .ff-prog-cur{color:var(--gold);}
+  .ff-prog-sep{color:rgba(255,255,255,.3);margin:0 3px;}
+  .ff-prog-tgt{color:rgba(255,255,255,.35);font-size:.7em;}
 </style>
 </head>
 <body>
@@ -173,6 +200,22 @@
   <div id="vs">VS</div>
 
   <div id="logo">SCHLAG<b>FERTIG</b> · 100 LEUTE GEFRAGT</div>
+
+  <!-- Fast Five: eigener Header + Fortschrittsbalken -->
+  <div id="ff-header">
+    <div class="ff-h-left" id="ff-h-left">Fast Five · Runde 1</div>
+    <div class="ff-h-right" id="ff-h-right">Frage 1 von 5</div>
+  </div>
+  <div id="ff-progress">
+    <div class="ff-prog-label">Punktziel</div>
+    <div class="ff-prog-track"><div class="ff-prog-fill" id="ff-prog-fill" style="width:0%"></div></div>
+    <div class="ff-prog-score">
+      <span class="ff-prog-cur" id="ff-prog-cur">0</span>
+      <span class="ff-prog-sep">/</span>
+      <span class="ff-prog-tgt" id="ff-prog-tgt">400</span>
+      <span class="ff-prog-sep" style="font-size:.6em"> Pts</span>
+    </div>
+  </div>
 
   <div id="inhalt"></div>
 
@@ -438,11 +481,9 @@ function ensureFFBoard(){
           <div class="tile-back"><span class="t-text">${a.text}</span><span class="t-pkt">${a.punkte}</span></div>
         </div></div>`).join('');
     document.getElementById('inhalt').innerHTML = `
-      <div class="ff-dran" id="ff-dran"></div>
       <div id="ff-timer-disp"></div>
       <div class="board-frage" id="ff-frage"></div>
-      <div class="board">${tiles}</div>
-      <div class="ff-score" id="ff-score"></div>`;
+      <div class="board">${tiles}</div>`;
     ffBoardKey = key;
   }
   return true;
@@ -452,12 +493,10 @@ function paintFFBoard(){
   const ff = state.ff;
   const fq  = ff.fragen[ff.aktuell || 0];
   const anzFragen = ff.fragen.length;
-  const dranColor = ff.dran === 'A' ? 'var(--teamA)' : 'var(--teamB)';
-
-  document.getElementById('ff-dran').innerHTML =
-    `<span style="color:${dranColor}">⚡ ${state.teams[ff.dran].name}</span>`
-    + ` · Frage ${(ff.aktuell||0)+1} / ${anzFragen}`;
-  document.getElementById('ff-frage').textContent = fq.frage;
+  const runde = ff.fertig_a ? 2 : 1;
+  document.getElementById('ff-h-left').textContent  = `Fast Five · Runde ${runde}`;
+  document.getElementById('ff-h-right').textContent = `Frage ${(ff.aktuell||0)+1} von ${anzFragen}`;
+  document.getElementById('ff-frage').textContent   = fq.frage;
 
   // Tiles synchronisieren (Flip-Animation bleibt erhalten)
   fq.antworten.forEach((a,i)=>{
@@ -481,19 +520,14 @@ function paintFFBoard(){
     timerEl.innerHTML = '';
   }
 
-  // FF-Score
+  // Fortschrittsbalken
   const pA = ff.punkte_a||0, pB = ff.punkte_b||0;
   const total = pA + pB;
   const ziel  = (state.config && state.config.ff_ziel) || 400;
-  const zielHit = total >= ziel;
-  document.getElementById('ff-score').innerHTML =
-    `<span style="color:var(--teamA);font-weight:700">${state.teams.A.name}: ${pA}</span>`
-    +`<span class="sep">·</span>`
-    +`<span style="color:var(--teamB);font-weight:700">${state.teams.B.name}: ${pB}</span>`
-    +`<span class="sep">·</span>`
-    +`<span class="gesamt">${total}`
-    +(zielHit?` <span style="color:#33c46a;font-size:.7em">✓ Ziel erreicht</span>`:`/ ${ziel}`)
-    +`</span>`;
+  const pct   = Math.min(total / ziel * 100, 100);
+  document.getElementById('ff-prog-fill').style.width = pct + '%';
+  document.getElementById('ff-prog-cur').textContent  = total;
+  document.getElementById('ff-prog-tgt').textContent  = ziel;
 }
 
 // Phasen-Router
@@ -511,6 +545,13 @@ function renderPhase(phase){
 
   document.getElementById('vs').style.display =
     (phase === 'buzzerduell' && !state.aktive_frage) ? 'block' : 'none';
+
+  // Fast Five: eigene UI-Elemente ein-/ausblenden
+  const ffAktiv = phase === 'fastfive';
+  document.getElementById('ff-header').style.display   = ffAktiv ? 'flex' : 'none';
+  document.getElementById('ff-progress').style.display = ffAktiv ? 'flex' : 'none';
+  document.getElementById('logo').style.display        = ffAktiv ? 'none' : '';
+  document.querySelectorAll('.score').forEach(el => el.style.display = ffAktiv ? 'none' : '');
 
   bgA.classList.remove('buzz','win'); bgB.classList.remove('buzz','win');
   if(!BOARD_PHASEN.includes(phase)) boardFrageId = null;
