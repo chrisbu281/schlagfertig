@@ -210,7 +210,7 @@ async function weiter_spielen() {
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'Aktualisierung fehlgeschlagen');
     zeige_fortschritt('a', 100);
-    zeige_meldung_a('erfolg', `✅ ${d.anzahl} Fragen geladen – willkommen, ${d.name}!`);
+    zeige_meldung_a('erfolg', `✅ Alle Spielinhalte synchronisiert – willkommen, ${d.name}!`);
     setTimeout(() => { window.location.href = '/editor'; }, 700);
   } catch(e) {
     // Offline? Trotzdem spielen mit gecachten Fragen
@@ -242,7 +242,7 @@ async function konto_login() {
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'Fehler beim Anmelden');
     zeige_fortschritt('b', 100);
-    zeige_meldung_b('erfolg', `✅ ${d.anzahl} Fragen geladen – willkommen, ${d.name}!`);
+    zeige_meldung_b('erfolg', `✅ Alle Spielinhalte synchronisiert – willkommen, ${d.name}!`);
     setTimeout(() => { window.location.href = '/editor'; }, 700);
   } catch(e) {
     zeige_fortschritt('b', 0);
