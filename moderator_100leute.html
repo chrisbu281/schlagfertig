@@ -680,47 +680,29 @@ function renderStehlen(el, teams) {
     af.antworten.forEach((a,i) => { if (!a.auf) verbleibend.push({...a, idx:i}); });
   }
 
-  const optionen = verbleibend.map(a =>
-    `<option value="${a.idx}">Nr. ${a.idx+1}: ${a.text} (${a.punkte} Pts)</option>`
-  ).join('');
-
   el.innerHTML = `
   <div class="karte" style="border-color:rgba(226,75,74,.3);background:rgba(226,75,74,.05)">
     <div class="karte-title" style="color:#fca5a5">⚡ STEHLEN</div>
-    <p style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:12px">
+    <p style="font-size:14px;color:rgba(255,255,255,.5);margin-bottom:16px">
       <strong style="color:#fff">${escHtml(teams[gegner]?.name||gegner)}</strong>
-      hat die Chance zu stehlen!
+      hat die Chance zu stehlen — Antwort antippen:
     </p>
-    <div class="inp-label">Genannte Antwort (falls auf der Tafel)</div>
-    <select class="inp" id="sel-stehlen" style="margin-bottom:12px">
-      <option value="">– nicht auf der Tafel –</option>
-      ${optionen}
-    </select>
-    <div class="btn-row">
-      <button class="btn sm gruen" onclick="stehlenRichtig()">✓ Richtig → Stehlen!</button>
-      <button class="btn sm primaer" onclick="stehlenFalsch()">✕ Falsch → ${escHtml(teams[aktiv]?.name||aktiv)} gewinnt</button>
+    <div class="mod-board" style="margin-bottom:16px">
+      ${verbleibend.map(a=>`
+        <div class="mod-tile" onclick="stehlenAufdecken(${a.idx})">
+          <span class="mt-nr">${a.idx+1}</span>
+          <span class="mt-text">${escHtml(a.text)}</span>
+          <span class="mt-pkt">${a.punkte}</span>
+        </div>`).join('')}
     </div>
-  </div>
-
-  <div class="karte">
-    <div class="karte-title">Verbleibende Antworten</div>
-    <div class="mod-board">
-    ${verbleibend.map(a=>`
-      <div class="mod-tile">
-        <span class="mt-nr">${a.idx+1}</span>
-        <span class="mt-text">${escHtml(a.text)}</span>
-        <span class="mt-pkt">${a.punkte}</span>
-      </div>`).join('')}
-    </div>
+    <button class="btn sm dunkel" style="width:100%;justify-content:center" onclick="stehlenFalsch()">
+      ✗ Nicht auf der Tafel → ${escHtml(teams[aktiv]?.name||aktiv)} gewinnt
+    </button>
   </div>
   `;
 }
 
-function stehlenRichtig() {
-  const sel = document.getElementById('sel-stehlen');
-  const idx = sel && sel.value !== '' ? parseInt(sel.value) : null;
-  emit('stehlen_aufdecken', {idx});
-}
+function stehlenAufdecken(idx) { emit('stehlen_aufdecken', {idx}); }
 function stehlenFalsch() { emit('stehlen_falsch'); }
 
 // ══ RUNDENENDE-PHASE ══
