@@ -492,6 +492,8 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         _broadcast()
         if not state.get("beamer_aktiv"):
             starte_beamer()
+        else:
+            _socketio.emit("beamer_reload", {}, namespace=NAMESPACE)
 
     @socketio.on("frage_freigeben", namespace=NAMESPACE)
     def _on_frage_freigeben(data=None):
