@@ -825,11 +825,11 @@ function renderFastfive(el, teams, cfg) {
       const auf = a.auf;
       const vonKlasse = auf ? 'von-'+(a.von||'').toLowerCase() : '';
       antwortenHtml += `
-      <div class="ff-tile-mod ${auf?'auf':''} ${vonKlasse}" onclick="${auf?'':'ffAufdecken('+i+')'}"
+      <div class="ff-tile-mod ${auf?'auf':''} ${vonKlasse}" onclick="${auf?'':'ffAufdeckenUndWeiter('+i+')'}"
         style="${auf?'cursor:default':''}">
         <span class="ftm-nr">${i+1}</span>
-        <span class="ftm-text">${auf?escHtml(a.text):'─ ─ ─'}</span>
-        ${auf?`<span class="ftm-pkt">${a.punkte}</span>`:'<span style="color:rgba(255,255,255,.2);font-size:12px">👆</span>'}
+        <span class="ftm-text">${escHtml(a.text)}</span>
+        <span class="ftm-pkt" style="${auf?'':'color:rgba(255,255,255,.3)'}">${a.punkte}</span>
       </div>`;
     });
     antwortenHtml += '</div>';
@@ -844,9 +844,10 @@ function renderFastfive(el, teams, cfg) {
       ${aktFrage ? escHtml(aktFrage.frage) : '–'}
     </div>
     ${antwortenHtml}
-    <button class="btn dunkel btn-sm" onclick="ffNaechste()" style="margin-top:4px">
-      ▶ Nächste Frage
-    </button>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn sm dunkel" onclick="ffNaechste()" style="flex:1">✗ Nicht auf der Tafel</button>
+      <button class="btn sm dunkel" onclick="ffNaechste()" style="flex:1">→ Überspringen</button>
+    </div>
   </div>
 
   <div class="karte">
@@ -874,6 +875,10 @@ function renderFastfive(el, teams, cfg) {
 function ffStarten() { emit('ff_starten'); }
 function ffSpielerBereit() { emit('ff_spieler_bereit'); }
 function ffAufdecken(idx) { emit('ff_aufdecken', {idx}); }
+function ffAufdeckenUndWeiter(idx) {
+  emit('ff_aufdecken', {idx});
+  setTimeout(() => emit('ff_naechste_frage'), 800);
+}
 function ffNaechste() { emit('ff_naechste_frage'); }
 function ffTimerStart() { emit('ff_timer_start'); }
 function ffTimerStop() { emit('ff_timer_stop'); }
