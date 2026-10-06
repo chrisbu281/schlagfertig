@@ -441,7 +441,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 .hw-toggle-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; flex: 1; }
 .hw-toggle-label input[type=checkbox] { width: 16px; height: 16px; accent-color: #2d8a4e; cursor: pointer; }
 .hw-fragen-toolbar { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
-.hw-fragen-liste { max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 10px; }
+.hw-fragen-liste { max-height: 420px; overflow-y: auto; border: 1px solid #eee; border-radius: 10px; }
 .hw-frage-zeile { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background .1s; }
 .hw-frage-zeile:last-child { border-bottom: none; }
 .hw-frage-zeile:hover { background: #f8f8ff; }
@@ -841,9 +841,8 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
       <div class="wizard-untertitel">Aus der Bibliothek wählen oder zufällig auswählen</div>
       <div class="hw-fragen-toolbar">
         <button class="btn" id="hw-btn-empfohlen" onclick="hwZufaelligEmpfohlen()" style="font-size:12px;padding:6px 10px;background:#f5c518;color:#1a1400;border-color:#c9a000;font-weight:700">⭐ Empfohlen</button>
-        <button class="btn" onclick="hwAlleWaehlen()" style="font-size:12px;padding:6px 10px">Alle</button>
         <button class="btn" onclick="hwKeineWaehlen()" style="font-size:12px;padding:6px 10px">Keine</button>
-        <span class="hw-auswahl-info" id="hw-fragen-zaehler"></span>
+        <span class="hw-auswahl-info" id="hw-fragen-zaehler" style="margin-left:auto;font-size:13px;font-weight:700;color:#1a1a2e"></span>
       </div>
       <div class="hw-fragen-liste" id="hw-fragen-liste">
         <div style="padding:20px;text-align:center;color:#888;font-size:13px">⏳ Lädt Fragen…</div>
@@ -2219,11 +2218,16 @@ function hwRendereFragenListe() {
     hwUpdateFragenInfo();
     return;
   }
-  el.innerHTML = hwFragenListe.map(f => {
+  const sortiert = [...hwFragenListe].sort((a,b) => {
+    const aG = hwGewaehltIds.has(a.id) ? 0 : 1;
+    const bG = hwGewaehltIds.has(b.id) ? 0 : 1;
+    return aG - bG;
+  });
+  el.innerHTML = sortiert.map(f => {
     const gew = hwGewaehltIds.has(f.id);
     const esc = f.frage.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    return `<div class="hw-frage-zeile${gew?' gewaehlt':''}" onclick="hwToggleFrage('${f.id}',this)">
-      <input type="checkbox" class="hw-frage-cb"${gew?' checked':''} onclick="event.stopPropagation();hwToggleFrage('${f.id}',this.parentElement)">
+    return `<div class="hw-frage-zeile${gew?' gewaehlt':''}" onclick="hwToggleFrage('${f.id}')">
+      <input type="checkbox" class="hw-frage-cb"${gew?' checked':''} onclick="event.stopPropagation();hwToggleFrage('${f.id}')">
       <span class="hw-frage-text">${esc}</span>
       <span class="hw-frage-tags">${f.anzahl} Antworten</span>
     </div>`;
@@ -2231,26 +2235,24 @@ function hwRendereFragenListe() {
   hwUpdateFragenInfo();
 }
 
-function hwToggleFrage(id, el) {
-  if(hwGewaehltIds.has(id)) {
-    hwGewaehltIds.delete(id);
-    el.classList.remove('gewaehlt');
-    const cb = el.querySelector('.hw-frage-cb');
-    if(cb) cb.checked = false;
-  } else {
-    hwGewaehltIds.add(id);
-    el.classList.add('gewaehlt');
-    const cb = el.querySelector('.hw-frage-cb');
-    if(cb) cb.checked = true;
-  }
-  hwUpdateFragenInfo();
+function hwToggleFrage(id) {
+  if(hwGewaehltIds.has(id)) hwGewaehltIds.delete(id);
+  else hwGewaehltIds.add(id);
+  hwRendereFragenListe();
+  const liste = document.getElementById('hw-fragen-liste');
+  if(liste) liste.scrollTop = 0;
 }
 
 function hwUpdateFragenInfo() {
-  const el = document.getElementById('hw-fragen-zaehler');
-  if(el) el.textContent = hwGewaehltIds.size > 0 ? `${hwGewaehltIds.size} ausgewählt` : '';
+  const ziel  = hwRunden[hwLaenge] || 3;
+  const aktiv = hwGewaehltIds.size;
+  const el    = document.getElementById('hw-fragen-zaehler');
+  if(el){
+    el.textContent = `${aktiv} von ${ziel}`;
+    el.style.color = aktiv === ziel ? '#2d8a4e' : aktiv > ziel ? '#c0392b' : '#1a1a2e';
+  }
   const btn = document.getElementById('hwbtn3');
-  if(btn) btn.disabled = hwGewaehltIds.size === 0;
+  if(btn) btn.disabled = aktiv !== ziel;
 }
 
 function hwAlleWaehlen() {
