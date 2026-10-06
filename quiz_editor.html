@@ -402,6 +402,55 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 .start-btn.fragen-btn:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(45,138,78,.5); }
 .start-btn.store { background: linear-gradient(135deg, #7c3aed 0%, #4f1d96 100%); color: #fff; box-shadow: 0 8px 24px rgba(124,58,237,.3); }
 .start-btn.store:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(124,58,237,.5); }
+
+/* ═══ 100 LEUTE WIZARD ═══ */
+.hw-modus-grid { display: flex; flex-direction: column; gap: 10px; }
+.hw-modus-karte { border: 2px solid #e0e0e0; border-radius: 14px; padding: 16px 18px; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 14px; }
+.hw-modus-karte:hover { border-color: #c49a00; background: #fffdf0; transform: translateY(-1px); }
+.hw-modus-karte.aktiv { border-color: #f5c518; background: #fffbeb; box-shadow: 0 0 0 3px rgba(245,197,24,.15); }
+.hw-modus-icon { font-size: 30px; line-height: 1; flex-shrink: 0; }
+.hw-modus-titel { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+.hw-modus-desc { font-size: 13px; color: #888; line-height: 1.4; }
+.hw-modus-karte.aktiv .hw-modus-desc { color: #92701c; }
+.hw-team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hw-team-karte { border: 2px solid #e0e0e0; border-radius: 14px; overflow: hidden; }
+.hw-team-karte.A { border-color: rgba(96,165,250,.5); }
+.hw-team-karte.B { border-color: rgba(251,146,60,.5); }
+.hw-team-kopf { padding: 12px; font-size: 12px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; text-align: center; }
+.hw-team-kopf.A { background: rgba(96,165,250,.1); color: #1d4ed8; }
+.hw-team-kopf.B { background: rgba(251,146,60,.1); color: #c2410c; }
+.hw-team-input { width: 100%; padding: 10px 12px; border: none; border-top: 1px solid #eee; font-size: 15px; font-weight: 600; text-align: center; outline: none; background: #fff; font-family: inherit; }
+.hw-team-input:focus { background: #fafaff; }
+.hw-buzzer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.hw-buzzer-box { border-radius: 10px; padding: 12px 14px; }
+.hw-buzzer-box.A { background: #eff6ff; }
+.hw-buzzer-box.B { background: #fff7ed; }
+.hw-buzzer-label { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+.hw-buzzer-label.A { color: #1d4ed8; }
+.hw-buzzer-label.B { color: #c2410c; }
+.hw-fragen-toolbar { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+.hw-fragen-liste { max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 10px; }
+.hw-frage-zeile { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background .1s; }
+.hw-frage-zeile:last-child { border-bottom: none; }
+.hw-frage-zeile:hover { background: #f8f8ff; }
+.hw-frage-zeile.gewaehlt { background: #f0fdf4; }
+.hw-frage-cb { width: 16px; height: 16px; accent-color: #2d8a4e; cursor: pointer; flex-shrink: 0; }
+.hw-frage-text { font-size: 13px; color: #333; flex: 1; min-width: 0; }
+.hw-frage-tags { font-size: 11px; color: #bbb; flex-shrink: 0; }
+.hw-auswahl-info { font-size: 12px; color: #555; font-weight: 700; margin-left: auto; }
+.hw-ff-zeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #f8f8f8; border-radius: 10px; padding: 12px 14px; }
+.hw-ff-label { font-size: 14px; font-weight: 600; color: #333; }
+.hw-ff-sub { font-size: 12px; color: #888; margin-top: 2px; }
+.hw-num-input { width: 80px; padding: 8px 10px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 15px; font-weight: 700; text-align: center; outline: none; font-family: inherit; }
+.hw-num-input:focus { border-color: #1a1a2e; }
+.hw-uebersicht { display: flex; flex-direction: column; gap: 8px; }
+.hw-ub-zeile { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8f8f8; border-radius: 10px; font-size: 14px; }
+.hw-ub-key { color: #888; }
+.hw-ub-val { font-weight: 700; color: #1a1a2e; }
+.hw-ub-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.hw-ub-team { border: 1.5px solid #eee; border-radius: 10px; padding: 10px 12px; text-align: center; }
+.hw-ub-team-name { font-size: 14px; font-weight: 700; }
+.hw-ub-team-nr { font-size: 12px; color: #888; margin-top: 3px; }
 </style>
 <script src="/sio.js"></script>
 </head>
@@ -599,6 +648,164 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
       <div class="wizard-buttons">
         <button class="btn grau" onclick="wizardZurueck(2)">← Zurück</button>
         <button class="btn gruen gross" id="wiz-start-btn" onclick="spielStarten()">🎮 Los geht's!</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 100 LEUTE WIZARD ═══ -->
+<div class="ansicht" id="ansicht-hundert-wizard">
+  <header>
+    <div class="logo" onclick="adminLogoKlick()" style="cursor:pointer">Schlag<span>fertig</span></div>
+    <div class="header-rechts">
+      <button class="btn" onclick="homeKlick()" style="font-size:13px" title="Startseite">🏠 Home</button>
+      <button class="btn" onclick="systemAusschalten()" style="background:#c0392b;color:#fff;border-color:#c0392b;padding:6px 12px" title="System ausschalten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:block"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
+    </div>
+  </header>
+  <div class="wizard-container">
+    <!-- Progress -->
+    <div class="wizard-progress">
+      <div class="wp-schritt"><div class="wp-kreis aktiv" id="hwp1">1</div><span class="wp-label aktiv" id="hwl1">Länge</span></div>
+      <div class="wp-linie" id="hwline1"></div>
+      <div class="wp-schritt"><div class="wp-kreis" id="hwp2">2</div><span class="wp-label" id="hwl2">Teams</span></div>
+      <div class="wp-linie" id="hwline2"></div>
+      <div class="wp-schritt"><div class="wp-kreis" id="hwp3">3</div><span class="wp-label" id="hwl3">Fragen</span></div>
+      <div class="wp-linie" id="hwline3"></div>
+      <div class="wp-schritt"><div class="wp-kreis" id="hwp4">4</div><span class="wp-label" id="hwl4">Fast Five</span></div>
+      <div class="wp-linie" id="hwline4"></div>
+      <div class="wp-schritt"><div class="wp-kreis" id="hwp5">5</div><span class="wp-label" id="hwl5">Start</span></div>
+    </div>
+
+    <!-- Schritt 1: Spiellänge -->
+    <div class="wizard-inhalt" id="hw-schritt-1">
+      <div class="wizard-titel">⏱️ Spiellänge</div>
+      <div class="wizard-untertitel">Wie viel Zeit habt ihr heute?</div>
+      <div class="hw-modus-grid">
+        <div class="hw-modus-karte" id="hwm-kurz" onclick="hwWaehleLaenge('kurz')">
+          <div class="hw-modus-icon">⚡</div>
+          <div>
+            <div class="hw-modus-titel">Kurz</div>
+            <div class="hw-modus-desc">2 Runden + Fast Five &middot; ca. 15–20 Minuten</div>
+          </div>
+        </div>
+        <div class="hw-modus-karte" id="hwm-standard" onclick="hwWaehleLaenge('standard')">
+          <div class="hw-modus-icon">🎯</div>
+          <div>
+            <div class="hw-modus-titel">Standard</div>
+            <div class="hw-modus-desc">3 Runden + Fast Five &middot; ca. 25–35 Minuten</div>
+          </div>
+        </div>
+        <div class="hw-modus-karte" id="hwm-lang" onclick="hwWaehleLaenge('lang')">
+          <div class="hw-modus-icon">🏆</div>
+          <div>
+            <div class="hw-modus-titel">Lang</div>
+            <div class="hw-modus-desc">5 Runden + Fast Five &middot; ca. 45–60 Minuten</div>
+          </div>
+        </div>
+      </div>
+      <div class="wizard-buttons">
+        <button class="btn grau" onclick="homeKlick()">← Abbrechen</button>
+        <button class="btn gruen gross" id="hwbtn1" onclick="hwSchritt(2)" disabled>Weiter →</button>
+      </div>
+    </div>
+
+    <!-- Schritt 2: Teams -->
+    <div class="wizard-inhalt" id="hw-schritt-2" style="display:none">
+      <div class="wizard-titel">👥 Teams</div>
+      <div class="wizard-untertitel">Teamnamen und Buzzer-Nummern festlegen</div>
+      <div class="hw-team-grid">
+        <div class="hw-team-karte A">
+          <div class="hw-team-kopf A">🔵 Team A</div>
+          <input class="hw-team-input" type="text" id="hw-team-a" placeholder="Teamname" value="Team A" maxlength="20">
+        </div>
+        <div class="hw-team-karte B">
+          <div class="hw-team-kopf B">🟠 Team B</div>
+          <input class="hw-team-input" type="text" id="hw-team-b" placeholder="Teamname" value="Team B" maxlength="20">
+        </div>
+      </div>
+      <div class="hw-buzzer-grid">
+        <div class="hw-buzzer-box A">
+          <div class="hw-buzzer-label A">🔵 Team A = Spieler-Nr.</div>
+          <input class="hw-num-input" type="number" id="hw-buz-a" value="1" min="1" max="8" style="width:100%">
+        </div>
+        <div class="hw-buzzer-box B">
+          <div class="hw-buzzer-label B">🟠 Team B = Spieler-Nr.</div>
+          <input class="hw-num-input" type="number" id="hw-buz-b" value="2" min="1" max="8" style="width:100%">
+        </div>
+      </div>
+      <div class="wizard-buttons">
+        <button class="btn grau" onclick="hwSchritt(1)">← Zurück</button>
+        <button class="btn gruen gross" onclick="hwSchritt(3)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- Schritt 3: Fragen -->
+    <div class="wizard-inhalt" id="hw-schritt-3" style="display:none">
+      <div class="wizard-titel">📋 Fragen auswählen</div>
+      <div class="wizard-untertitel">Aus der Bibliothek wählen oder zufällig auswählen</div>
+      <div class="hw-fragen-toolbar">
+        <button class="btn" id="hw-btn-empfohlen" onclick="hwZufaelligEmpfohlen()" style="font-size:12px;padding:6px 10px;background:#f5c518;color:#1a1400;border-color:#c9a000;font-weight:700">⭐ Empfohlen</button>
+        <button class="btn" onclick="hwAlleWaehlen()" style="font-size:12px;padding:6px 10px">Alle</button>
+        <button class="btn" onclick="hwKeineWaehlen()" style="font-size:12px;padding:6px 10px">Keine</button>
+        <span style="font-size:12px;color:#888;margin-left:2px">Zufall:</span>
+        <button class="btn lila" onclick="hwZufaellig(3)" style="font-size:12px;padding:6px 10px">3</button>
+        <button class="btn lila" onclick="hwZufaellig(5)" style="font-size:12px;padding:6px 10px">5</button>
+        <button class="btn lila" onclick="hwZufaellig(10)" style="font-size:12px;padding:6px 10px">10</button>
+        <span class="hw-auswahl-info" id="hw-fragen-zaehler"></span>
+      </div>
+      <div class="hw-fragen-liste" id="hw-fragen-liste">
+        <div style="padding:20px;text-align:center;color:#888;font-size:13px">⏳ Lädt Fragen…</div>
+      </div>
+      <div class="wizard-buttons">
+        <button class="btn grau" onclick="hwSchritt(2)">← Zurück</button>
+        <button class="btn gruen gross" id="hwbtn3" onclick="hwSchritt(4)" disabled>Weiter →</button>
+      </div>
+    </div>
+
+    <!-- Schritt 4: Fast Five -->
+    <div class="wizard-inhalt" id="hw-schritt-4" style="display:none">
+      <div class="wizard-titel">⚡ Fast Five</div>
+      <div class="wizard-untertitel">Einstellungen für das Finale</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="hw-ff-zeile">
+          <div>
+            <div class="hw-ff-label">⏱ Timer aktiv</div>
+            <div class="hw-ff-sub">Countdown für Fast Five</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="hw-ff-timer" checked onchange="hwTimerToggle()"><span class="toggle-slider"></span></label>
+        </div>
+        <div id="hw-ff-timer-detail" style="display:flex;flex-direction:column;gap:8px">
+          <div class="hw-ff-zeile">
+            <div class="hw-ff-label">Spieler 1 (Sek.)</div>
+            <input class="hw-num-input" type="number" id="hw-ff1" value="20" min="10" max="60">
+          </div>
+          <div class="hw-ff-zeile">
+            <div class="hw-ff-label">Spieler 2 (Sek.)</div>
+            <input class="hw-num-input" type="number" id="hw-ff2" value="25" min="10" max="60">
+          </div>
+        </div>
+        <div class="hw-ff-zeile">
+          <div>
+            <div class="hw-ff-label">🎯 Zielpunkte Fast Five</div>
+            <div class="hw-ff-sub">Wie viele Punkte müssen erreicht werden?</div>
+          </div>
+          <input class="hw-num-input" type="number" id="hw-ff-ziel" value="400" min="100" max="999" step="50">
+        </div>
+      </div>
+      <div class="wizard-buttons">
+        <button class="btn grau" onclick="hwSchritt(3)">← Zurück</button>
+        <button class="btn gruen gross" onclick="hwSchritt(5)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- Schritt 5: Start -->
+    <div class="wizard-inhalt" id="hw-schritt-5" style="display:none">
+      <div class="wizard-titel">🚀 Alles bereit?</div>
+      <div class="wizard-untertitel">Kurze Übersicht vor dem Start</div>
+      <div class="hw-uebersicht" id="hw-uebersicht-inhalt"></div>
+      <div class="wizard-buttons">
+        <button class="btn grau" onclick="hwSchritt(4)">← Zurück</button>
+        <button class="btn gross" style="background:linear-gradient(135deg,#f5c518,#d97706);color:#1a1400;font-weight:800;border:none;font-size:16px" onclick="hundertStarten()">▶ Spiel starten!</button>
       </div>
     </div>
   </div>
@@ -1837,16 +2044,197 @@ async function ladeInstalliertSpiele() {
     const installiert = katalog.filter(s => s.installiert);
     const container = document.getElementById('installierte-spiele-container');
     if (!container) return;
-    container.innerHTML = installiert.map(s => `
-      <button class="start-btn"
+    container.innerHTML = installiert.map(s => {
+      const onclick = s.id === '100leute'
+        ? `starteHundertWizard()`
+        : `location.href='${s.url_moderator}'`;
+      return `<button class="start-btn"
         style="background:${s.farbe};color:${s.text_farbe||'#fff'};box-shadow:0 8px 24px rgba(0,0,0,.25);"
-        onclick="location.href='${s.url_moderator}'">
+        onclick="${onclick}">
         <span class="icon">${s.icon}</span>
         <span style="font-size:15px">${s.name}</span>
         <span style="font-size:11px;opacity:.8">${s.untertitel||''}</span>
-      </button>
-    `).join('');
+      </button>`;
+    }).join('');
   } catch(_) {}
+}
+
+// ── 100 LEUTE WIZARD ──
+let hwLaenge = null;
+let hwFragenListe = [];
+let hwGewaehltIds = new Set();
+const hwRunden = { kurz: 2, standard: 3, lang: 5 };
+
+function starteHundertWizard() {
+  hwLaenge = null;
+  hwGewaehltIds = new Set();
+  ['kurz','standard','lang'].forEach(l => document.getElementById('hwm-'+l)?.classList.remove('aktiv'));
+  const btn1 = document.getElementById('hwbtn1');
+  if(btn1) btn1.disabled = true;
+  hwSchritt(1);
+  hwLadeFragenListe();
+  zeigeAnsicht('hundert-wizard');
+}
+
+function hwSchritt(n) {
+  for(let i=1;i<=5;i++) {
+    const inhalt = document.getElementById('hw-schritt-'+i);
+    if(inhalt) inhalt.style.display = i===n ? '' : 'none';
+    const kreis = document.getElementById('hwp'+i);
+    const label = document.getElementById('hwl'+i);
+    if(kreis) {
+      kreis.classList.toggle('aktiv', i===n);
+      kreis.classList.toggle('fertig', i<n);
+      kreis.textContent = i<n ? '✓' : i;
+    }
+    if(label) { label.classList.toggle('aktiv', i===n); }
+    const linie = document.getElementById('hwline'+i);
+    if(linie) linie.classList.toggle('fertig', i<n);
+  }
+  if(n===3) hwRendereFragenListe();
+  if(n===5) hwRendereUebersicht();
+}
+
+function hwWaehleLaenge(laenge) {
+  hwLaenge = laenge;
+  ['kurz','standard','lang'].forEach(l =>
+    document.getElementById('hwm-'+l)?.classList.toggle('aktiv', l===laenge)
+  );
+  const btn1 = document.getElementById('hwbtn1');
+  if(btn1) btn1.disabled = false;
+}
+
+async function hwLadeFragenListe() {
+  try {
+    const r = await fetch('/api/100leute/fragen-liste');
+    if(!r.ok) throw new Error();
+    hwFragenListe = await r.json();
+    if(hwLaenge) hwZufaelligEmpfohlen();
+  } catch(e) {
+    const el = document.getElementById('hw-fragen-liste');
+    if(el) el.innerHTML = '<div style="padding:16px;text-align:center;color:#c0392b;font-size:13px">⚠️ Fragen konnten nicht geladen werden.<br><small>Bitte zuerst Fragen in der Moderator-Ansicht hochladen.</small></div>';
+  }
+}
+
+function hwRendereFragenListe() {
+  const el = document.getElementById('hw-fragen-liste');
+  if(!el) return;
+  if(hwFragenListe.length === 0) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:#888;font-size:13px">Keine Fragen verfügbar.<br><a href="/moderator/100leute" style="color:#1a1a2e">→ Fragen in der Moderator-Ansicht hochladen</a></div>';
+    hwUpdateFragenInfo();
+    return;
+  }
+  el.innerHTML = hwFragenListe.map(f => {
+    const gew = hwGewaehltIds.has(f.id);
+    const esc = f.frage.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<div class="hw-frage-zeile${gew?' gewaehlt':''}" onclick="hwToggleFrage('${f.id}',this)">
+      <input type="checkbox" class="hw-frage-cb"${gew?' checked':''} onclick="event.stopPropagation();hwToggleFrage('${f.id}',this.parentElement)">
+      <span class="hw-frage-text">${esc}</span>
+      <span class="hw-frage-tags">${f.anzahl} Antworten</span>
+    </div>`;
+  }).join('');
+  hwUpdateFragenInfo();
+}
+
+function hwToggleFrage(id, el) {
+  if(hwGewaehltIds.has(id)) {
+    hwGewaehltIds.delete(id);
+    el.classList.remove('gewaehlt');
+    const cb = el.querySelector('.hw-frage-cb');
+    if(cb) cb.checked = false;
+  } else {
+    hwGewaehltIds.add(id);
+    el.classList.add('gewaehlt');
+    const cb = el.querySelector('.hw-frage-cb');
+    if(cb) cb.checked = true;
+  }
+  hwUpdateFragenInfo();
+}
+
+function hwUpdateFragenInfo() {
+  const el = document.getElementById('hw-fragen-zaehler');
+  if(el) el.textContent = hwGewaehltIds.size > 0 ? `${hwGewaehltIds.size} ausgewählt` : '';
+  const btn = document.getElementById('hwbtn3');
+  if(btn) btn.disabled = hwGewaehltIds.size === 0;
+}
+
+function hwAlleWaehlen() {
+  hwGewaehltIds = new Set(hwFragenListe.map(f=>f.id));
+  hwRendereFragenListe();
+}
+
+function hwKeineWaehlen() {
+  hwGewaehltIds = new Set();
+  hwRendereFragenListe();
+}
+
+function hwZufaellig(n) {
+  const gemischt = [...hwFragenListe].sort(()=>Math.random()-.5);
+  hwGewaehltIds = new Set(gemischt.slice(0, Math.min(n, gemischt.length)).map(f=>f.id));
+  hwRendereFragenListe();
+}
+
+function hwZufaelligEmpfohlen() {
+  hwZufaellig(hwRunden[hwLaenge] || 3);
+}
+
+function hwTimerToggle() {
+  const an = document.getElementById('hw-ff-timer')?.checked;
+  const detail = document.getElementById('hw-ff-timer-detail');
+  if(detail) detail.style.display = an ? '' : 'none';
+}
+
+function hwRendereUebersicht() {
+  const el = document.getElementById('hw-uebersicht-inhalt');
+  if(!el) return;
+  const laengeTxt = { kurz:'Kurz – ca. 15–20 Min.', standard:'Standard – ca. 25–35 Min.', lang:'Lang – ca. 45–60 Min.' };
+  const teamA = document.getElementById('hw-team-a')?.value || 'Team A';
+  const teamB = document.getElementById('hw-team-b')?.value || 'Team B';
+  const buzA  = document.getElementById('hw-buz-a')?.value || '1';
+  const buzB  = document.getElementById('hw-buz-b')?.value || '2';
+  const timerAn = document.getElementById('hw-ff-timer')?.checked;
+  const ff1 = document.getElementById('hw-ff1')?.value || '20';
+  const ff2 = document.getElementById('hw-ff2')?.value || '25';
+  const ziel = document.getElementById('hw-ff-ziel')?.value || '400';
+  const runden = hwGewaehltIds.size || hwRunden[hwLaenge] || 3;
+  const escA = teamA.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const escB = teamB.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  el.innerHTML = `
+    <div class="hw-ub-teams">
+      <div class="hw-ub-team" style="border-color:rgba(96,165,250,.4)">
+        <div class="hw-ub-team-name">${escA}</div>
+        <div class="hw-ub-team-nr" style="color:#1d4ed8">🔵 Buzzer ${buzA}</div>
+      </div>
+      <div class="hw-ub-team" style="border-color:rgba(251,146,60,.4)">
+        <div class="hw-ub-team-name">${escB}</div>
+        <div class="hw-ub-team-nr" style="color:#c2410c">🟠 Buzzer ${buzB}</div>
+      </div>
+    </div>
+    <div class="hw-ub-zeile"><span class="hw-ub-key">Spiellänge</span><span class="hw-ub-val">${laengeTxt[hwLaenge]||'–'}</span></div>
+    <div class="hw-ub-zeile"><span class="hw-ub-key">Fragen / Runden</span><span class="hw-ub-val">${runden}</span></div>
+    <div class="hw-ub-zeile"><span class="hw-ub-key">Fast Five Timer</span><span class="hw-ub-val">${timerAn ? `An · S1: ${ff1}s / S2: ${ff2}s` : 'Aus'}</span></div>
+    <div class="hw-ub-zeile"><span class="hw-ub-key">Zielpunkte Fast Five</span><span class="hw-ub-val">${ziel} Punkte</span></div>
+  `;
+}
+
+function hundertStarten() {
+  const teamA  = (document.getElementById('hw-team-a')?.value||'').trim() || 'Team A';
+  const teamB  = (document.getElementById('hw-team-b')?.value||'').trim() || 'Team B';
+  const buzA   = parseInt(document.getElementById('hw-buz-a')?.value)||1;
+  const buzB   = parseInt(document.getElementById('hw-buz-b')?.value)||2;
+  const timerAn = document.getElementById('hw-ff-timer')?.checked !== false;
+  const ff1    = parseInt(document.getElementById('hw-ff1')?.value)||20;
+  const ff2    = parseInt(document.getElementById('hw-ff2')?.value)||25;
+  const ziel   = parseInt(document.getElementById('hw-ff-ziel')?.value)||400;
+  const fragenIds = [...hwGewaehltIds];
+  const runden = fragenIds.length || hwRunden[hwLaenge] || 3;
+  const cfg = {
+    config:    { runden, ff_timer: timerAn, ff_zeit1: ff1, ff_zeit2: ff2, ff_ziel: ziel, buzzer_a: buzA, buzzer_b: buzB },
+    teams:     { A: { name: teamA }, B: { name: teamB } },
+    fragen_ids: fragenIds,
+  };
+  try { localStorage.setItem('hundert_wizard_config', JSON.stringify(cfg)); } catch(_) {}
+  location.href = '/moderator/100leute';
 }
 
 async function init() {

@@ -1349,6 +1349,11 @@ def _sync_100leute_stille():
         except Exception:
             pass
 
+@app.route("/api/100leute/fragen-liste")
+def hundert_fragen_liste():
+    fragen = spiel_100leute.lade_fragen(spiel_100leute.CSV_HAUPT)
+    return jsonify([{"id": f["id"], "frage": f["frage"], "anzahl": len(f["antworten"])} for f in fragen])
+
 @app.route("/api/100leute/fragen-info")
 def hundert_fragen_info():
     def _zaehle(pfad):

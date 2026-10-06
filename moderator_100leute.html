@@ -237,7 +237,23 @@ socket.on('connect', () => {
 socket.on('disconnect', () => {
   document.getElementById('conn-dot').classList.remove('verbunden');
 });
-socket.on('state', s => { S = s; render(); });
+let _wizardConfigAngewendet = false;
+socket.on('state', s => {
+  S = s;
+  if(!_wizardConfigAngewendet && S.phase === 'setup') {
+    _wizardConfigAngewendet = true;
+    try {
+      const raw = localStorage.getItem('hundert_wizard_config');
+      if(raw) {
+        localStorage.removeItem('hundert_wizard_config');
+        const cfg = JSON.parse(raw);
+        emit('spiel_starten', cfg);
+        return;
+      }
+    } catch(_) {}
+  }
+  render();
+});
 
 // ══ UTILS ══
 function emit(ev, data) { socket.emit(ev, data||{}); }

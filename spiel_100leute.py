@@ -176,6 +176,7 @@ def _neuer_state():
         "runde": 0, "aktive_frage": None, "duell": _neue_duell(),
         "strikes": 0, "aktives_team": None, "rundentopf": 0,
         "rundenende": None, "musik": False, "beamer_aktiv": False, "ff": None,
+        "fragen_queue": [],
     }
 
 state = _neuer_state()
@@ -234,6 +235,20 @@ def _apply_setup(data):
     for t in ("A", "B"):
         if t in teams and "name" in teams[t]:
             state["teams"][t]["name"] = teams[t]["name"]
+    fragen_ids = data.get("fragen_ids")
+    if fragen_ids:
+        fragen = lade_fragen(CSV_HAUPT)
+        by_id  = {f["id"]: f for f in fragen}
+        state["fragen_queue"] = [
+            {"id": f["id"], "frage": f["frage"],
+             "antworten": [{"text": a["text"], "punkte": a["punkte"], "auf": False}
+                           for a in f["antworten"]]}
+            for fid in fragen_ids if (f := by_id.get(fid))
+        ]
+        if "runden" not in cfg:
+            state["config"]["runden"] = max(1, len(state["fragen_queue"]))
+    else:
+        state["fragen_queue"] = []
 
 # ── Buzzer-Duell-Logik ──────────────────────────────────────────────
 def _on_buzz(team):
@@ -466,15 +481,18 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
 
     @socketio.on("frage_freigeben", namespace=NAMESPACE)
     def _on_frage_freigeben():
-        fragen = hole_naechste(1, "haupt")
-        if not fragen:
-            return
-        f = fragen[0]
-        state["aktive_frage"] = {
-            "id": f["id"], "frage": f["frage"],
-            "antworten": [{"text": a["text"], "punkte": a["punkte"], "auf": False}
-                          for a in f["antworten"]],
-        }
+        if state.get("fragen_queue"):
+            state["aktive_frage"] = state["fragen_queue"].pop(0)
+        else:
+            fragen = hole_naechste(1, "haupt")
+            if not fragen:
+                return
+            f = fragen[0]
+            state["aktive_frage"] = {
+                "id": f["id"], "frage": f["frage"],
+                "antworten": [{"text": a["text"], "punkte": a["punkte"], "auf": False}
+                              for a in f["antworten"]],
+            }
         state["duell"] = _neue_duell()
         state["duell"]["buzzer_offen"] = True
         _aktualisiere_rundentopf()
