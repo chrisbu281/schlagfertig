@@ -543,6 +543,14 @@ function renderPhase(phase){
   // Setup-Screen nur in setup-Phase anzeigen
   if(setupEl) setupEl.style.display = (phase === 'setup') ? 'flex' : 'none';
 
+  // Ende-Artefakte beim Verlassen der Ende-Phase aufräumen
+  if(phase !== 'ende') {
+    const oldEndeBg = document.getElementById('ende-bg');
+    if(oldEndeBg) oldEndeBg.remove();
+    if(document.getElementById('buehne').style.position) document.getElementById('buehne').style.position = '';
+    if(phase === 'setup') inhalt.innerHTML = '';
+  }
+
   document.getElementById('vs').style.display =
     (phase === 'buzzerduell' && !state.aktive_frage) ? 'block' : 'none';
 
@@ -686,11 +694,6 @@ function renderPhase(phase){
       break;
     }
     default: // setup
-      inhalt.innerHTML = '';
-      document.getElementById('buehne').style.position = '';
-      const endeBg = document.getElementById('ende-bg');
-      if(endeBg) endeBg.remove();
-      bgA.classList.remove('buzz','win'); bgB.classList.remove('buzz','win');
       let sEl = document.getElementById('setup-screen');
       if(!sEl){
         sEl = document.createElement('div');
