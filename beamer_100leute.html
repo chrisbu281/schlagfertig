@@ -235,6 +235,7 @@ let state = null;
 socket.on('connect',    () => document.getElementById('conn').classList.add('on'));
 socket.on('disconnect', () => document.getElementById('conn').classList.remove('on'));
 socket.on('state', (s) => { state = s; render(); });
+socket.on('beamer_reload', () => window.location.reload());
 
 // ════ MEME-BOARD (Moderator löst per Klick ein GIF/Sticker/Video aus) ════
 let memePopupTimer = null;

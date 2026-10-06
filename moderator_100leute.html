@@ -190,6 +190,7 @@ body{display:flex;flex-direction:column}
   <div class="mh-badge">Moderator</div>
   <div class="mh-rechts">
     <div class="conn-dot" id="conn-dot"></div>
+    <button class="mh-btn grau" onclick="beamerNeuLaden()" title="Beamer-Seite neu laden">⟳ Beamer</button>
     <button class="mh-btn grau" onclick="resetSpiel()">↺ Reset</button>
     <button class="mh-btn rot" onclick="beendeSpiel()">✕ Ende</button>
   </div>
@@ -283,6 +284,10 @@ function toast(msg, color) {
 }
 
 // ══ HEADER-BUTTONS ══
+function beamerNeuLaden() {
+  emit('beamer_reload');
+  toast('Beamer wird neu geladen …');
+}
 function resetSpiel() {
   if (confirm('Spiel wirklich zurücksetzen?')) emit('reset');
 }

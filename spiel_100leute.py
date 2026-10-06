@@ -369,6 +369,7 @@ def starte_beamer():
             _steuerung["stop_pygame"]()
         except Exception as e:
             print(f"100leute: stop_pygame Fehler: {e}")
+    subprocess.run(["pkill", "-f", "chromium"], capture_output=True)
     _time.sleep(0.5)
     _starte_buzzer_reader()
 
@@ -470,6 +471,10 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
     def _on_beamer_starten(data=None):
         starte_beamer()
 
+    @socketio.on("beamer_reload", namespace=NAMESPACE)
+    def _on_beamer_reload(data=None):
+        _socketio.emit("beamer_reload", {}, namespace=NAMESPACE)
+
     @socketio.on("spiel_starten", namespace=NAMESPACE)
     def _on_spiel_starten(data=None):
         if data:
@@ -485,10 +490,9 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         state["duell"]        = _neue_duell()
         state["ff"]           = None
         state["phase"]        = "buzzerduell"
+        _broadcast()
         if not state.get("beamer_aktiv"):
             starte_beamer()
-        else:
-            _broadcast()
 
     @socketio.on("frage_freigeben", namespace=NAMESPACE)
     def _on_frage_freigeben(data=None):
