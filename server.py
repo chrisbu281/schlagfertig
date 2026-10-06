@@ -644,6 +644,7 @@ def cloud_login():
             "benutzer_name": name, "user_id": user.get("id", ""),
             "access_token": at, "refresh_token": rt, "rolle": rolle,
         })
+        threading.Thread(target=_sync_100leute_stille, daemon=True).start()
         return jsonify({"status": "ok", "name": name, "anzahl": len(fragen), "rolle": rolle})
     except urllib.error.HTTPError as e:
         if e.code == 400:
@@ -1334,20 +1335,55 @@ SUPABASE_FASTFIVE_CSV  = f"{SUPABASE_BASE}/storage/v1/object/public/sync/fragen_
 CSV_100LEUTE  = os.path.join(BASIS, "fragen_100leute.csv")
 CSV_FASTFIVE  = os.path.join(BASIS, "fragen_fastfive.csv")
 
+def _sb_familienduell_fragen(token=None):
+    """Lädt öffentliche Einträge aus fragen_familienduell via Supabase REST."""
+    url = f"{SUPABASE_BASE}/rest/v1/fragen_familienduell?select=*&ist_oeffentlich=eq.true&order=frage.asc"
+    req = urllib.request.Request(url, headers=_sb_headers(token))
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return json.loads(r.read().decode())
+
+def _speichere_familienduell_csv(fragen_roh):
+    """Schreibt fragen_familienduell-Zeilen als fragen_100leute.csv."""
+    header = ["Frage"]
+    for i in range(1, 9):
+        header += [f"Antwort{i}", f"Punkte{i}"]
+    rows = [header]
+    for f in fragen_roh:
+        frage = (f.get("frage") or "").strip()
+        if not frage:
+            continue
+        row = [frage]
+        for i in range(1, 9):
+            antwort = (f.get(f"antwort_{i}") or "").strip()
+            punkte  = f.get(f"punkte_{i}")
+            row += [antwort, str(punkte) if punkte is not None else ""]
+        rows.append(row)
+    with open(CSV_100LEUTE, "w", encoding="utf-8-sig", newline="") as fh:
+        csv.writer(fh).writerows(rows)
+    return len(rows) - 1
+
 def _sync_100leute_stille():
-    """Lädt 100-Leute-Fragen aus Supabase – best effort, keine Fehler nach außen."""
-    for url, ziel in [(SUPABASE_100LEUTE_CSV, CSV_100LEUTE),
-                      (SUPABASE_FASTFIVE_CSV,  CSV_FASTFIVE)]:
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "Schlagfertig/1.0"})
-            with urllib.request.urlopen(req, timeout=8) as r:
-                content = r.read().decode("utf-8-sig")
-            rows = list(csv.reader(io.StringIO(content)))
-            if len(rows) >= 2:
-                with open(ziel, "w", encoding="utf-8", newline="") as f:
-                    f.write(content)
-        except Exception:
-            pass
+    """Hauptfragen aus fragen_familienduell-Tabelle, FastFive weiterhin aus Storage."""
+    # Hauptfragen: Supabase DB-Tabelle abfragen
+    try:
+        cfg   = lese_cloud_config()
+        token = cfg.get("access_token") or None
+        fragen = _sb_familienduell_fragen(token)
+        if fragen:
+            n = _speichere_familienduell_csv(fragen)
+            print(f"100leute sync: {n} Fragen aus fragen_familienduell geladen")
+    except Exception as e:
+        print(f"100leute DB-sync Fehler: {e}")
+    # FastFive: weiterhin aus Storage laden
+    try:
+        req = urllib.request.Request(SUPABASE_FASTFIVE_CSV,
+                                     headers={"User-Agent": "Schlagfertig/1.0"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            content = r.read()
+        with open(CSV_FASTFIVE, "wb") as fh:
+            fh.write(content)
+    except Exception:
+        pass
 
 @app.route("/api/100leute/fragen-liste")
 def hundert_fragen_liste():
@@ -1393,16 +1429,29 @@ def hundert_fragen_upload():
 @app.route("/api/100leute/fragen-sync", methods=["POST"])
 def hundert_fragen_sync():
     pool = (request.get_json() or {}).get("pool", "haupt")
-    url  = SUPABASE_100LEUTE_CSV if pool == "haupt" else SUPABASE_FASTFIVE_CSV
-    ziel = CSV_100LEUTE if pool == "haupt" else CSV_FASTFIVE
+    if pool == "haupt":
+        try:
+            cfg   = lese_cloud_config()
+            token = cfg.get("access_token") or None
+            fragen = _sb_familienduell_fragen(token)
+            if not fragen:
+                return jsonify({"error": "Keine Fragen in fragen_familienduell gefunden"}), 404
+            n = _speichere_familienduell_csv(fragen)
+            return jsonify({"status": "ok", "anzahl": n})
+        except urllib.error.HTTPError as e:
+            return jsonify({"error": f"Supabase HTTP {e.code}"}), 502
+        except Exception as e:
+            return jsonify({"error": str(e)}), 503
+    # FastFive: weiterhin aus Storage
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Schlagfertig/1.0"})
+        req = urllib.request.Request(SUPABASE_FASTFIVE_CSV,
+                                     headers={"User-Agent": "Schlagfertig/1.0"})
         with urllib.request.urlopen(req, timeout=15) as r:
             content = r.read().decode("utf-8-sig")
         rows = list(csv.reader(io.StringIO(content)))
         if len(rows) < 2:
             return jsonify({"error": "Datei aus Cloud ist leer"}), 400
-        with open(ziel, "w", encoding="utf-8", newline="") as out:
+        with open(CSV_FASTFIVE, "w", encoding="utf-8", newline="") as out:
             out.write(content)
         return jsonify({"status": "ok", "anzahl": len(rows) - 1})
     except urllib.error.HTTPError as e:
