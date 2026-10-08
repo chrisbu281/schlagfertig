@@ -400,7 +400,11 @@ def stoppe_beamer():
     if _chromium:
         try:
             _chromium.terminate()
-            _chromium.wait(timeout=3)
+            try:
+                _chromium.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                _chromium.kill()
+                _chromium.wait(timeout=2)
         except Exception:
             pass
         _chromium = None
