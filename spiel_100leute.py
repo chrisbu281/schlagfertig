@@ -383,13 +383,20 @@ def starte_beamer():
         try:
             _chromium = subprocess.Popen([binary] + flags, env=env,
                                           preexec_fn=os.setsid)
-            print(f"100leute: Beamer gestartet ({binary})")
+            print(f"100leute: Beamer gestartet ({binary}) PID={_chromium.pid}")
             break
         except FileNotFoundError:
             continue
         except Exception as e:
             print(f"100leute: Chromium-Start Fehler: {e}")
             break
+    # Prüfe nach 1s ob Chromium noch lebt (stirbt sofort = Single-Instance-Problem)
+    _time.sleep(1.0)
+    if _chromium and _chromium.poll() is not None:
+        print(f"100leute: WARNUNG – Chromium sofort beendet (exitcode={_chromium.poll()}). "
+              f"Möglicherweise läuft eine andere Instanz auf DISPLAY :0.")
+    elif _chromium:
+        print(f"100leute: Chromium läuft (PID={_chromium.pid})")
     state["beamer_aktiv"] = True
     _broadcast()
 

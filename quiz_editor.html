@@ -505,6 +505,11 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
         <span style="font-size:15px">Weitere Spiele</span>
         <span style="font-size:11px;opacity:.8">App Store</span>
       </button>
+      <button class="start-btn" style="background:#374151;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.25)" onclick="notfallReset()">
+        <span class="icon">🔄</span>
+        <span style="font-size:15px">Notfall-Reset</span>
+        <span style="font-size:11px;opacity:.8">Beamer zurücksetzen</span>
+      </button>
     </div>
   </div>
   <div style="max-width:700px;margin:24px auto;padding:0 24px;">
@@ -2128,6 +2133,17 @@ async function logHochladen(statusId) {
     statusEl.innerHTML = '<span style="color:#c0392b">❌ Netzwerkfehler</span>';
   }
 }
+async function notfallReset() {
+  if (!confirm('Notfall-Reset: Beamer-Anzeige zurücksetzen?\n\nDas beendet alle laufenden Spiel-Anzeigen und startet den Wartebildschirm neu.')) return;
+  try {
+    const r = await fetch('/api/notfall-reset', { method: 'POST' });
+    const d = await r.json();
+    alert('✅ ' + (d.meldung || 'Reset durchgeführt'));
+  } catch(e) {
+    alert('⚠️ Reset fehlgeschlagen: ' + e.message);
+  }
+}
+
 async function ladeInstalliertSpiele() {
   try {
     const r = await fetch('/api/appstore/katalog');

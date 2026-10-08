@@ -1250,6 +1250,37 @@ def system_logs():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route("/api/debug/status")
+def debug_status():
+    """Zeigt was gerade auf dem System läuft – für Diagnose."""
+    import shutil
+    result = subprocess.run(["ps", "aux"], capture_output=True, text=True)
+    procs = [l for l in result.stdout.splitlines()
+             if any(k in l for k in ("chromium", "quiz_buzzer", "python"))]
+    chromium_sg = [l for l in procs if "chromium-sg" in l]
+    chromium_display = [l for l in procs if "chromium" in l and "chromium-sg" not in l]
+    buzzer = [l for l in procs if "quiz_buzzer" in l]
+    return jsonify({
+        "chromium_spiel": chromium_sg,
+        "chromium_display": chromium_display,
+        "quiz_buzzer": buzzer,
+        "spiel_prozess_lebt": spiel_laeuft(),
+        "tmp_sg": os.listdir("/tmp") if os.path.exists("/tmp") else [],
+    })
+
+@app.route("/api/notfall-reset", methods=["POST"])
+def notfall_reset():
+    """Killt alle Spiel-Chromium-Instanzen und startet quiz_buzzer.py neu."""
+    import shutil, signal as _signal
+    # Alle schlagfertig-Chromium-Instanzen killen
+    subprocess.run(["pkill", "-9", "-f", "chromium-sg"], check=False)
+    _time.sleep(0.5)
+    # quiz_buzzer.py neu starten
+    stoppe_pygame()
+    _time.sleep(0.5)
+    starte_quiz()
+    return jsonify({"status": "ok", "meldung": "Reset durchgeführt"})
+
 @app.route("/api/system/logs/upload", methods=["POST"])
 def system_logs_upload():
     try:
