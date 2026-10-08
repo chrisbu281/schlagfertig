@@ -1274,10 +1274,11 @@ def notfall_reset():
     import shutil, signal as _signal
     # Alle schlagfertig-Chromium-Instanzen killen
     subprocess.run(["pkill", "-9", "-f", "chromium-sg"], check=False)
-    _time.sleep(0.5)
+    import time as _time_local
+    _time_local.sleep(0.5)
     # quiz_buzzer.py neu starten
     stoppe_pygame()
-    _time.sleep(0.5)
+    _time_local.sleep(0.5)
     starte_quiz()
     return jsonify({"status": "ok", "meldung": "Reset durchgeführt"})
 

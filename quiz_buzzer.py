@@ -284,7 +284,11 @@ def zeichne_neon_button(x, y, w, h, text, farbe, buchstabe=None, selected=False,
 
 def display_setup():
     global SF_GR, SF_MI, SF_KL, SF_EMOJI, BR, HO, screen
-    for driver in ['kmsdrm', 'dummy']:
+    drivers = []
+    if os.environ.get('DISPLAY'):
+        drivers.append('x11')
+    drivers.extend(['kmsdrm', 'dummy'])
+    for driver in drivers:
         try:
             os.environ['SDL_VIDEODRIVER'] = driver
             pygame.init()
