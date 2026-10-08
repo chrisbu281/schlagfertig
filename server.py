@@ -491,11 +491,14 @@ def spiel_stoppen():
     try:
         schreibe_state("stoppen")
         if spiel_laeuft():
-            spiel_prozess.terminate()
-            spiel_prozess.wait()
-        import time
-        time.sleep(0.5)
-        starte_quiz()
+            # quiz_buzzer.py am Leben lassen – SDL bleibt aktiv, Auflösung bleibt korrekt.
+            # Nur aus Beamer-Modus aufwecken, falls 100leute gerade lief.
+            try:
+                spiel_prozess.send_signal(signal.SIGUSR2)
+            except Exception:
+                pass
+        else:
+            starte_quiz()
         return jsonify({"status": "ok"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -1650,9 +1653,19 @@ def admin_rollen_post():
 spiel_100leute.init_app(app, socketio, stop_pygame=stoppe_pygame, start_pygame=starte_quiz)
 spiel_testspiel.init_app(app, socketio, stop_pygame=stoppe_pygame, start_pygame=starte_quiz)
 
+def _deaktiviere_alten_buzzer_service():
+    """Deaktiviert schlagfertig-buzzer.service falls noch aktiv (veraltete Installation).
+    Dieser Service konkurriert mit server.py und verursacht einen Crash-Loop."""
+    try:
+        os.system("sudo systemctl stop schlagfertig-buzzer 2>/dev/null || true")
+        os.system("sudo systemctl disable schlagfertig-buzzer 2>/dev/null || true")
+    except Exception:
+        pass
+
 if __name__ == "__main__":
     print("Schlagfertig Server startet...")
     print("Erreichbar unter: http://schlagfertig.local:5000")
+    _deaktiviere_alten_buzzer_service()
     starte_quiz()
     print("Wartebildschirm gestartet!")
     socketio.run(app, host="0.0.0.0", port=5000, debug=False, allow_unsafe_werkzeug=True)
