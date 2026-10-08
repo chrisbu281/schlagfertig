@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify, send_from_directory, redirect, Response
 from flask_socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
-import json, os, csv, io, subprocess, urllib.request, urllib.parse, sys, threading
+import json, os, csv, io, subprocess, urllib.request, urllib.parse, sys, threading, signal
 try:
     import requests as _requests
 except ImportError:
@@ -251,26 +251,30 @@ BUZZER_LOG = os.path.join(BASIS, "quiz_buzzer.log")
 def starte_quiz():
     global spiel_prozess
     env = {**os.environ, "DISPLAY": ":0"}
-    log = open(BUZZER_LOG, "w")
-    spiel_prozess = subprocess.Popen(
-        [sys.executable, os.path.join(BASIS, "quiz_buzzer.py")],
-        env=env,
-        stdout=log,
-        stderr=log
-    )
+    if spiel_laeuft():
+        # quiz_buzzer.py läuft noch im Beamer-Modus → aufwecken
+        try:
+            spiel_prozess.send_signal(signal.SIGUSR2)
+        except Exception as e:
+            print(f"starte_quiz SIGUSR2 Fehler: {e}")
+    else:
+        log = open(BUZZER_LOG, "w")
+        spiel_prozess = subprocess.Popen(
+            [sys.executable, os.path.join(BASIS, "quiz_buzzer.py")],
+            env=env,
+            stdout=log,
+            stderr=log
+        )
     schreibe_state("warten")
 
 def stoppe_pygame():
-    """Beendet quiz_buzzer.py (für 100-Leute-Modus, der Chromium statt pygame nutzt)."""
-    global spiel_prozess
-    schreibe_state("stoppen")
+    """Schickt quiz_buzzer.py in den Beamer-Modus (zeigt Schwarz, bleibt am Leben).
+    So bleibt SDL aktiv und die X11-Displayauflösung korrekt."""
     if spiel_laeuft():
-        spiel_prozess.terminate()
         try:
-            spiel_prozess.wait(timeout=3)
-        except Exception:
-            spiel_prozess.kill()
-        spiel_prozess = None
+            spiel_prozess.send_signal(signal.SIGUSR1)
+        except Exception as e:
+            print(f"stoppe_pygame SIGUSR1 Fehler: {e}")
 
 # ── ROUTES ──
 @app.route("/")

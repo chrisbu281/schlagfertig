@@ -14,9 +14,22 @@ except (ImportError, RuntimeError):
         GPIO = None
 
 import pygame
-import json, time, sys, os, threading, atexit
+import json, time, sys, os, threading, atexit, signal
 import socketio as sio_client
 from queue import Queue
+
+_beamer_modus = False  # Schwarz-Modus während Chromium-Spiel läuft
+
+def _sigusr1(signum, frame):
+    global _beamer_modus
+    _beamer_modus = True
+
+def _sigusr2(signum, frame):
+    global _beamer_modus
+    _beamer_modus = False
+
+signal.signal(signal.SIGUSR1, _sigusr1)
+signal.signal(signal.SIGUSR2, _sigusr2)
 try:
     from PIL import Image, ImageSequence
     _PIL_VERFUEGBAR = True
@@ -973,6 +986,15 @@ def main():
     clock = pygame.time.Clock()
 
     while True:
+        # Beamer-Modus: SDL aktiv halten, schwarzen Bildschirm zeigen
+        if _beamer_modus:
+            for event in pygame.event.get():
+                pass  # Events leeren damit SDL nicht blockiert
+            zeige_schwarz()
+            pygame.display.flip()
+            clock.tick(10)
+            continue
+
         # Pygame Events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
