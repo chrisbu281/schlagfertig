@@ -399,17 +399,18 @@ def stoppe_beamer():
     _time.sleep(0.1)
     if _chromium:
         try:
-            _chromium.terminate()
+            _chromium.kill()  # SIGKILL — cannot be ignored
+            _chromium.wait(timeout=2)
         except Exception:
             pass
         _chromium = None
-    # Chromium forks itself on Linux — the Popen handle may point to a dead
-    # launcher. Kill by URL to reliably hit the actual window process.
+    # Belt-and-suspenders: also kill by name in case the handle pointed to
+    # a wrapper that already exited while the real Chromium window lives on.
     try:
-        subprocess.run(["pkill", "-f", "/spiel/100leute"], check=False)
+        subprocess.run(["pkill", "-9", "-f", "100leute"], check=False)
     except Exception:
         pass
-    _time.sleep(0.5)
+    _time.sleep(1.0)  # Give the display time to release before pygame starts
     state["beamer_aktiv"] = False
     _broadcast()
     if _steuerung["start_pygame"]:
