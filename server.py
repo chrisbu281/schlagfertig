@@ -251,7 +251,6 @@ BUZZER_LOG = os.path.join(BASIS, "quiz_buzzer.log")
 def starte_quiz():
     global spiel_prozess
     env = {**os.environ, "DISPLAY": ":0"}
-    subprocess.run(["xrandr", "--auto"], env=env, capture_output=True)
     log = open(BUZZER_LOG, "w")
     spiel_prozess = subprocess.Popen(
         [sys.executable, os.path.join(BASIS, "quiz_buzzer.py")],
