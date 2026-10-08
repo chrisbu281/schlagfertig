@@ -27,6 +27,7 @@ def starte_beamer():
     _time.sleep(0.3)
     url   = "http://localhost:5000/spiel/testspiel"
     env   = {**os.environ, "DISPLAY": ":0"}
+    subprocess.run(["xrandr", "--auto"], env=env, capture_output=True)
     flags = ["--user-data-dir=/tmp/chromium-sg-testspiel",
              "--kiosk", "--no-sandbox", "--noerrdialogs", "--disable-infobars",
              "--disable-session-crashed-bubble", "--password-store=basic",
