@@ -374,7 +374,8 @@ def starte_beamer():
 
     url  = "http://localhost:5000/spiel/100leute"
     env  = {**os.environ, "DISPLAY": ":0"}
-    flags = ["--kiosk", "--incognito", "--noerrdialogs", "--disable-infobars",
+    flags = ["--user-data-dir=/tmp/chromium-sg-100leute",
+             "--kiosk", "--no-sandbox", "--noerrdialogs", "--disable-infobars",
              "--disable-session-crashed-bubble", "--password-store=basic",
              "--autoplay-policy=no-user-gesture-required", url]
     _chromium = None
