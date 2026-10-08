@@ -362,6 +362,24 @@ def _buzzer_reader_loop():
     print("100leute: Buzzer-Reader gestoppt")
 
 
+def _kill_display_chromium():
+    """Beendet den /display-Chromium damit das Spiel den vollen Bildschirm bekommt."""
+    subprocess.run(["pkill", "-f", "chromium-sg-display"], capture_output=True)
+    _time.sleep(0.3)
+
+
+def _starte_display_chromium():
+    """Startet den /display-Chromium neu nach Ende des Spiels."""
+    start_script = os.path.join(BASIS, "pi-config", "start-display.sh")
+    if os.path.exists(start_script):
+        env = {**os.environ, "DISPLAY": ":0"}
+        subprocess.Popen(
+            ["bash", start_script], env=env,
+            start_new_session=True,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+
+
 def starte_beamer():
     global _chromium
     if _steuerung["stop_pygame"]:
@@ -370,6 +388,7 @@ def starte_beamer():
         except Exception as e:
             print(f"100leute: stop_pygame Fehler: {e}")
     _time.sleep(0.5)
+    _kill_display_chromium()  # /display-Chromium beenden → voller Bildschirm frei
     _starte_buzzer_reader()
 
     url  = "http://localhost:5000/spiel/100leute"
@@ -426,7 +445,8 @@ def stoppe_beamer():
         except Exception:
             pass
         _chromium = None
-    _time.sleep(0.8)  # Give display time to release before pygame starts
+    _time.sleep(0.8)
+    _starte_display_chromium()  # /display-Chromium neu starten
     state["beamer_aktiv"] = False
     _broadcast()
     if _steuerung["start_pygame"]:

@@ -17,6 +17,22 @@ def _broadcast():
         _socketio.emit("state", state, namespace=NAMESPACE)
 
 
+def _kill_display_chromium():
+    subprocess.run(["pkill", "-f", "chromium-sg-display"], capture_output=True)
+    _time.sleep(0.3)
+
+
+def _starte_display_chromium():
+    start_script = os.path.join(BASIS, "pi-config", "start-display.sh")
+    if os.path.exists(start_script):
+        env = {**os.environ, "DISPLAY": ":0"}
+        subprocess.Popen(
+            ["bash", start_script], env=env,
+            start_new_session=True,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+
+
 def starte_beamer():
     global _chromium
     if _steuerung["stop_pygame"]:
@@ -25,6 +41,7 @@ def starte_beamer():
         except Exception as e:
             print(f"testspiel: stop_pygame Fehler: {e}")
     _time.sleep(0.3)
+    _kill_display_chromium()
     url   = "http://localhost:5000/spiel/testspiel"
     env   = {**os.environ, "DISPLAY": ":0"}
     subprocess.run(["xrandr", "--auto"], env=env, capture_output=True)
@@ -70,6 +87,7 @@ def stoppe_beamer():
             pass
         _chromium = None
     _time.sleep(0.8)
+    _starte_display_chromium()
     state["phase"] = "bereit"
     _broadcast()
     if _steuerung["start_pygame"]:
