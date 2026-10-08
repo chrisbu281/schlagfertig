@@ -251,7 +251,7 @@ def starte_quiz():
     env = {**os.environ, "DISPLAY": ":0"}
     spiel_prozess = subprocess.Popen(
         [sys.executable, os.path.join(BASIS, "quiz_buzzer.py")],
-        env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        env=env
     )
     schreibe_state("warten")
 

@@ -13,7 +13,7 @@ Shuffle-Logik:
     - Naechster Tag -> automatisch neu mischen
     - Zustand wird in ~/.schlagfertig_shuffle.json gespeichert
 """
-import os, csv, json, random, hashlib, subprocess, base64, threading, time as _time
+import os, csv, json, random, hashlib, subprocess, base64, threading, time as _time, signal
 from datetime import date
 
 BASIS         = os.path.dirname(os.path.abspath(__file__))
@@ -380,7 +380,8 @@ def starte_beamer():
     _chromium = None
     for binary in ("chromium-browser", "chromium"):
         try:
-            _chromium = subprocess.Popen([binary] + flags, env=env)
+            _chromium = subprocess.Popen([binary] + flags, env=env,
+                                          preexec_fn=os.setsid)
             print(f"100leute: Beamer gestartet ({binary})")
             break
         except FileNotFoundError:
@@ -396,21 +397,22 @@ def stoppe_beamer():
     global _chromium
     _ff_timer_stoppen()
     _stoppe_buzzer_reader()
-    _time.sleep(0.1)
     if _chromium:
         try:
-            _chromium.kill()  # SIGKILL — cannot be ignored
+            # Kill the entire process group (Chromium forks renderers etc.)
+            pgid = os.getpgid(_chromium.pid)
+            os.killpg(pgid, signal.SIGKILL)
+        except Exception:
+            try:
+                _chromium.kill()
+            except Exception:
+                pass
+        try:
             _chromium.wait(timeout=2)
         except Exception:
             pass
         _chromium = None
-    # Belt-and-suspenders: also kill by name in case the handle pointed to
-    # a wrapper that already exited while the real Chromium window lives on.
-    try:
-        subprocess.run(["pkill", "-9", "-f", "100leute"], check=False)
-    except Exception:
-        pass
-    _time.sleep(1.0)  # Give the display time to release before pygame starts
+    _time.sleep(0.8)  # Give display time to release before pygame starts
     state["beamer_aktiv"] = False
     _broadcast()
     if _steuerung["start_pygame"]:
@@ -650,7 +652,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
     def _on_spiel_beenden(data=None):
         state["phase"] = "setup"
         _broadcast()
-        stoppe_beamer()
+        threading.Thread(target=stoppe_beamer, daemon=True).start()
 
     @socketio.on("reset", namespace=NAMESPACE)
     def _on_reset(data=None):

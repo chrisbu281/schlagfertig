@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Test-Spiel 4 — minimales Chromium-Beamer-Testmodul."""
 
-import os, subprocess, time as _time
+import os, subprocess, time as _time, signal, threading
 
 BASIS     = os.path.dirname(os.path.abspath(__file__))
 NAMESPACE = "/testspiel"
@@ -33,7 +33,8 @@ def starte_beamer():
     _chromium = None
     for binary in ("chromium-browser", "chromium"):
         try:
-            _chromium = subprocess.Popen([binary] + flags, env=env)
+            _chromium = subprocess.Popen([binary] + flags, env=env,
+                                          preexec_fn=os.setsid)
             print(f"testspiel: Beamer gestartet ({binary})")
             break
         except FileNotFoundError:
@@ -49,16 +50,19 @@ def stoppe_beamer():
     global _chromium
     if _chromium:
         try:
-            _chromium.kill()
+            pgid = os.getpgid(_chromium.pid)
+            os.killpg(pgid, signal.SIGKILL)
+        except Exception:
+            try:
+                _chromium.kill()
+            except Exception:
+                pass
+        try:
             _chromium.wait(timeout=2)
         except Exception:
             pass
         _chromium = None
-    try:
-        subprocess.run(["pkill", "-9", "-f", "testspiel"], check=False)
-    except Exception:
-        pass
-    _time.sleep(1.0)
+    _time.sleep(0.8)
     state["phase"] = "bereit"
     _broadcast()
     if _steuerung["start_pygame"]:
@@ -91,11 +95,11 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
 
     @socketio.on("spiel_starten", namespace=NAMESPACE)
     def _on_spiel_starten(data=None):
-        starte_beamer()
+        threading.Thread(target=starte_beamer, daemon=True).start()
 
     @socketio.on("spiel_beenden", namespace=NAMESPACE)
     def _on_spiel_beenden(data=None):
-        stoppe_beamer()
+        threading.Thread(target=stoppe_beamer, daemon=True).start()
 
     @socketio.on("beamer_reload", namespace=NAMESPACE)
     def _on_beamer_reload(data=None):
