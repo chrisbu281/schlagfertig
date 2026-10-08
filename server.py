@@ -1306,7 +1306,7 @@ def appstore_katalog():
         katalog = json.load(f)
     installiert = _lade_installiert()
     for eintrag in katalog:
-        eintrag["installiert"] = eintrag["id"] in installiert
+        eintrag["installiert"] = eintrag["id"] in installiert or bool(eintrag.get("vorinstalliert"))
     return jsonify(katalog)
 
 @app.route("/api/appstore/installieren", methods=["POST"])

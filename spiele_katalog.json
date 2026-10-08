@@ -11,5 +11,18 @@
     "url_moderator": "/moderator/100leute",
     "version": "1.0",
     "fragen_datei": "fragen_100leute.csv"
+  },
+  {
+    "id": "testspiel",
+    "name": "Test Spiel 4",
+    "untertitel": "Chromium-Beamer-Test",
+    "icon": "🧪",
+    "farbe": "#4338ca",
+    "text_farbe": "#fff",
+    "beschreibung": "Testet ob der Browser-Wechsel vom 100-Leute-Bildschirm funktioniert.",
+    "tags": ["Chromium", "Test"],
+    "url_moderator": "/moderator/testspiel",
+    "version": "1.0",
+    "vorinstalliert": true
   }
 ]
