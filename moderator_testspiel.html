@@ -67,7 +67,7 @@
 
 <div id="toast"></div>
 
-<script src="/static/socket.io.min.js"></script>
+<script src="/sio.js"></script>
 <script>
   const socket = io('/testspiel', { transports: ['websocket'] });
 
@@ -88,7 +88,7 @@
   function beenden() {
     socket.emit('spiel_beenden');
     toast('Beende Spiel …');
-    setTimeout(() => { window.location.href = '/spielmodus'; }, 1200);
+    setTimeout(() => { window.location.href = '/editor'; }, 1200);
   }
 
   function beamerReload() {
