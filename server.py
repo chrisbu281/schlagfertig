@@ -246,12 +246,17 @@ def lese_state():
 def spiel_laeuft():
     return spiel_prozess is not None and spiel_prozess.poll() is None
 
+BUZZER_LOG = os.path.join(BASIS, "quiz_buzzer.log")
+
 def starte_quiz():
     global spiel_prozess
     env = {**os.environ, "DISPLAY": ":0"}
+    log = open(BUZZER_LOG, "w")
     spiel_prozess = subprocess.Popen(
         [sys.executable, os.path.join(BASIS, "quiz_buzzer.py")],
-        env=env
+        env=env,
+        stdout=log,
+        stderr=log
     )
     schreibe_state("warten")
 
@@ -1260,12 +1265,18 @@ def debug_status():
     chromium_sg = [l for l in procs if "chromium-sg" in l]
     chromium_display = [l for l in procs if "chromium" in l and "chromium-sg" not in l]
     buzzer = [l for l in procs if "quiz_buzzer" in l]
+    try:
+        with open(BUZZER_LOG) as f:
+            buzzer_log = f.read()[-3000:]
+    except Exception:
+        buzzer_log = "(kein Log)"
     return jsonify({
         "chromium_spiel": chromium_sg,
         "chromium_display": chromium_display,
         "quiz_buzzer": buzzer,
         "spiel_prozess_lebt": spiel_laeuft(),
         "tmp_sg": os.listdir("/tmp") if os.path.exists("/tmp") else [],
+        "buzzer_log": buzzer_log,
     })
 
 @app.route("/api/notfall-reset", methods=["POST"])
