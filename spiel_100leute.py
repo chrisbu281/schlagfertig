@@ -377,7 +377,11 @@ def starte_beamer():
     flags = ["--user-data-dir=/tmp/chromium-sg-100leute",
              "--kiosk", "--no-sandbox", "--noerrdialogs", "--disable-infobars",
              "--disable-session-crashed-bubble", "--password-store=basic",
-             "--autoplay-policy=no-user-gesture-required", url]
+             "--autoplay-policy=no-user-gesture-required",
+             "--disable-translate", "--disable-features=TranslateUI",
+             "--disable-extensions", "--disable-component-update",
+             "--force-device-scale-factor=1",
+             url]
     _chromium = None
     for binary in ("chromium-browser", "chromium"):
         try:
