@@ -14,19 +14,22 @@ except (ImportError, RuntimeError):
         GPIO = None
 
 import pygame
-import json, time, sys, os, threading, atexit, signal
+import json, time, sys, os, threading, atexit, signal, subprocess
 import socketio as sio_client
 from queue import Queue
 
-_beamer_modus = False  # Schwarz-Modus während Chromium-Spiel läuft
+_beamer_modus = False
+_beamer_modus_wechsel = None  # 'start' oder 'stop' – wird im Hauptloop verarbeitet
 
 def _sigusr1(signum, frame):
-    global _beamer_modus
+    global _beamer_modus, _beamer_modus_wechsel
     _beamer_modus = True
+    _beamer_modus_wechsel = 'start'
 
 def _sigusr2(signum, frame):
-    global _beamer_modus
+    global _beamer_modus, _beamer_modus_wechsel
     _beamer_modus = False
+    _beamer_modus_wechsel = 'stop'
 
 signal.signal(signal.SIGUSR1, _sigusr1)
 signal.signal(signal.SIGUSR2, _sigusr2)
@@ -922,6 +925,7 @@ def lade_gif_frames(pfad):
 # ─────────────────────────────────────────────
 def main():
     global buzzer_aktiv, buzzer_gesperrt, buzzer_start_zeit, zeitlimit_aktiv, zeitlimit_sek
+    global screen, BR, HO, _beamer_modus_wechsel
 
     pruefe_einzelinstanz()   # Doppelstart beim Boot abfangen
 
@@ -986,12 +990,34 @@ def main():
     clock = pygame.time.Clock()
 
     while True:
-        # Beamer-Modus: SDL aktiv halten, schwarzen Bildschirm zeigen
+        # Display-Modus wechseln wenn Signal empfangen wurde
+        if _beamer_modus_wechsel == 'start':
+            _beamer_modus_wechsel = None
+            try:
+                # Vollbild freigeben → Chromium bekommt den ganzen Bildschirm
+                screen = pygame.display.set_mode((1, 1), 0)
+                pygame.display.flip()
+            except Exception as e:
+                print(f"Beamer-Start Display-Fehler: {e}")
+        elif _beamer_modus_wechsel == 'stop':
+            _beamer_modus_wechsel = None
+            try:
+                # Auflösung wiederherstellen, dann Vollbild zurück
+                subprocess.run(["xrandr", "--auto"], capture_output=True, timeout=5)
+                time.sleep(0.3)
+                info = pygame.display.Info()
+                w, h = info.current_w, info.current_h
+                if w <= 0 or h <= 0:
+                    w, h = 1920, 1080
+                screen = pygame.display.set_mode((w, h), pygame.FULLSCREEN)
+                BR, HO = w, h
+            except Exception as e:
+                print(f"Beamer-Stop Display-Fehler: {e}")
+
+        # Beamer-Modus: Fenster ist 1×1, nur Events leeren
         if _beamer_modus:
             for event in pygame.event.get():
-                pass  # Events leeren damit SDL nicht blockiert
-            zeige_schwarz()
-            pygame.display.flip()
+                pass
             clock.tick(10)
             continue
 
