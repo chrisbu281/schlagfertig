@@ -25,6 +25,9 @@ xset s noblank 2>/dev/null || true
 # HDMI auf native Auflösung setzen (damit Chromium den vollen Bildschirm füllt)
 xrandr --auto 2>/dev/null || true
 
+# Gecachten Chromium-Zustand löschen (verhindert falsche Fenstergröße nach Neustart)
+rm -rf /tmp/chromium-sg-display
+
 # ── HDMI-Display: Kiosk-Ansicht ─────────────────────────────
 DISPLAY=:0 chromium-browser \
     --user-data-dir=/tmp/chromium-sg-display \

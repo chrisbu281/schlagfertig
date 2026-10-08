@@ -375,6 +375,8 @@ def starte_beamer():
     url  = "http://localhost:5000/spiel/100leute"
     env  = {**os.environ, "DISPLAY": ":0"}
     subprocess.run(["xrandr", "--auto"], env=env, capture_output=True)
+    import shutil
+    shutil.rmtree("/tmp/chromium-sg-100leute", ignore_errors=True)
     flags = ["--user-data-dir=/tmp/chromium-sg-100leute",
              "--kiosk", "--no-sandbox", "--noerrdialogs", "--disable-infobars",
              "--disable-session-crashed-bubble", "--password-store=basic",
