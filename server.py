@@ -1277,6 +1277,10 @@ def debug_status():
         "spiel_prozess_lebt": spiel_laeuft(),
         "tmp_sg": os.listdir("/tmp") if os.path.exists("/tmp") else [],
         "buzzer_log": buzzer_log,
+        "xrandr": subprocess.run(
+            ["xrandr"], capture_output=True, text=True,
+            env={**os.environ, "DISPLAY": ":0"}
+        ).stdout,
     })
 
 @app.route("/api/notfall-reset", methods=["POST"])
