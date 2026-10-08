@@ -8,6 +8,7 @@ try:
 except ImportError:
     _requests = None
 import spiel_100leute
+import spiel_testspiel
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'schlagfertig2024'
@@ -1596,6 +1597,7 @@ def admin_rollen_post():
 
 # ── 100-LEUTE-MODUL REGISTRIEREN ──────────────────────────────────────────────
 spiel_100leute.init_app(app, socketio, stop_pygame=stoppe_pygame, start_pygame=starte_quiz)
+spiel_testspiel.init_app(app, socketio, stop_pygame=stoppe_pygame, start_pygame=starte_quiz)
 
 if __name__ == "__main__":
     print("Schlagfertig Server startet...")

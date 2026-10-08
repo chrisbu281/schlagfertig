@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test Spiel 4 – Moderator</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, sans-serif;
+    background: #0f172a; color: #e2e8f0;
+    min-height: 100vh; padding: 32px 20px;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 8px; }
+  .subtitle { color: #64748b; margin-bottom: 40px; font-size: .9rem; }
+
+  .status-box {
+    background: #1e293b; border: 1px solid #334155;
+    border-radius: 12px; padding: 20px 24px;
+    margin-bottom: 32px;
+    font-size: .85rem; color: #94a3b8;
+    line-height: 1.6;
+  }
+  .status-box strong { color: #e2e8f0; }
+
+  .btn {
+    display: inline-block; padding: 14px 32px;
+    border: none; border-radius: 10px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn-rot  { background: #ef4444; color: #fff; }
+  .btn-grau { background: #334155; color: #e2e8f0; margin-right: 12px; }
+
+  .conn { display: flex; align-items: center; gap: 8px;
+          color: #64748b; font-size: .8rem; margin-bottom: 24px; }
+  .dot  { width: 8px; height: 8px; border-radius: 50%; background: #374151; }
+  .dot.on { background: #22c55e; }
+
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #1e293b; border: 1px solid #334155; border-radius: 8px;
+    padding: 10px 20px; font-size: .85rem; color: #94a3b8;
+    opacity: 0; transition: opacity .3s;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="conn"><div class="dot" id="dot"></div><span id="conn-label">Verbinde …</span></div>
+
+<h1>🧪 Test Spiel 4</h1>
+<p class="subtitle">Chromium-Beamer-Test — prüft ob der Browser-Wechsel funktioniert</p>
+
+<div class="status-box">
+  <strong>Was passiert:</strong><br>
+  Der Beamer zeigt jetzt die Test-4-Seite (lila Hintergrund mit "Test 4").<br>
+  Falls 100-Leute vorher gehangen hat und du dieses Spiel gestartet hast —
+  schaut der Beamer jetzt anders aus? Dann hat der Browser-Wechsel funktioniert.
+</div>
+
+<button class="btn" style="background:#4338ca;color:#fff;margin-right:12px" onclick="starten()">▶ Beamer starten</button>
+<button class="btn btn-grau" onclick="beamerReload()">⟳ Beamer</button>
+<button class="btn btn-rot"  onclick="beenden()">✕ Spiel beenden</button>
+
+<div id="toast"></div>
+
+<script src="/static/socket.io.min.js"></script>
+<script>
+  const socket = io('/testspiel', { transports: ['websocket'] });
+
+  socket.on('connect',    () => {
+    document.getElementById('dot').classList.add('on');
+    document.getElementById('conn-label').textContent = 'Verbunden';
+  });
+  socket.on('disconnect', () => {
+    document.getElementById('dot').classList.remove('on');
+    document.getElementById('conn-label').textContent = 'Getrennt';
+  });
+
+  function starten() {
+    socket.emit('spiel_starten');
+    toast('Beamer wird gestartet …');
+  }
+
+  function beenden() {
+    socket.emit('spiel_beenden');
+    toast('Beende Spiel …');
+    setTimeout(() => { window.location.href = '/spielmodus'; }, 1200);
+  }
+
+  function beamerReload() {
+    socket.emit('beamer_reload');
+    toast('Beamer wird neu geladen …');
+  }
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+</script>
+</body>
+</html>
