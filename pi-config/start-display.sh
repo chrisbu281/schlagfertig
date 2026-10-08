@@ -2,16 +2,13 @@
 # ╔══════════════════════════════════════════════════════════╗
 # ║  Schlagfertig – Display-Starter                         ║
 # ║                                                          ║
-# ║  Öffnet auf dem eingebauten DSI-Display die Kiosk-      ║
-# ║  Ansicht (/display) und optional auf HDMI die           ║
-# ║  Spieler-Ansicht (/game).                               ║
+# ║  Öffnet auf dem HDMI-Display die Kiosk-Ansicht          ║
+# ║  (/display) in nativer Auflösung.                       ║
 # ║                                                          ║
 # ║  Wird automatisch beim Desktop-Start ausgeführt.        ║
 # ╚══════════════════════════════════════════════════════════╝
 
 SERVER_URL="http://localhost:5000"
-DSI_DISPLAY=":0"      # Primärer Display (DSI, eingebaut)
-HDMI_DISPLAY=":1"     # HDMI-Ausgang (optional, für TV/Beamer)
 
 # Warten bis Server bereit
 echo "Warte auf Schlagfertig-Server..."
@@ -25,9 +22,12 @@ xset -dpms 2>/dev/null || true
 xset s off   2>/dev/null || true
 xset s noblank 2>/dev/null || true
 
-# ── DSI-Display: Kiosk-Ansicht ──────────────────────────────
-# Zeigt /display  →  Status, QR-Code, Spielzustand
-DISPLAY=$DSI_DISPLAY chromium-browser \
+# HDMI auf native Auflösung setzen (damit Chromium den vollen Bildschirm füllt)
+xrandr --auto 2>/dev/null || true
+
+# ── HDMI-Display: Kiosk-Ansicht ─────────────────────────────
+DISPLAY=:0 chromium-browser \
+    --user-data-dir=/tmp/chromium-sg-display \
     --noerrdialogs \
     --disable-infobars \
     --kiosk \
@@ -35,21 +35,12 @@ DISPLAY=$DSI_DISPLAY chromium-browser \
     --disable-translate \
     --disable-features=TranslateUI \
     --disable-extensions \
+    --disable-component-update \
+    --autoplay-policy=no-user-gesture-required \
+    --password-store=basic \
     --check-for-update-interval=31536000 \
     --app="$SERVER_URL/display" \
     &
 
-# ── HDMI-Display: Spieler-Ansicht (optional) ────────────────
-# Nur starten wenn ein zweites Display angeschlossen ist.
-# Auskommentieren um die HDMI-Ausgabe zu aktivieren:
-#
-# DISPLAY=$HDMI_DISPLAY chromium-browser \
-#     --noerrdialogs \
-#     --disable-infobars \
-#     --kiosk \
-#     --no-sandbox \
-#     --app="$SERVER_URL/game" \
-#     &
-
-echo "Displays gestartet."
+echo "Display gestartet."
 wait
