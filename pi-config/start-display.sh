@@ -22,22 +22,31 @@ xset -dpms 2>/dev/null || true
 xset s off   2>/dev/null || true
 xset s noblank 2>/dev/null || true
 
-# Pi 5: TV-HDMI als primären Output setzen, ungenutzten HDMI-Port deaktivieren.
-# DSI (7"-Touchscreen) wird NICHT angefasst – der bleibt für die Steuerung aktiv.
+# Nur TV-HDMI aktivieren, alle anderen Outputs (DSI, zweiter HDMI) deaktivieren.
+# Mit DSI aktiv im X11-Virtual-Desktop zeigt Chromium kiosk nur den halben Bildschirm.
 HDMI_PRIMARY=""
-HDMI_CMD=""
-while IFS= read -r output; do
-    status=$(xrandr 2>/dev/null | awk -v o="$output" '$0 ~ "^"o" " {print $2; exit}')
-    if [ "$status" = "connected" ] && [ -z "$HDMI_PRIMARY" ]; then
-        HDMI_PRIMARY="$output"
-        HDMI_CMD="--output $output --primary --auto"
+XRANDR_CMD="xrandr"
+while IFS= read -r line; do
+    # Nur Output-Zeilen (beginnen nicht mit Leerzeichen)
+    [[ "$line" =~ ^[[:space:]] ]] && continue
+    output=$(echo "$line" | awk '{print $1}')
+    [[ "$output" == "Screen" ]] && continue
+    [[ -z "$output" ]] && continue
+
+    if echo "$line" | grep -q " connected" && ! echo "$line" | grep -q " disconnected"; then
+        if echo "$output" | grep -qE "^HDMI" && [ -z "$HDMI_PRIMARY" ]; then
+            HDMI_PRIMARY="$output"
+            XRANDR_CMD="$XRANDR_CMD --output $output --primary --auto"
+        else
+            XRANDR_CMD="$XRANDR_CMD --output $output --off"
+        fi
     else
-        HDMI_CMD="$HDMI_CMD --output $output --off"
+        XRANDR_CMD="$XRANDR_CMD --output $output --off"
     fi
-done < <(xrandr 2>/dev/null | grep "^HDMI" | awk '{print $1}')
+done < <(xrandr 2>/dev/null)
 
 if [ -n "$HDMI_PRIMARY" ]; then
-    xrandr $HDMI_CMD 2>/dev/null || true
+    eval "$XRANDR_CMD" 2>/dev/null || true
     sleep 0.5
 else
     xrandr --auto 2>/dev/null || true
