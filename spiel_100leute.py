@@ -355,7 +355,9 @@ def _buzzer_reader_loop():
 def _kill_display_chromium():
     """Beendet den /display-Chromium damit das Spiel den vollen Bildschirm bekommt."""
     subprocess.run(["pkill", "-f", "chromium-sg-display"], capture_output=True)
-    _time.sleep(0.3)
+    _time.sleep(2.0)  # Chromium braucht Zeit für graceful shutdown
+    subprocess.run(["pkill", "-9", "-f", "chromium-sg-display"], capture_output=True)
+    _time.sleep(0.5)
 
 
 def _setze_einzelbildschirm(env):
@@ -383,9 +385,14 @@ def _setze_einzelbildschirm(env):
         else:
             cmd += ["--output", name, "--off"]
     if hdmi_primary:
-        subprocess.run(cmd, env=env, capture_output=True)
+        r = subprocess.run(cmd, env=env, capture_output=True, text=True)
+        if r.returncode != 0:
+            print(f"100leute: xrandr FEHLER ({r.returncode}): {r.stderr.strip()}")
+        else:
+            print(f"100leute: xrandr → 1920x1080 auf {hdmi_primary}")
         _time.sleep(0.5)
     else:
+        print("100leute: xrandr – kein HDMI gefunden, nutze --auto")
         subprocess.run(["xrandr", "--auto"], env=env, capture_output=True)
 
 
