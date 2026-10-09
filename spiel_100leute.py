@@ -375,7 +375,7 @@ def _setze_einzelbildschirm(env):
             if ' connected' in line and ' disconnected' not in line:
                 if not hdmi_primary:
                     hdmi_primary = name
-                    cmd += ["--output", name, "--primary", "--auto"]
+                    cmd += ["--output", name, "--primary", "--mode", "1920x1080", "--pos", "0x0"]
                 else:
                     cmd += ["--output", name, "--off"]
             else:

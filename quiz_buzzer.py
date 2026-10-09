@@ -323,7 +323,7 @@ def _konfiguriere_hdmi_display():
                 if ' connected' in line and ' disconnected' not in line:
                     if not hdmi_primary:
                         hdmi_primary = name
-                        cmd += ["--output", name, "--primary", "--auto"]
+                        cmd += ["--output", name, "--primary", "--mode", "1920x1080", "--pos", "0x0"]
                     else:
                         cmd += ["--output", name, "--off"]
                 else:
@@ -975,6 +975,7 @@ def lade_gif_frames(pfad):
 def main():
     global buzzer_aktiv, buzzer_gesperrt, buzzer_start_zeit, zeitlimit_aktiv, zeitlimit_sek
     global screen, BR, HO
+    global _beamer_modus, _beamer_modus_wechsel
 
     pruefe_einzelinstanz()   # Doppelstart beim Boot abfangen
 
