@@ -23,22 +23,24 @@ def _kill_display_chromium():
 
 
 def _setze_einzelbildschirm(env):
-    """Pi 5 hat 2 HDMI-Ports: primären aktivieren, alle anderen deaktivieren."""
-    import re as _re
+    """TV-HDMI als primären Output setzen, ungenutzten HDMI-Port deaktivieren.
+    DSI (7"-Touchscreen) wird nicht angefasst."""
     xr = subprocess.run(["xrandr"], env=env, capture_output=True, text=True)
-    primary, to_off = None, []
+    hdmi_primary, hdmi_off = None, []
     for line in xr.stdout.splitlines():
+        name = line.split()[0]
+        if 'HDMI' not in name:
+            continue
         if ' connected' in line and ' disconnected' not in line:
-            name = line.split()[0]
-            if ' primary ' in line or _re.search(r'\b\d+x\d+\+0\+0\b', line):
-                primary = name
+            if not hdmi_primary:
+                hdmi_primary = name
             else:
-                to_off.append(name)
+                hdmi_off.append(name)
         elif ' disconnected' in line:
-            to_off.append(line.split()[0])
-    if primary:
-        cmd = ["xrandr", "--output", primary, "--auto"]
-        for o in to_off:
+            hdmi_off.append(name)
+    if hdmi_primary:
+        cmd = ["xrandr", "--output", hdmi_primary, "--primary", "--auto"]
+        for o in hdmi_off:
             cmd += ["--output", o, "--off"]
         subprocess.run(cmd, env=env, capture_output=True)
     else:

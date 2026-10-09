@@ -14,25 +14,9 @@ except (ImportError, RuntimeError):
         GPIO = None
 
 import pygame
-import json, time, sys, os, threading, atexit, signal, subprocess
+import json, time, sys, os, threading, atexit
 import socketio as sio_client
 from queue import Queue
-
-_beamer_modus = False
-_beamer_modus_wechsel = None  # 'start' oder 'stop' – wird im Hauptloop verarbeitet
-
-def _sigusr1(signum, frame):
-    global _beamer_modus, _beamer_modus_wechsel
-    _beamer_modus = True
-    _beamer_modus_wechsel = 'start'
-
-def _sigusr2(signum, frame):
-    global _beamer_modus, _beamer_modus_wechsel
-    _beamer_modus = False
-    _beamer_modus_wechsel = 'stop'
-
-signal.signal(signal.SIGUSR1, _sigusr1)
-signal.signal(signal.SIGUSR2, _sigusr2)
 try:
     from PIL import Image, ImageSequence
     _PIL_VERFUEGBAR = True
@@ -298,50 +282,8 @@ def zeichne_neon_button(x, y, w, h, text, farbe, buchstabe=None, selected=False,
     txt = SF_KL.render(text[:18], True, txt_color)
     screen.blit(txt, (x - w//2 + 60, y - txt.get_height()//2))
 
-def _fix_xrandr_und_lese_aufloesung():
-    """Setzt xrandr auf primären Output und gibt dessen echte Auflösung zurück.
-    Verhindert, dass ein gestapelter/gespannter virtueller Desktop (z.B. 1920x2160
-    oder 3840x1080 bei Pi 5 mit 2 HDMI-Ports) als pygame-Auflösung genutzt wird."""
-    import re as _re
-    try:
-        env = {**os.environ, "DISPLAY": ":0"}
-        xr = subprocess.run(["xrandr"], env=env, capture_output=True, text=True, timeout=5)
-        primary, to_off = None, []
-        for line in xr.stdout.splitlines():
-            if ' connected' in line and ' disconnected' not in line:
-                name = line.split()[0]
-                if ' primary ' in line or _re.search(r'\b\d+x\d+\+0\+0\b', line):
-                    primary = name
-                else:
-                    to_off.append(name)
-            elif ' disconnected' in line:
-                to_off.append(line.split()[0])
-        # Wenn mehrere Outputs → nur primären aktivieren
-        if primary and to_off:
-            cmd = ["xrandr", "--output", primary, "--auto"]
-            for o in to_off:
-                cmd += ["--output", o, "--off"]
-            subprocess.run(cmd, env=env, capture_output=True, timeout=5)
-            time.sleep(0.4)
-            # Auflösung nach xrandr nochmals lesen
-            xr = subprocess.run(["xrandr"], env=env, capture_output=True, text=True, timeout=5)
-        # Primäre Auflösung aus xrandr (nicht aus virtualem Desktop)
-        for line in xr.stdout.splitlines():
-            if ' connected' in line and ' disconnected' not in line:
-                m = _re.search(r'(\d+)x(\d+)\+0\+0', line)
-                if m:
-                    w, h = int(m.group(1)), int(m.group(2))
-                    print(f"xrandr: primäre Auflösung {w}x{h} ({line.split()[0]})")
-                    return w, h
-    except Exception as e:
-        print(f"xrandr-Fix Fehler: {e}")
-    return None, None
-
-
 def display_setup():
     global SF_GR, SF_MI, SF_KL, SF_EMOJI, BR, HO, screen
-    # xrandr vor pygame: stellt sicher, dass der virtuelle Desktop nur einen Output umfasst
-    xw, xh = _fix_xrandr_und_lese_aufloesung()
     drivers = []
     if os.environ.get('DISPLAY'):
         drivers.append('x11')
@@ -352,15 +294,11 @@ def display_setup():
             pygame.init()
             if not pygame.display.get_init():
                 raise Exception("Display-Subsystem nicht initialisiert")
-            if xw and xh:
-                w, h = xw, xh
-            else:
-                info = pygame.display.Info()
-                w, h = info.current_w, info.current_h
-                if w <= 0 or h <= 0:
-                    w, h = 1920, 1080
-            screen = pygame.display.set_mode((w, h), pygame.FULLSCREEN)
-            BR, HO = w, h
+            # (0,0) + FULLSCREEN → SDL2 nutzt native Auflösung des primären Displays
+            screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+            BR, HO = screen.get_width(), screen.get_height()
+            if BR <= 0 or HO <= 0:
+                BR, HO = 1920, 1080
             print(f"Display: {driver} {BR}x{HO}")
             break
         except Exception as e:
@@ -970,7 +908,6 @@ def lade_gif_frames(pfad):
 # ─────────────────────────────────────────────
 def main():
     global buzzer_aktiv, buzzer_gesperrt, buzzer_start_zeit, zeitlimit_aktiv, zeitlimit_sek
-    global screen, BR, HO, _beamer_modus_wechsel
 
     pruefe_einzelinstanz()   # Doppelstart beim Boot abfangen
 
@@ -1048,17 +985,11 @@ def main():
             _beamer_modus_wechsel = None
             try:
                 time.sleep(0.3)
-                xw, xh = _fix_xrandr_und_lese_aufloesung()
-                if xw and xh:
-                    w, h = xw, xh
-                else:
-                    info = pygame.display.Info()
-                    w, h = info.current_w, info.current_h
-                    if w <= 0 or h <= 0:
-                        w, h = 1920, 1080
-                screen = pygame.display.set_mode((w, h), pygame.FULLSCREEN)
-                BR, HO = w, h
-                print(f"Beamer-Stop: Display zurück {w}x{h}")
+                screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                BR, HO = screen.get_width(), screen.get_height()
+                if BR <= 0 or HO <= 0:
+                    BR, HO = 1920, 1080
+                print(f"Beamer-Stop: Display zurück {BR}x{HO}")
             except Exception as e:
                 print(f"Beamer-Stop Display-Fehler: {e}")
 

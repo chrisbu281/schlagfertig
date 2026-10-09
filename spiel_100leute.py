@@ -13,7 +13,7 @@ Shuffle-Logik:
     - Naechster Tag -> automatisch neu mischen
     - Zustand wird in ~/.schlagfertig_shuffle.json gespeichert
 """
-import os, csv, json, random, hashlib, subprocess, base64, threading, time as _time, signal
+import os, csv, json, random, hashlib, subprocess, base64, threading, time as _time
 from datetime import date
 
 BASIS         = os.path.dirname(os.path.abspath(__file__))
@@ -162,7 +162,7 @@ def _neue_duell():
 def _neuer_ff():
     return {"fragen": [], "aktuell": 0, "dran": "A", "timer_laueft": False,
             "timer_rest": 0, "punkte_a": 0, "punkte_b": 0,
-            "fertig_a": False, "fertig_b": False, "spieler_bereit": True}
+            "fertig_a": False, "fertig_b": False}
 
 def _neuer_state():
     return {
@@ -174,7 +174,7 @@ def _neuer_state():
             "B": {"name": "Team B", "foto": "", "punkte": 0},
         },
         "runde": 0, "aktive_frage": None, "duell": _neue_duell(),
-        "strikes": 0, "aktives_team": None, "rundentopf": 0, "runde_vorab": 0,
+        "strikes": 0, "aktives_team": None, "rundentopf": 0,
         "rundenende": None, "musik": False, "beamer_aktiv": False, "ff": None,
         "fragen_queue": [],
     }
@@ -217,8 +217,8 @@ def _ff_beenden_intern():
     _ff_timer_stoppen()
     if state.get("ff"):
         state["ff"]["timer_laueft"] = False
-    ff_team = ff.get("ff_team") or "A"
-    state["teams"][ff_team]["punkte"] += ff.get("punkte_a", 0) + ff.get("punkte_b", 0)
+    state["teams"]["A"]["punkte"] += ff.get("punkte_a", 0)
+    state["teams"]["B"]["punkte"] += ff.get("punkte_b", 0)
     state["phase"] = "ende"
     _broadcast()
 
@@ -265,24 +265,14 @@ def _aktualisiere_rundentopf():
     state["rundentopf"] = sum(a["punkte"] for a in af["antworten"] if a.get("auf")) if af else 0
 
 def _runde_beenden(gewinner):
-    topf  = state.get("rundentopf", 0)
-    vorab = state.get("runde_vorab", 0)
+    topf = state.get("rundentopf", 0)
     if gewinner in ("A", "B"):
-        aktives = state.get("aktives_team") or gewinner
-        if gewinner == aktives:
-            # aktives_team wins: already credited vorab live, add the rest (duell points)
-            state["teams"][gewinner]["punkte"] += (topf - vorab)
-        else:
-            # steal: remove live credits from aktives_team, give full topf to opponent
-            state["teams"][aktives]["punkte"] -= vorab
-            state["teams"][gewinner]["punkte"] += topf
-    state["runde_vorab"] = 0
+        state["teams"][gewinner]["punkte"] += topf
     state["rundenende"] = {"gewinner": gewinner, "topf": topf}
     state["phase"] = "rundenende"
 
 def _naechste_runde():
     state["rundentopf"]   = 0
-    state["runde_vorab"]  = 0
     state["strikes"]      = 0
     state["aktive_frage"] = None
     state["aktives_team"] = None
@@ -369,22 +359,24 @@ def _kill_display_chromium():
 
 
 def _setze_einzelbildschirm(env):
-    """Pi 5 hat 2 HDMI-Ports: primären aktivieren, alle anderen deaktivieren."""
-    import re as _re
+    """TV-HDMI als primären Output setzen, ungenutzten HDMI-Port deaktivieren.
+    DSI (7"-Touchscreen) wird nicht angefasst."""
     xr = subprocess.run(["xrandr"], env=env, capture_output=True, text=True)
-    primary, to_off = None, []
+    hdmi_primary, hdmi_off = None, []
     for line in xr.stdout.splitlines():
+        name = line.split()[0]
+        if 'HDMI' not in name:
+            continue
         if ' connected' in line and ' disconnected' not in line:
-            name = line.split()[0]
-            if ' primary ' in line or _re.search(r'\b\d+x\d+\+0\+0\b', line):
-                primary = name
+            if not hdmi_primary:
+                hdmi_primary = name
             else:
-                to_off.append(name)
+                hdmi_off.append(name)
         elif ' disconnected' in line:
-            to_off.append(line.split()[0])
-    if primary:
-        cmd = ["xrandr", "--output", primary, "--auto"]
-        for o in to_off:
+            hdmi_off.append(name)
+    if hdmi_primary:
+        cmd = ["xrandr", "--output", hdmi_primary, "--primary", "--auto"]
+        for o in hdmi_off:
             cmd += ["--output", o, "--off"]
         subprocess.run(cmd, env=env, capture_output=True)
     else:
@@ -411,40 +403,24 @@ def starte_beamer():
         except Exception as e:
             print(f"100leute: stop_pygame Fehler: {e}")
     _time.sleep(0.5)
-    _kill_display_chromium()  # /display-Chromium beenden → voller Bildschirm frei
     _starte_buzzer_reader()
 
     url  = "http://localhost:5000/spiel/100leute"
     env  = {**os.environ, "DISPLAY": ":0"}
-    _setze_einzelbildschirm(env)
-    import shutil
-    shutil.rmtree("/tmp/chromium-sg-100leute", ignore_errors=True)
-    flags = ["--user-data-dir=/tmp/chromium-sg-100leute",
-             "--kiosk", "--no-sandbox", "--noerrdialogs", "--disable-infobars",
+    flags = ["--kiosk", "--incognito", "--noerrdialogs", "--disable-infobars",
              "--disable-session-crashed-bubble", "--password-store=basic",
-             "--autoplay-policy=no-user-gesture-required",
-             "--disable-translate", "--disable-features=TranslateUI",
-             "--disable-extensions", "--disable-component-update",
-             url]
+             "--autoplay-policy=no-user-gesture-required", url]
     _chromium = None
     for binary in ("chromium-browser", "chromium"):
         try:
-            _chromium = subprocess.Popen([binary] + flags, env=env,
-                                          preexec_fn=os.setsid)
-            print(f"100leute: Beamer gestartet ({binary}) PID={_chromium.pid}")
+            _chromium = subprocess.Popen([binary] + flags, env=env)
+            print(f"100leute: Beamer gestartet ({binary})")
             break
         except FileNotFoundError:
             continue
         except Exception as e:
             print(f"100leute: Chromium-Start Fehler: {e}")
             break
-    # Prüfe nach 1s ob Chromium noch lebt (stirbt sofort = Single-Instance-Problem)
-    _time.sleep(1.0)
-    if _chromium and _chromium.poll() is not None:
-        print(f"100leute: WARNUNG – Chromium sofort beendet (exitcode={_chromium.poll()}). "
-              f"Möglicherweise läuft eine andere Instanz auf DISPLAY :0.")
-    elif _chromium:
-        print(f"100leute: Chromium läuft (PID={_chromium.pid})")
     state["beamer_aktiv"] = True
     _broadcast()
 
@@ -453,23 +429,13 @@ def stoppe_beamer():
     global _chromium
     _ff_timer_stoppen()
     _stoppe_buzzer_reader()
+    _time.sleep(0.1)
     if _chromium:
         try:
-            # Kill the entire process group (Chromium forks renderers etc.)
-            pgid = os.getpgid(_chromium.pid)
-            os.killpg(pgid, signal.SIGKILL)
-        except Exception:
-            try:
-                _chromium.kill()
-            except Exception:
-                pass
-        try:
-            _chromium.wait(timeout=2)
+            _chromium.terminate()
         except Exception:
             pass
         _chromium = None
-    _time.sleep(0.8)
-    _starte_display_chromium()  # /display-Chromium neu starten
     state["beamer_aktiv"] = False
     _broadcast()
     if _steuerung["start_pygame"]:
@@ -537,10 +503,6 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
     def _on_beamer_starten(data=None):
         starte_beamer()
 
-    @socketio.on("beamer_reload", namespace=NAMESPACE)
-    def _on_beamer_reload(data=None):
-        _socketio.emit("beamer_reload", {}, namespace=NAMESPACE)
-
     @socketio.on("spiel_starten", namespace=NAMESPACE)
     def _on_spiel_starten(data=None):
         if data:
@@ -550,17 +512,15 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         state["runde"]        = 1
         state["strikes"]      = 0
         state["rundentopf"]   = 0
-        state["runde_vorab"]  = 0
         state["aktive_frage"] = None
         state["aktives_team"] = None
         state["duell"]        = _neue_duell()
         state["ff"]           = None
         state["phase"]        = "buzzerduell"
-        _broadcast()
         if not state.get("beamer_aktiv"):
             starte_beamer()
         else:
-            _socketio.emit("beamer_reload", {}, namespace=NAMESPACE)
+            _broadcast()
 
     @socketio.on("frage_freigeben", namespace=NAMESPACE)
     def _on_frage_freigeben(data=None):
@@ -607,10 +567,6 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         if d["antwort_a"] is not None and d["antwort_b"] is not None:
             d["gewinner"] = _duell_gewinner(d)
             d["buzzer_offen"] = False
-            topf = state.get("rundentopf", 0)
-            if d["gewinner"] in ("A", "B") and topf > 0:
-                state["teams"][d["gewinner"]]["punkte"] += topf
-                state["runde_vorab"] = state.get("runde_vorab", 0) + topf
         _broadcast()
 
     @socketio.on("duell_reset_antworten", namespace=NAMESPACE)
@@ -619,11 +575,6 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         af = state.get("aktive_frage")
         if not d or not af:
             return
-        alter_gewinner = d.get("gewinner")
-        alter_topf = state.get("rundentopf", 0)
-        if alter_gewinner in ("A", "B") and alter_topf > 0:
-            state["teams"][alter_gewinner]["punkte"] -= alter_topf
-            state["runde_vorab"] = max(0, state.get("runde_vorab", 0) - alter_topf)
         for idx in (d.get("antwort_a"), d.get("antwort_b")):
             if isinstance(idx, int) and 0 <= idx < len(af["antworten"]):
                 af["antworten"][idx]["auf"] = False
@@ -655,13 +606,9 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         if af["antworten"][idx]["auf"]:
             return
         af["antworten"][idx]["auf"] = True
-        pts = af["antworten"][idx]["punkte"]
-        aktives = state.get("aktives_team") or "A"
-        state["teams"][aktives]["punkte"] += pts
-        state["runde_vorab"] = state.get("runde_vorab", 0) + pts
         _aktualisiere_rundentopf()
         if all(a["auf"] for a in af["antworten"]):
-            _runde_beenden(aktives)
+            _runde_beenden(state.get("aktives_team") or "A")
         _broadcast()
 
     @socketio.on("hauptrunde_strike", namespace=NAMESPACE)
@@ -708,8 +655,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
     @socketio.on("spiel_beenden", namespace=NAMESPACE)
     def _on_spiel_beenden(data=None):
         state["phase"] = "setup"
-        _broadcast()
-        threading.Thread(target=stoppe_beamer, daemon=True).start()
+        stoppe_beamer()
 
     @socketio.on("reset", namespace=NAMESPACE)
     def _on_reset(data=None):
@@ -735,9 +681,8 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
             for f in fragen
         ]
         ff["timer_rest"] = state["config"]["ff_zeit1"]
-        ff["ff_team"] = "A" if state["teams"]["A"]["punkte"] >= state["teams"]["B"]["punkte"] else "B"
         state["ff"] = ff
-        _ff_timer_starten()
+        _broadcast()
 
     @socketio.on("ff_aufdecken", namespace=NAMESPACE)
     def _on_ff_aufdecken(data):
@@ -768,17 +713,16 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         ff = state.get("ff")
         if not ff or state.get("phase") != "fastfive":
             return
+        _ff_timer_stoppen()
+        ff["timer_laueft"] = False
         ak = ff["aktuell"]
         naechste = ak + 1
         if naechste >= len(ff["fragen"]):
             if ff["dran"] == "A":
-                _ff_timer_stoppen()
-                ff["timer_laueft"] = False
-                ff["fertig_a"]     = True
-                ff["dran"]         = "B"
-                ff["aktuell"]      = 0
-                ff["timer_rest"]   = state["config"]["ff_zeit2"]
-                ff["spieler_bereit"] = False
+                ff["fertig_a"] = True
+                ff["dran"]     = "B"
+                ff["aktuell"]  = 0
+                ff["timer_rest"] = state["config"]["ff_zeit2"]
                 _broadcast()
             else:
                 ff["fertig_b"] = True
@@ -799,14 +743,6 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
             _ff_timer_stoppen()
             ff["timer_laueft"] = False
             _broadcast()
-
-    @socketio.on("ff_spieler_bereit", namespace=NAMESPACE)
-    def _on_ff_spieler_bereit(data=None):
-        ff = state.get("ff")
-        if ff and state.get("phase") == "fastfive":
-            ff["spieler_bereit"] = True
-            _broadcast()
-            _ff_timer_starten()
 
     @socketio.on("ff_beenden", namespace=NAMESPACE)
     def _on_ff_beenden(data=None):

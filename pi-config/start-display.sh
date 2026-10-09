@@ -22,13 +22,23 @@ xset -dpms 2>/dev/null || true
 xset s off   2>/dev/null || true
 xset s noblank 2>/dev/null || true
 
-# Pi 5 hat 2 HDMI-Ausgänge – primären aktivieren, anderen deaktivieren
-PRIMARY=$(xrandr 2>/dev/null | grep -E " connected.*(primary|\+0\+0)" | head -1 | awk '{print $1}')
-if [ -n "$PRIMARY" ]; then
-    xrandr --output "$PRIMARY" --auto 2>/dev/null || true
-    for output in $(xrandr 2>/dev/null | grep " connected" | grep -v "^$PRIMARY " | awk '{print $1}'); do
-        xrandr --output "$output" --off 2>/dev/null || true
-    done
+# Pi 5: TV-HDMI als primären Output setzen, ungenutzten HDMI-Port deaktivieren.
+# DSI (7"-Touchscreen) wird NICHT angefasst – der bleibt für die Steuerung aktiv.
+HDMI_PRIMARY=""
+HDMI_CMD=""
+while IFS= read -r output; do
+    status=$(xrandr 2>/dev/null | awk -v o="$output" '$0 ~ "^"o" " {print $2; exit}')
+    if [ "$status" = "connected" ] && [ -z "$HDMI_PRIMARY" ]; then
+        HDMI_PRIMARY="$output"
+        HDMI_CMD="--output $output --primary --auto"
+    else
+        HDMI_CMD="$HDMI_CMD --output $output --off"
+    fi
+done < <(xrandr 2>/dev/null | grep "^HDMI" | awk '{print $1}')
+
+if [ -n "$HDMI_PRIMARY" ]; then
+    xrandr $HDMI_CMD 2>/dev/null || true
+    sleep 0.5
 else
     xrandr --auto 2>/dev/null || true
 fi
