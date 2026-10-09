@@ -39,7 +39,7 @@ def _setze_einzelbildschirm(env):
             if ' connected' in line and ' disconnected' not in line:
                 if not hdmi_primary:
                     hdmi_primary = name
-                    cmd += ["--output", name, "--primary", "--mode", "1920x1080", "--pos", "0x0"]
+                    cmd += ["--output", name, "--primary", "--auto"]
                 else:
                     cmd += ["--output", name, "--off"]
             else:
@@ -84,6 +84,7 @@ def starte_beamer():
              "--autoplay-policy=no-user-gesture-required",
              "--disable-translate", "--disable-features=TranslateUI",
              "--disable-extensions", "--disable-component-update",
+             "--force-device-scale-factor=2",
              url]
     _chromium = None
     for binary in ("chromium-browser", "chromium"):

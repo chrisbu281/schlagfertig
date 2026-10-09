@@ -36,7 +36,7 @@ while IFS= read -r line; do
     if echo "$line" | grep -q " connected" && ! echo "$line" | grep -q " disconnected"; then
         if echo "$output" | grep -qE "^HDMI" && [ -z "$HDMI_PRIMARY" ]; then
             HDMI_PRIMARY="$output"
-            XRANDR_CMD="$XRANDR_CMD --output $output --primary --mode 1920x1080 --pos 0x0"
+            XRANDR_CMD="$XRANDR_CMD --output $output --primary --auto"
         else
             XRANDR_CMD="$XRANDR_CMD --output $output --off"
         fi
@@ -69,6 +69,7 @@ DISPLAY=:0 chromium-browser \
     --autoplay-policy=no-user-gesture-required \
     --password-store=basic \
     --check-for-update-interval=31536000 \
+    --force-device-scale-factor=2 \
     --app="$SERVER_URL/display" \
     &
 
