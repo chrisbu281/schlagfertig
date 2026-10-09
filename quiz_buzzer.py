@@ -257,6 +257,7 @@ SF_GR = SF_MI = SF_KL = SF_EMOJI = None
 BR = HO = 0
 screen = None
 spieler_map_global = {}
+_spieler_global = []
 frame_counter = 0
 
 def set_modus_theme(modus):
@@ -360,12 +361,10 @@ def display_setup():
             pygame.init()
             if not pygame.display.get_init():
                 raise Exception("Display-Subsystem nicht initialisiert")
-            # (0,0) + FULLSCREEN → SDL2 nutzt native Auflösung des primären Displays
-            screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-            BR, HO = screen.get_width(), screen.get_height()
-            if BR <= 0 or HO <= 0:
-                BR, HO = 1920, 1080
-            print(f"Display: {driver} {BR}x{HO}")
+            # SCALED → pygame rendert in 1920×1080 und skaliert auf den TV hoch
+            screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN | pygame.SCALED)
+            BR, HO = 1920, 1080
+            print(f"Display: {driver} {BR}x{HO} (SCALED)")
             break
         except Exception as e:
             print(f"Display Fehler ({driver}): {e}")
@@ -976,6 +975,7 @@ def main():
     global buzzer_aktiv, buzzer_gesperrt, buzzer_start_zeit, zeitlimit_aktiv, zeitlimit_sek
     global screen, BR, HO
     global _beamer_modus, _beamer_modus_wechsel
+    global spieler_map_global, _spieler_global
 
     pruefe_einzelinstanz()   # Doppelstart beim Boot abfangen
 
@@ -985,8 +985,8 @@ def main():
     konfig = lade_konfig()
     spieler = konfig["spieler"]
     spieler_map = {s["nr"]: s for s in spieler}
-    global spieler_map_global
     spieler_map_global = spieler_map
+    _spieler_global = spieler
 
     gpio_setup(spieler)
     display_setup()
@@ -1048,6 +1048,7 @@ def main():
             _beamer_modus_wechsel = None
             try:
                 # Vollbild freigeben → Chromium bekommt den ganzen Bildschirm
+                gpio_cleanup()   # GPIO freigeben damit spiel_100leute lgpio nutzen kann
                 screen = pygame.display.set_mode((1, 1), 0)
                 pygame.display.flip()
             except Exception as e:
@@ -1057,11 +1058,10 @@ def main():
             try:
                 time.sleep(0.3)
                 _konfiguriere_hdmi_display()
-                screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-                BR, HO = screen.get_width(), screen.get_height()
-                if BR <= 0 or HO <= 0:
-                    BR, HO = 1920, 1080
-                print(f"Beamer-Stop: Display zurück {BR}x{HO}")
+                gpio_setup(_spieler_global)  # GPIO zurückfordern
+                screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN | pygame.SCALED)
+                BR, HO = 1920, 1080
+                print(f"Beamer-Stop: Display zurück {BR}x{HO} (SCALED)")
             except Exception as e:
                 print(f"Beamer-Stop Display-Fehler: {e}")
 
