@@ -22,6 +22,29 @@ def _kill_display_chromium():
     _time.sleep(0.3)
 
 
+def _setze_einzelbildschirm(env):
+    """Pi 5 hat 2 HDMI-Ports: primären aktivieren, alle anderen deaktivieren."""
+    import re as _re
+    xr = subprocess.run(["xrandr"], env=env, capture_output=True, text=True)
+    primary, to_off = None, []
+    for line in xr.stdout.splitlines():
+        if ' connected' in line and ' disconnected' not in line:
+            name = line.split()[0]
+            if ' primary ' in line or _re.search(r'\b\d+x\d+\+0\+0\b', line):
+                primary = name
+            else:
+                to_off.append(name)
+        elif ' disconnected' in line:
+            to_off.append(line.split()[0])
+    if primary:
+        cmd = ["xrandr", "--output", primary, "--auto"]
+        for o in to_off:
+            cmd += ["--output", o, "--off"]
+        subprocess.run(cmd, env=env, capture_output=True)
+    else:
+        subprocess.run(["xrandr", "--auto"], env=env, capture_output=True)
+
+
 def _starte_display_chromium():
     start_script = os.path.join(BASIS, "pi-config", "start-display.sh")
     if os.path.exists(start_script):
@@ -44,12 +67,7 @@ def starte_beamer():
     _kill_display_chromium()
     url   = "http://localhost:5000/spiel/testspiel"
     env   = {**os.environ, "DISPLAY": ":0"}
-    xr = subprocess.run(["xrandr"], env=env, capture_output=True, text=True)
-    disconnected = [l.split()[0] for l in xr.stdout.splitlines() if " disconnected" in l]
-    cmd = ["xrandr", "--auto"]
-    for o in disconnected:
-        cmd += ["--output", o, "--off"]
-    subprocess.run(cmd, env=env, capture_output=True)
+    _setze_einzelbildschirm(env)
     import shutil
     shutil.rmtree("/tmp/chromium-sg-testspiel", ignore_errors=True)
     flags = ["--user-data-dir=/tmp/chromium-sg-testspiel",

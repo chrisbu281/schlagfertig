@@ -22,11 +22,16 @@ xset -dpms 2>/dev/null || true
 xset s off   2>/dev/null || true
 xset s noblank 2>/dev/null || true
 
-# Pi 5 hat 2 HDMI-Ausgänge – nur den verbundenen aktivieren, anderen deaktivieren
-xrandr --auto 2>/dev/null || true
-for output in $(xrandr 2>/dev/null | grep " disconnected" | awk '{print $1}'); do
-    xrandr --output "$output" --off 2>/dev/null || true
-done
+# Pi 5 hat 2 HDMI-Ausgänge – primären aktivieren, anderen deaktivieren
+PRIMARY=$(xrandr 2>/dev/null | grep -E " connected.*(primary|\+0\+0)" | head -1 | awk '{print $1}')
+if [ -n "$PRIMARY" ]; then
+    xrandr --output "$PRIMARY" --auto 2>/dev/null || true
+    for output in $(xrandr 2>/dev/null | grep " connected" | grep -v "^$PRIMARY " | awk '{print $1}'); do
+        xrandr --output "$output" --off 2>/dev/null || true
+    done
+else
+    xrandr --auto 2>/dev/null || true
+fi
 
 # Gecachten Chromium-Zustand löschen (verhindert falsche Fenstergröße nach Neustart)
 rm -rf /tmp/chromium-sg-display
