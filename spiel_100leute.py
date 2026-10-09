@@ -352,6 +352,49 @@ def _buzzer_reader_loop():
     print("100leute: Buzzer-Reader gestoppt")
 
 
+def _kill_display_chromium():
+    """Beendet den /display-Chromium damit das Spiel den vollen Bildschirm bekommt."""
+    subprocess.run(["pkill", "-f", "chromium-sg-display"], capture_output=True)
+    _time.sleep(0.3)
+
+
+def _setze_einzelbildschirm(env):
+    """TV-HDMI als primären Output setzen, ungenutzten HDMI-Port deaktivieren.
+    DSI (7"-Touchscreen) wird nicht angefasst."""
+    xr = subprocess.run(["xrandr"], env=env, capture_output=True, text=True)
+    hdmi_primary, hdmi_off = None, []
+    for line in xr.stdout.splitlines():
+        name = line.split()[0]
+        if 'HDMI' not in name:
+            continue
+        if ' connected' in line and ' disconnected' not in line:
+            if not hdmi_primary:
+                hdmi_primary = name
+            else:
+                hdmi_off.append(name)
+        elif ' disconnected' in line:
+            hdmi_off.append(name)
+    if hdmi_primary:
+        cmd = ["xrandr", "--output", hdmi_primary, "--primary", "--auto"]
+        for o in hdmi_off:
+            cmd += ["--output", o, "--off"]
+        subprocess.run(cmd, env=env, capture_output=True)
+    else:
+        subprocess.run(["xrandr", "--auto"], env=env, capture_output=True)
+
+
+def _starte_display_chromium():
+    """Startet den /display-Chromium neu nach Ende des Spiels."""
+    start_script = os.path.join(BASIS, "pi-config", "start-display.sh")
+    if os.path.exists(start_script):
+        env = {**os.environ, "DISPLAY": ":0"}
+        subprocess.Popen(
+            ["bash", start_script], env=env,
+            start_new_session=True,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+
+
 def starte_beamer():
     global _chromium
     if _steuerung["stop_pygame"]:

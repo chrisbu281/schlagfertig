@@ -284,18 +284,21 @@ def zeichne_neon_button(x, y, w, h, text, farbe, buchstabe=None, selected=False,
 
 def display_setup():
     global SF_GR, SF_MI, SF_KL, SF_EMOJI, BR, HO, screen
-    for driver in ['kmsdrm', 'dummy']:
+    drivers = []
+    if os.environ.get('DISPLAY'):
+        drivers.append('x11')
+    drivers.extend(['kmsdrm', 'dummy'])
+    for driver in drivers:
         try:
             os.environ['SDL_VIDEODRIVER'] = driver
             pygame.init()
             if not pygame.display.get_init():
                 raise Exception("Display-Subsystem nicht initialisiert")
-            info = pygame.display.Info()
-            w, h = info.current_w, info.current_h
-            if w <= 0 or h <= 0:
-                w, h = 1920, 1080
-            screen = pygame.display.set_mode((w, h), pygame.FULLSCREEN)
-            BR, HO = w, h
+            # (0,0) + FULLSCREEN → SDL2 nutzt native Auflösung des primären Displays
+            screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+            BR, HO = screen.get_width(), screen.get_height()
+            if BR <= 0 or HO <= 0:
+                BR, HO = 1920, 1080
             print(f"Display: {driver} {BR}x{HO}")
             break
         except Exception as e:
@@ -969,6 +972,34 @@ def main():
     clock = pygame.time.Clock()
 
     while True:
+        # Display-Modus wechseln wenn Signal empfangen wurde
+        if _beamer_modus_wechsel == 'start':
+            _beamer_modus_wechsel = None
+            try:
+                # Vollbild freigeben → Chromium bekommt den ganzen Bildschirm
+                screen = pygame.display.set_mode((1, 1), 0)
+                pygame.display.flip()
+            except Exception as e:
+                print(f"Beamer-Start Display-Fehler: {e}")
+        elif _beamer_modus_wechsel == 'stop':
+            _beamer_modus_wechsel = None
+            try:
+                time.sleep(0.3)
+                screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                BR, HO = screen.get_width(), screen.get_height()
+                if BR <= 0 or HO <= 0:
+                    BR, HO = 1920, 1080
+                print(f"Beamer-Stop: Display zurück {BR}x{HO}")
+            except Exception as e:
+                print(f"Beamer-Stop Display-Fehler: {e}")
+
+        # Beamer-Modus: Fenster ist 1×1, nur Events leeren
+        if _beamer_modus:
+            for event in pygame.event.get():
+                pass
+            clock.tick(10)
+            continue
+
         # Pygame Events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
