@@ -14,7 +14,7 @@ except (ImportError, RuntimeError):
         GPIO = None
 
 import pygame
-import json, time, sys, os, threading, atexit
+import json, time, sys, os, threading, atexit, signal, subprocess
 import socketio as sio_client
 from queue import Queue
 try:
@@ -282,8 +282,74 @@ def zeichne_neon_button(x, y, w, h, text, farbe, buchstabe=None, selected=False,
     txt = SF_KL.render(text[:18], True, txt_color)
     screen.blit(txt, (x - w//2 + 60, y - txt.get_height()//2))
 
+# ─────────────────────────────────────────────
+#  BEAMER-MODUS (SIGUSR1 = minimieren, SIGUSR2 = wiederherstellen)
+# ─────────────────────────────────────────────
+_beamer_modus = False
+_beamer_modus_wechsel = None
+
+def _sig_beamer_start(signum, frame):
+    global _beamer_modus, _beamer_modus_wechsel
+    _beamer_modus = True
+    _beamer_modus_wechsel = 'start'
+
+def _sig_beamer_stop(signum, frame):
+    global _beamer_modus, _beamer_modus_wechsel
+    _beamer_modus = False
+    _beamer_modus_wechsel = 'stop'
+
+
+def _konfiguriere_hdmi_display():
+    """Deaktiviert alle Nicht-HDMI-Outputs (DSI etc.) via xrandr.
+    Ohne das umfasst der X11-Virtual-Desktop DSI+HDMI, und pygame
+    FULLSCREEN zeigt nur den HDMI-Anteil (halber Bildschirm)."""
+    try:
+        env = {**os.environ}
+        xr = subprocess.run(["xrandr"], env=env, capture_output=True, text=True, timeout=5)
+        if xr.returncode != 0:
+            return
+        hdmi_primary = None
+        cmd = ["xrandr"]
+        for line in xr.stdout.splitlines():
+            if not line or line[0].isspace():
+                continue
+            parts = line.split()
+            if not parts:
+                continue
+            name = parts[0]
+            if name == 'Screen':
+                continue
+            if 'HDMI' in name:
+                if ' connected' in line and ' disconnected' not in line:
+                    if not hdmi_primary:
+                        hdmi_primary = name
+                        cmd += ["--output", name, "--primary", "--auto"]
+                    else:
+                        cmd += ["--output", name, "--off"]
+                else:
+                    cmd += ["--output", name, "--off"]
+            else:
+                cmd += ["--output", name, "--off"]
+        if hdmi_primary:
+            subprocess.run(cmd, env=env, capture_output=True, timeout=5)
+            time.sleep(0.5)
+            print(f"xrandr: HDMI={hdmi_primary}, alle anderen Outputs deaktiviert")
+    except Exception as e:
+        print(f"xrandr Display-Konfiguration Fehler: {e}")
+
+
 def display_setup():
     global SF_GR, SF_MI, SF_KL, SF_EMOJI, BR, HO, screen
+    # Sicherstellen dass DISPLAY gesetzt ist (Dienst startet ohne GUI-Session)
+    if not os.environ.get('DISPLAY'):
+        os.environ['DISPLAY'] = ':0'
+    if not os.environ.get('XAUTHORITY'):
+        xauth = os.path.expanduser('~/.Xauthority')
+        if os.path.exists(xauth):
+            os.environ['XAUTHORITY'] = xauth
+    # DSI und alle Nicht-HDMI-Outputs deaktivieren – sonst umfasst der Virtual
+    # Desktop DSI+HDMI und FULLSCREEN zeigt nur den TV-Anteil (halber Bildschirm).
+    _konfiguriere_hdmi_display()
     drivers = []
     if os.environ.get('DISPLAY'):
         drivers.append('x11')
@@ -908,8 +974,12 @@ def lade_gif_frames(pfad):
 # ─────────────────────────────────────────────
 def main():
     global buzzer_aktiv, buzzer_gesperrt, buzzer_start_zeit, zeitlimit_aktiv, zeitlimit_sek
+    global screen, BR, HO
 
     pruefe_einzelinstanz()   # Doppelstart beim Boot abfangen
+
+    signal.signal(signal.SIGUSR1, _sig_beamer_start)
+    signal.signal(signal.SIGUSR2, _sig_beamer_stop)
 
     konfig = lade_konfig()
     spieler = konfig["spieler"]
@@ -985,6 +1055,7 @@ def main():
             _beamer_modus_wechsel = None
             try:
                 time.sleep(0.3)
+                _konfiguriere_hdmi_display()
                 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
                 BR, HO = screen.get_width(), screen.get_height()
                 if BR <= 0 or HO <= 0:

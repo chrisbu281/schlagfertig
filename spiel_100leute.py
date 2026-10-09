@@ -359,26 +359,32 @@ def _kill_display_chromium():
 
 
 def _setze_einzelbildschirm(env):
-    """TV-HDMI als primären Output setzen, ungenutzten HDMI-Port deaktivieren.
-    DSI (7"-Touchscreen) wird nicht angefasst."""
+    """Nur den TV-HDMI aktivieren, alle anderen Outputs (DSI, zweiter HDMI) deaktivieren.
+    Mit DSI aktiv im X11-Virtual-Desktop zeigt Chromium kiosk nur den halben Bildschirm."""
     xr = subprocess.run(["xrandr"], env=env, capture_output=True, text=True)
-    hdmi_primary, hdmi_off = None, []
+    hdmi_primary = None
+    cmd = ["xrandr"]
     for line in xr.stdout.splitlines():
-        name = line.split()[0]
-        if 'HDMI' not in name:
+        if not line or line[0].isspace():
             continue
-        if ' connected' in line and ' disconnected' not in line:
-            if not hdmi_primary:
-                hdmi_primary = name
+        parts = line.split()
+        if not parts or parts[0] == 'Screen':
+            continue
+        name = parts[0]
+        if 'HDMI' in name:
+            if ' connected' in line and ' disconnected' not in line:
+                if not hdmi_primary:
+                    hdmi_primary = name
+                    cmd += ["--output", name, "--primary", "--auto"]
+                else:
+                    cmd += ["--output", name, "--off"]
             else:
-                hdmi_off.append(name)
-        elif ' disconnected' in line:
-            hdmi_off.append(name)
+                cmd += ["--output", name, "--off"]
+        else:
+            cmd += ["--output", name, "--off"]
     if hdmi_primary:
-        cmd = ["xrandr", "--output", hdmi_primary, "--primary", "--auto"]
-        for o in hdmi_off:
-            cmd += ["--output", o, "--off"]
         subprocess.run(cmd, env=env, capture_output=True)
+        _time.sleep(0.5)
     else:
         subprocess.run(["xrandr", "--auto"], env=env, capture_output=True)
 
