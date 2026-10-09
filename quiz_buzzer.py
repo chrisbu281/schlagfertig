@@ -284,6 +284,13 @@ def zeichne_neon_button(x, y, w, h, text, farbe, buchstabe=None, selected=False,
 
 def display_setup():
     global SF_GR, SF_MI, SF_KL, SF_EMOJI, BR, HO, screen
+    # Sicherstellen dass DISPLAY gesetzt ist (Dienst startet ohne GUI-Session)
+    if not os.environ.get('DISPLAY'):
+        os.environ['DISPLAY'] = ':0'
+    if not os.environ.get('XAUTHORITY'):
+        xauth = os.path.expanduser('~/.Xauthority')
+        if os.path.exists(xauth):
+            os.environ['XAUTHORITY'] = xauth
     drivers = []
     if os.environ.get('DISPLAY'):
         drivers.append('x11')
@@ -908,6 +915,7 @@ def lade_gif_frames(pfad):
 # ─────────────────────────────────────────────
 def main():
     global buzzer_aktiv, buzzer_gesperrt, buzzer_start_zeit, zeitlimit_aktiv, zeitlimit_sek
+    global screen, BR, HO
 
     pruefe_einzelinstanz()   # Doppelstart beim Boot abfangen
 

@@ -156,6 +156,8 @@ User=$PI_USER
 WorkingDirectory=$INSTALL_DIR
 Environment=SDL_AUDIODRIVER=alsa
 Environment=PYTHONUNBUFFERED=1
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/pi/.Xauthority
 SupplementaryGroups=video render
 ExecStartPre=/bin/sleep 10
 ExecStart=$INSTALL_DIR/env/bin/python $INSTALL_DIR/quiz_buzzer.py
