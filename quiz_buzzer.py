@@ -1003,7 +1003,12 @@ def main():
             _beamer_modus_wechsel = None
             try:
                 # Auflösung wiederherstellen, dann Vollbild zurück
-                subprocess.run(["xrandr", "--auto"], capture_output=True, timeout=5)
+                xr = subprocess.run(["xrandr"], capture_output=True, text=True, timeout=5)
+                disconnected = [l.split()[0] for l in xr.stdout.splitlines() if " disconnected" in l]
+                cmd = ["xrandr", "--auto"]
+                for o in disconnected:
+                    cmd += ["--output", o, "--off"]
+                subprocess.run(cmd, capture_output=True, timeout=5)
                 time.sleep(0.3)
                 info = pygame.display.Info()
                 w, h = info.current_w, info.current_h

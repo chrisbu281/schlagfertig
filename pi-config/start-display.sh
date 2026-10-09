@@ -22,8 +22,11 @@ xset -dpms 2>/dev/null || true
 xset s off   2>/dev/null || true
 xset s noblank 2>/dev/null || true
 
-# HDMI auf native Auflösung setzen (damit Chromium den vollen Bildschirm füllt)
+# Pi 5 hat 2 HDMI-Ausgänge – nur den verbundenen aktivieren, anderen deaktivieren
 xrandr --auto 2>/dev/null || true
+for output in $(xrandr 2>/dev/null | grep " disconnected" | awk '{print $1}'); do
+    xrandr --output "$output" --off 2>/dev/null || true
+done
 
 # Gecachten Chromium-Zustand löschen (verhindert falsche Fenstergröße nach Neustart)
 rm -rf /tmp/chromium-sg-display

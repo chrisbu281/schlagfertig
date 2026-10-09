@@ -44,7 +44,12 @@ def starte_beamer():
     _kill_display_chromium()
     url   = "http://localhost:5000/spiel/testspiel"
     env   = {**os.environ, "DISPLAY": ":0"}
-    subprocess.run(["xrandr", "--auto"], env=env, capture_output=True)
+    xr = subprocess.run(["xrandr"], env=env, capture_output=True, text=True)
+    disconnected = [l.split()[0] for l in xr.stdout.splitlines() if " disconnected" in l]
+    cmd = ["xrandr", "--auto"]
+    for o in disconnected:
+        cmd += ["--output", o, "--off"]
+    subprocess.run(cmd, env=env, capture_output=True)
     import shutil
     shutil.rmtree("/tmp/chromium-sg-testspiel", ignore_errors=True)
     flags = ["--user-data-dir=/tmp/chromium-sg-testspiel",
