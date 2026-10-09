@@ -408,19 +408,27 @@ def starte_beamer():
             _steuerung["stop_pygame"]()
         except Exception as e:
             print(f"100leute: stop_pygame Fehler: {e}")
-    _time.sleep(0.5)
+    _time.sleep(0.3)
+    _kill_display_chromium()
     _starte_buzzer_reader()
 
     url  = "http://localhost:5000/spiel/100leute"
     env  = {**os.environ, "DISPLAY": ":0"}
-    flags = ["--kiosk", "--incognito", "--noerrdialogs", "--disable-infobars",
+    _setze_einzelbildschirm(env)
+    import shutil
+    shutil.rmtree("/tmp/chromium-sg-100leute", ignore_errors=True)
+    flags = ["--user-data-dir=/tmp/chromium-sg-100leute",
+             "--kiosk", "--no-sandbox", "--noerrdialogs", "--disable-infobars",
              "--disable-session-crashed-bubble", "--password-store=basic",
              "--autoplay-policy=no-user-gesture-required",
+             "--disable-translate", "--disable-features=TranslateUI",
+             "--disable-extensions", "--disable-component-update",
              "--force-device-scale-factor=2", url]
     _chromium = None
     for binary in ("chromium-browser", "chromium"):
         try:
-            _chromium = subprocess.Popen([binary] + flags, env=env)
+            _chromium = subprocess.Popen([binary] + flags, env=env,
+                                          preexec_fn=os.setsid)
             print(f"100leute: Beamer gestartet ({binary})")
             break
         except FileNotFoundError:
