@@ -21,6 +21,17 @@ flutter create --platforms=linux,android --org=de.schlagfertig --project-name=sc
 echo "Lade Pakete..."
 flutter pub get
 
+# GTK-Runner: Vollbild auf Linux aktivieren (TV-Display)
+GTK_RUNNER="linux/runner/my_application.cc"
+if [ -f "$GTK_RUNNER" ]; then
+    if ! grep -q "gtk_window_fullscreen" "$GTK_RUNNER"; then
+        sed -i 's/gtk_window_set_default_size(window, [0-9]*, [0-9]*);/gtk_window_set_default_size(window, 1920, 1080);\n  gtk_window_fullscreen(window);/' "$GTK_RUNNER"
+        echo "GTK-Runner: Vollbild-Patch angewendet"
+    else
+        echo "GTK-Runner: Vollbild bereits aktiviert"
+    fi
+fi
+
 echo ""
 echo "=== Setup abgeschlossen ==="
 echo ""
