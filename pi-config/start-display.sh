@@ -61,26 +61,29 @@ if [ -z "$FLUTTER_BIN" ] || [ ! -x "$FLUTTER_BIN" ]; then
     exit 1
 fi
 
-echo "Starte Flutter-Display: $FLUTTER_BIN"
+LOG="/tmp/schlagfertig-display.log"
+echo "=== Display-Start $(date) ===" >> "$LOG"
+echo "Flutter-Binary: $FLUTTER_BIN" >> "$LOG"
 
-# Flutter-App starten
-DISPLAY=:0 "$FLUTTER_BIN" &
-FLUTTER_PID=$!
+# Flutter mit Neustart-Schleife (crasht es, startet es neu)
+while true; do
+    echo "[$(date '+%H:%M:%S')] Starte Flutter..." >> "$LOG"
 
-# Fenster nach dem Start per wmctrl/xdotool auf Vollbild setzen
-for i in $(seq 1 20); do
-    sleep 1
-    if wmctrl -l 2>/dev/null | grep -qi "schlagfertig"; then
-        wmctrl -r "schlagfertig" -b add,fullscreen 2>/dev/null || true
-        echo "Display Vollbild gesetzt (wmctrl)"
-        break
-    fi
-    # Fallback: xdotool
-    if xdotool search --class "schlagfertig" 2>/dev/null | head -1 | grep -q .; then
-        xdotool search --class "schlagfertig" windowfocus windowsize "$(xdpyinfo | grep 'dimensions:' | awk '{print $2}' | tr 'x' ' ')" 2>/dev/null || true
-        break
-    fi
+    DISPLAY=:0 "$FLUTTER_BIN" >> "$LOG" 2>&1 &
+    FLUTTER_PID=$!
+
+    # Vollbild setzen sobald Fenster erscheint
+    for i in $(seq 1 15); do
+        sleep 1
+        if DISPLAY=:0 wmctrl -l 2>/dev/null | grep -qi "schlagfertig"; then
+            DISPLAY=:0 wmctrl -r "schlagfertig" -b add,fullscreen 2>/dev/null || true
+            echo "[$(date '+%H:%M:%S')] Vollbild gesetzt" >> "$LOG"
+            break
+        fi
+    done
+
+    wait $FLUTTER_PID
+    EXIT_CODE=$?
+    echo "[$(date '+%H:%M:%S')] Flutter beendet (Exit: $EXIT_CODE) – Neustart in 3s..." >> "$LOG"
+    sleep 3
 done
-
-echo "Display gestartet (Flutter PID: $FLUTTER_PID)"
-wait $FLUTTER_PID
