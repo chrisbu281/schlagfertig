@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/socket_service.dart';
+import '../core/game_state.dart';
+import '../games/hundert_leute/hundert_leute_display.dart';
 
 class DisplayScreen extends StatefulWidget {
   const DisplayScreen({super.key});
@@ -10,31 +12,50 @@ class DisplayScreen extends StatefulWidget {
 
 class _DisplayScreenState extends State<DisplayScreen> {
   bool _connected = true;
+  String? _activeGame;
 
   @override
   void initState() {
     super.initState();
     SocketService().on('connect', (_) => setState(() => _connected = true));
     SocketService().on('disconnect', (_) => setState(() => _connected = false));
-    // Phase 2: Spiel-Events kommen hier dazu
+
+    // Listen on /100leute namespace to know when beamer is active
+    final ns = SocketService().connectNamespace('/100leute');
+    ns.on('state', (data) {
+      if (data is Map && mounted) {
+        final s = SpielState100Leute.fromMap(data);
+        setState(() => _activeGame = s.beamerAktiv ? '100leute' : null);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    SocketService().off('connect');
+    SocketService().off('disconnect');
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_activeGame == '100leute') {
+      return const HundertLeuteDisplay();
+    }
+    return _buildIdle();
+  }
+
+  Widget _buildIdle() {
     return Scaffold(
       backgroundColor: const Color(0xFF05070D),
       body: Stack(
         children: [
-          // Hintergrund-Muster
-          Positioned.fill(
-            child: CustomPaint(painter: _GridPainter()),
-          ),
-          // Inhalt
-          Center(
+          Positioned.fill(child: CustomPaint(painter: _GridPainter())),
+          const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'SCHLAGFERTIG',
                   style: TextStyle(
                     fontSize: 64,
@@ -43,19 +64,14 @@ class _DisplayScreenState extends State<DisplayScreen> {
                     letterSpacing: 8,
                   ),
                 ),
-                const SizedBox(height: 16),
-                const Text(
+                SizedBox(height: 16),
+                Text(
                   'Bereit für das Quiz',
-                  style: TextStyle(
-                    color: Colors.white38,
-                    fontSize: 22,
-                    letterSpacing: 3,
-                  ),
+                  style: TextStyle(color: Colors.white38, fontSize: 22, letterSpacing: 3),
                 ),
               ],
             ),
           ),
-          // Verbindungsstatus (unten rechts, klein)
           Positioned(
             bottom: 20,
             right: 24,

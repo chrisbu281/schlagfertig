@@ -9,6 +9,7 @@ class SocketService {
   SocketService._internal();
 
   IO.Socket? _socket;
+  final Map<String, IO.Socket> _namespaces = {};
   String _serverUrl = 'http://localhost:5000';
 
   bool get isConnected => _socket?.connected ?? false;
@@ -49,7 +50,7 @@ class SocketService {
     );
   }
 
-  void on(String event, EventCallback callback, {String namespace = '/'}) {
+  void on(String event, EventCallback callback) {
     _socket?.on(event, callback);
   }
 
@@ -61,7 +62,35 @@ class SocketService {
     _socket?.emit(event, data);
   }
 
+  IO.Socket connectNamespace(String ns) {
+    final existing = _namespaces[ns];
+    if (existing != null) return existing;
+
+    final socket = IO.io(
+      '$_serverUrl$ns',
+      IO.OptionBuilder()
+          .setTransports(['websocket', 'polling'])
+          .enableReconnection()
+          .setReconnectionAttempts(10)
+          .setReconnectionDelay(2000)
+          .build(),
+    );
+    _namespaces[ns] = socket;
+    return socket;
+  }
+
+  void disconnectNamespace(String ns) {
+    _namespaces.remove(ns)
+      ?..disconnect()
+      ..dispose();
+  }
+
   void disconnect() {
+    for (final s in _namespaces.values) {
+      s.disconnect();
+      s.dispose();
+    }
+    _namespaces.clear();
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;
