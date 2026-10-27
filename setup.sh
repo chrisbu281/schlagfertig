@@ -332,33 +332,20 @@ fi
 EOF
 chown "$PI_USER:$PI_USER" "/home/$PI_USER/.bash_profile"
 
-# .xinitrc: Openbox + Chromium (kein Desktop)
-cat > "/home/$PI_USER/.xinitrc" << XIEOF
+# .xinitrc: Openbox + Flutter-Display (kein Desktop)
+cat > "/home/$PI_USER/.xinitrc" << 'XIEOF'
 #!/bin/bash
-# Bildschirmschoner + Energiesparmodus deaktivieren
 xset s off
 xset s noblank
 xset -dpms
-
-# Mauszeiger nach 1s ausblenden
 unclutter -idle 1 &
 
-# Warten bis Flask-Server bereit ist (max. 30s)
-for i in \$(seq 1 30); do
-  curl -sf http://localhost:5000/ > /dev/null 2>&1 && break
-  sleep 1
-done
+# Openbox als Fenstermanager (ermöglicht Vollbild via wmctrl)
+openbox &
+sleep 1
 
-# Chromium im Kiosk-Modus
-exec $CHROMIUM_BIN \\
-  --kiosk \\
-  --noerrdialogs \\
-  --disable-infobars \\
-  --disk-cache-size=1 \\
-  --disable-features=TranslateUI,Translate \\
-  --check-for-update-interval=31536000 \\
-  --window-position=0,0 \\
-  "$SERVER_URL"
+# Schlagfertig Flutter-Display starten
+exec bash /home/pi/schlagfertig/pi-config/start-display.sh
 XIEOF
 chown "$PI_USER:$PI_USER" "/home/$PI_USER/.xinitrc"
 chmod +x "/home/$PI_USER/.xinitrc"
