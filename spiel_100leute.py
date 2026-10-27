@@ -182,7 +182,6 @@ def _neuer_state():
 state = _neuer_state()
 _socketio  = None
 _steuerung = {"stop_pygame": None, "start_pygame": None}
-_chromium  = None
 
 # ── Fast-Five-Timer ─────────────────────────────────────────────────
 _ff_stop_ev = threading.Event()
@@ -352,112 +351,21 @@ def _buzzer_reader_loop():
     print("100leute: Buzzer-Reader gestoppt")
 
 
-def _kill_display_chromium():
-    """Beendet den /display-Chromium damit das Spiel den vollen Bildschirm bekommt."""
-    subprocess.run(["pkill", "-f", "chromium-sg-display"], capture_output=True)
-    _time.sleep(2.0)  # Chromium braucht Zeit für graceful shutdown
-    subprocess.run(["pkill", "-9", "-f", "chromium-sg-display"], capture_output=True)
-    _time.sleep(0.5)
-
-
-def _setze_einzelbildschirm(env):
-    """Nur den TV-HDMI aktivieren, alle anderen Outputs (DSI, zweiter HDMI) deaktivieren.
-    Mit DSI aktiv im X11-Virtual-Desktop zeigt Chromium kiosk nur den halben Bildschirm."""
-    xr = subprocess.run(["xrandr"], env=env, capture_output=True, text=True)
-    hdmi_primary = None
-    cmd = ["xrandr"]
-    for line in xr.stdout.splitlines():
-        if not line or line[0].isspace():
-            continue
-        parts = line.split()
-        if not parts or parts[0] == 'Screen':
-            continue
-        name = parts[0]
-        if 'HDMI' in name:
-            if ' connected' in line and ' disconnected' not in line:
-                if not hdmi_primary:
-                    hdmi_primary = name
-                    cmd += ["--output", name, "--primary", "--mode", "1920x1080", "--pos", "0x0"]
-                else:
-                    cmd += ["--output", name, "--off"]
-            else:
-                cmd += ["--output", name, "--off"]
-        else:
-            cmd += ["--output", name, "--off"]
-    if hdmi_primary:
-        r = subprocess.run(cmd, env=env, capture_output=True, text=True)
-        if r.returncode != 0:
-            print(f"100leute: xrandr FEHLER ({r.returncode}): {r.stderr.strip()}")
-        else:
-            print(f"100leute: xrandr → 1920x1080 auf {hdmi_primary}")
-        _time.sleep(0.5)
-    else:
-        print("100leute: xrandr – kein HDMI gefunden, nutze --auto")
-        subprocess.run(["xrandr", "--auto"], env=env, capture_output=True)
-
-
-def _starte_display_chromium():
-    """Startet den /display-Chromium neu nach Ende des Spiels."""
-    start_script = os.path.join(BASIS, "pi-config", "start-display.sh")
-    if os.path.exists(start_script):
-        env = {**os.environ, "DISPLAY": ":0"}
-        subprocess.Popen(
-            ["bash", start_script], env=env,
-            start_new_session=True,
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-
-
 def starte_beamer():
-    global _chromium
     if _steuerung["stop_pygame"]:
         try:
             _steuerung["stop_pygame"]()
         except Exception as e:
             print(f"100leute: stop_pygame Fehler: {e}")
-    _time.sleep(0.3)
-    _kill_display_chromium()
     _starte_buzzer_reader()
-
-    url  = "http://localhost:5000/spiel/100leute"
-    env  = {**os.environ, "DISPLAY": ":0"}
-    _setze_einzelbildschirm(env)
-    import shutil
-    shutil.rmtree("/tmp/chromium-sg-100leute", ignore_errors=True)
-    flags = ["--user-data-dir=/tmp/chromium-sg-100leute",
-             "--kiosk", "--no-sandbox", "--noerrdialogs", "--disable-infobars",
-             "--disable-session-crashed-bubble", "--password-store=basic",
-             "--autoplay-policy=no-user-gesture-required",
-             "--disable-translate", "--disable-features=TranslateUI",
-             "--disable-extensions", "--disable-component-update",
-             url]
-    _chromium = None
-    for binary in ("chromium-browser", "chromium"):
-        try:
-            _chromium = subprocess.Popen([binary] + flags, env=env,
-                                          preexec_fn=os.setsid)
-            print(f"100leute: Beamer gestartet ({binary})")
-            break
-        except FileNotFoundError:
-            continue
-        except Exception as e:
-            print(f"100leute: Chromium-Start Fehler: {e}")
-            break
     state["beamer_aktiv"] = True
     _broadcast()
+    print("100leute: Beamer aktiv – Flutter-Display übernimmt")
 
 
 def stoppe_beamer():
-    global _chromium
     _ff_timer_stoppen()
     _stoppe_buzzer_reader()
-    _time.sleep(0.1)
-    if _chromium:
-        try:
-            _chromium.terminate()
-        except Exception:
-            pass
-        _chromium = None
     state["beamer_aktiv"] = False
     _broadcast()
     if _steuerung["start_pygame"]:
@@ -465,6 +373,7 @@ def stoppe_beamer():
             _steuerung["start_pygame"]()
         except Exception as e:
             print(f"100leute: start_pygame Fehler: {e}")
+    print("100leute: Beamer deaktiviert")
 
 
 def init_app(app, socketio, stop_pygame=None, start_pygame=None):
