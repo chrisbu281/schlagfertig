@@ -41,6 +41,8 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
       }
     };
     _ns.on('state', _onState);
+    // Aktuellen State aktiv anfordern (Socket schon verbunden, kein zweites connect-Event)
+    _ns.emit('get_state');
   }
 
   @override

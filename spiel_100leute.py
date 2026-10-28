@@ -410,6 +410,10 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
     def _on_connect():
         emit("state", state)
 
+    @socketio.on("get_state", namespace=NAMESPACE)
+    def _on_get_state(data=None):
+        emit("state", state)
+
     @socketio.on("setup", namespace=NAMESPACE)
     def _on_setup(data):
         _apply_setup(data)
