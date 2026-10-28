@@ -6,7 +6,7 @@ import '../../core/socket_service.dart';
 import '../../core/game_state.dart';
 
 // ── Farben ───────────────────────────────────────────────────────────────────
-const _kGold   = Color(0xFFF5C518);
+const _kGold   = Color(0xFFF5C518);  // nur noch für Timer-Warnung
 const _kDark   = Color(0xFF05070D);
 const _kTeamA  = Color(0xFF2F6FED);
 const _kTeamB  = Color(0xFFE0473A);
@@ -50,7 +50,6 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
   @override
   Widget build(BuildContext context) {
     final s = _state;
-    // DefaultTextStyle.none setzt alle vom Theme geerbten Dekorationen zurück
     Widget inner;
     if (s == null || !s.beamerAktiv) {
       inner = _buildIdle(s);
@@ -78,7 +77,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
       Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
         RichText(text: TextSpan(children: [
           TextSpan(text: 'SCHLAG', style: _bc(96, FontWeight.w900, Colors.white, letterSpacing: 6)),
-          TextSpan(text: 'FERTIG', style: _bc(96, FontWeight.w900, _kGold, letterSpacing: 6)),
+          TextSpan(text: 'FERTIG', style: _bc(96, FontWeight.w900, Colors.white.withOpacity(0.85), letterSpacing: 6)),
         ])),
         const SizedBox(height: 10),
         Text('100 LEUTE GEFRAGT',
@@ -108,17 +107,16 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
   );
 
   // ══ GAME BASE ═══════════════════════════════════════════════════════════════
-  // Legt Team-Hintergründe, Logo und Scores unter den eigentlichen Inhalt.
   Widget _gameBase({
     required SpielState100Leute s,
     String? activeTeam,
     required Widget child,
     bool showScores = true,
-    bool showLogo  = true,
-    bool fullChild  = false, // wenn true: child füllt Positoned.fill statt Center
+    bool showLogo   = true,
+    bool fullChild  = false,
   }) {
     return Stack(children: [
-      // Team-Hintergründe
+      // Hintergründe
       Positioned.fill(child: Row(children: [
         Expanded(child: _TeamBg(team: s.teamA, isLeft: true,  active: activeTeam == 'A', color: _kTeamA)),
         Expanded(child: _TeamBg(team: s.teamB, isLeft: false, active: activeTeam == 'B', color: _kTeamB)),
@@ -134,23 +132,23 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
           ),
         ))],
       ))),
-      // Logo
-      if (showLogo)
-        Positioned(top: 22, left: 0, right: 0,
-          child: Center(child: RichText(text: TextSpan(children: [
-            TextSpan(text: 'SCHLAG', style: _bc(15, FontWeight.w700, const Color(0xFF5B6478), letterSpacing: 4)),
-            TextSpan(text: 'FERTIG', style: _bc(15, FontWeight.w700, _kGold, letterSpacing: 4)),
-            TextSpan(text: '  ·  100 LEUTE GEFRAGT',
-                style: _bc(15, FontWeight.w400, const Color(0xFF5B6478), letterSpacing: 4)),
-          ]))),
-        ),
-      // Inhalt
+      // Inhalt (unter Logo im Z-Stack)
       if (fullChild)
         Positioned.fill(child: child)
       else
         Positioned(top: 50, left: 0, right: 0, bottom: showScores ? 100 : 0,
           child: Center(child: child)),
-      // Team-Scores unten links/rechts
+      // Logo (immer ganz oben)
+      if (showLogo)
+        Positioned(top: 22, left: 0, right: 0,
+          child: Center(child: RichText(text: TextSpan(children: [
+            TextSpan(text: 'SCHLAG', style: _bc(15, FontWeight.w700, const Color(0xFF5B6478), letterSpacing: 4)),
+            TextSpan(text: 'FERTIG', style: _bc(15, FontWeight.w700, Colors.white.withOpacity(0.7), letterSpacing: 4)),
+            TextSpan(text: '  ·  100 LEUTE GEFRAGT',
+                style: _bc(15, FontWeight.w400, const Color(0xFF5B6478), letterSpacing: 4)),
+          ]))),
+        ),
+      // Team-Scores unten
       if (showScores) ...[
         Positioned(bottom: 28, left: 40,
             child: _scoreLabel(s.teamA, _kTeamA, active: activeTeam == 'A')),
@@ -160,15 +158,14 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
     ]);
   }
 
-  Widget _scoreLabel(Team t, Color c, {bool active = false}) => Row(
-    crossAxisAlignment: CrossAxisAlignment.end,
+  Widget _scoreLabel(Team t, Color c, {bool active = false}) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
     children: [
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(t.name, style: _bc(18, FontWeight.w700,
-            active ? Colors.white : Colors.white60, letterSpacing: 1)),
-        Text('${t.punkte}', style: _bc(54, FontWeight.w900,
-            active ? c : c.withOpacity(0.65), height: 1.0)),
-      ]),
+      Text(t.name, style: _bc(18, FontWeight.w700,
+          active ? Colors.white : Colors.white60, letterSpacing: 1)),
+      Text('${t.punkte}', style: _bc(54, FontWeight.w900,
+          active ? c : c.withOpacity(0.65), height: 1.0)),
     ],
   );
 
@@ -182,12 +179,9 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
         width: 880,
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Text('BUZZER-DUELL  ·  RUNDE ${s.runde}',
-              style: _bc(20, FontWeight.w400, _kGold.withOpacity(0.85), letterSpacing: 6)),
+              style: _bc(24, FontWeight.w400, Colors.white.withOpacity(0.45), letterSpacing: 6)),
           const SizedBox(height: 28),
-          if (s.aktiveFrage != null && (d.ersterTeam != null || d.buzzerOffen)) ...[
-            _questionBox(s.aktiveFrage!.frage),
-            const SizedBox(height: 36),
-          ] else if (s.aktiveFrage != null) ...[
+          if (s.aktiveFrage != null) ...[
             _questionBox(s.aktiveFrage!.frage),
             const SizedBox(height: 36),
           ],
@@ -206,7 +200,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
             style: _bc(16, FontWeight.w300, Colors.white38, letterSpacing: 5)),
         const SizedBox(height: 12),
         Text('>> ${s.teamFor(d.gewinner!).name}  spielt die Hauptrunde',
-            style: _bc(40, FontWeight.w900, c, letterSpacing: 1)),
+            style: _bc(42, FontWeight.w900, c, letterSpacing: 1)),
       ]);
     }
     if (d.ersterTeam != null) {
@@ -218,17 +212,17 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
           border: Border.all(color: c, width: 2),
         ),
         child: Text('>> ${s.teamFor(d.ersterTeam!).name} hat zuerst gebuzzert!',
-            style: _bc(32, FontWeight.w800, Colors.white)),
+            style: _bc(38, FontWeight.w800, Colors.white)),
       );
     }
     if (d.buzzerOffen) {
       return _PulseWidget(child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 56, vertical: 22),
         decoration: BoxDecoration(
-          color: _kGold.withOpacity(0.1), borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _kGold, width: 2.5),
+          color: Colors.white.withOpacity(0.08), borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white, width: 2.5),
         ),
-        child: Text('BUZZER OFFEN', style: _bc(48, FontWeight.w900, _kGold, letterSpacing: 8)),
+        child: Text('BUZZER OFFEN', style: _bc(52, FontWeight.w900, Colors.white, letterSpacing: 8)),
       ));
     }
     return Text('Warten auf Moderator …',
@@ -259,20 +253,18 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
               ),
               child: Text(
                 isStehlen ? 'STEHLEN!' : 'HAUPTRUNDE  ·  RUNDE ${s.runde}',
-                style: _bc(16, isStehlen ? FontWeight.w900 : FontWeight.w500,
+                style: _bc(20, isStehlen ? FontWeight.w900 : FontWeight.w500,
                     isStehlen ? Colors.orange : Colors.white54, letterSpacing: 3),
               ),
             ),
             const Spacer(),
-            Text('RUNDENTOPF', style: _bc(12, FontWeight.w300, Colors.white38, letterSpacing: 3)),
+            Text('RUNDENTOPF', style: _bc(14, FontWeight.w300, Colors.white38, letterSpacing: 3)),
             const SizedBox(width: 8),
-            Text('${s.rundentopf}', style: _bc(22, FontWeight.w900, _kGold)),
+            Text('${s.rundentopf}', style: _bc(26, FontWeight.w900, Colors.white70)),
           ]),
           const SizedBox(height: 14),
-          // Frage
           if (frage != null) _questionBox(frage.frage),
           const SizedBox(height: 12),
-          // Tiles
           if (frage != null)
             ...frage.antworten.asMap().entries.map((e) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -287,24 +279,24 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
                 padding: const EdgeInsets.only(right: 12),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
-                  width: 44, height: 44,
+                  width: 50, height: 50,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: hit ? _kTeamB.withOpacity(0.25) : Colors.white.withOpacity(0.06),
                     border: Border.all(color: hit ? _kTeamB : Colors.white24, width: 2),
                   ),
-                  child: Center(child: Text(hit ? '✗' : '',
-                      style: _bc(22, FontWeight.w900, _kTeamB))),
+                  child: Center(child: Text(hit ? 'X' : '',
+                      style: _bc(26, FontWeight.w900, _kTeamB))),
                 ),
               );
             }),
             const Spacer(),
             if (isStehlen && s.aktivesTeam != null)
               Text('** ${s.teamFor(s.aktivesTeam!).name} – eine Chance!',
-                  style: _bc(17, FontWeight.w700, Colors.orange, letterSpacing: 0.5))
+                  style: _bc(26, FontWeight.w700, Colors.orange, letterSpacing: 0.5))
             else if (s.aktivesTeam != null)
               Text('>> ${s.teamFor(s.aktivesTeam!).name} ist dran',
-                  style: _bc(17, FontWeight.w400, Colors.white60, letterSpacing: 0.5)),
+                  style: _bc(26, FontWeight.w700, Colors.white70, letterSpacing: 0.5)),
           ]),
         ]),
       ),
@@ -312,38 +304,8 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
   }
 
   // ══ RUNDENENDE ══════════════════════════════════════════════════════════════
-  Widget _buildRundenende(SpielState100Leute s) {
-    final re   = s.rundenende;
-    final isA  = re?.gewinner == 'A';
-    final c    = isA ? _kTeamA : _kTeamB;
-    final name = re?.gewinner != null ? s.teamFor(re!.gewinner!).name : '—';
-
-    return _gameBase(
-      s: s, activeTeam: re?.gewinner, showScores: false,
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text('RUNDE ${s.runde} GEWONNEN',
-            style: _bc(20, FontWeight.w300, Colors.white38, letterSpacing: 6)),
-        const SizedBox(height: 20),
-        Text(name, style: _bc(64, FontWeight.w900, c, letterSpacing: 2)),
-        const SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
-          decoration: BoxDecoration(
-            color: _kGold.withOpacity(0.1), borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _kGold, width: 2),
-          ),
-          child: Text('+${re?.topf ?? 0} Punkte',
-              style: _bc(36, FontWeight.w900, _kGold, letterSpacing: 1)),
-        ),
-        const SizedBox(height: 52),
-        Row(mainAxisSize: MainAxisSize.min, children: [
-          _scoreTile(s.teamA.name, s.teamA.punkte, _kTeamA, highlight: isA),
-          const SizedBox(width: 40),
-          _scoreTile(s.teamB.name, s.teamB.punkte, _kTeamB, highlight: !isA),
-        ]),
-      ]),
-    );
-  }
+  Widget _buildRundenende(SpielState100Leute s) =>
+      _RundenendeAnim(key: ValueKey('re-${s.runde}-${s.rundenende?.topf}'), s: s);
 
   // ══ FAST FIVE ═══════════════════════════════════════════════════════════════
   Widget _buildFastFive(SpielState100Leute s) {
@@ -351,7 +313,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
     if (ff == null) {
       return _gameBase(s: s, child: Column(mainAxisSize: MainAxisSize.min, children: [
         Text('FAST', style: _bc(30, FontWeight.w300, Colors.white38, letterSpacing: 12)),
-        Text('FIVE', style: _bc(88, FontWeight.w900, _kGold, letterSpacing: 14)),
+        Text('FIVE', style: _bc(88, FontWeight.w900, Colors.white, letterSpacing: 14)),
       ]));
     }
 
@@ -367,18 +329,17 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
       s: s, activeTeam: ff.dran,
       showScores: false, showLogo: false, fullChild: true,
       child: Column(children: [
-        // ── FF-Header ──────────────────────────────────────────────────────
         Container(
           padding: const EdgeInsets.fromLTRB(36, 14, 36, 12),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter, end: Alignment.bottomCenter,
-              colors: [const Color(0xE005070D), Colors.transparent],
+              colors: [Color(0xE005070D), Colors.transparent],
             ),
           ),
           child: Row(children: [
             Text('FAST FIVE  ·  RUNDE $runde  ·  ${s.teamFor(ff.dran).name}',
-                style: _bc(24, FontWeight.w900, dranC, letterSpacing: 2)),
+                style: _bc(26, FontWeight.w900, dranC, letterSpacing: 2)),
             const Spacer(),
             if (s.config.ffTimer && (ff.timerLaueft || ff.timerRest > 0))
               Text('${ff.timerRest}s', style: _bc(
@@ -387,7 +348,6 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
               )),
           ]),
         ),
-        // ── Timer-Bar ──────────────────────────────────────────────────────
         if (s.config.ffTimer && (ff.timerLaueft || ff.timerRest > 0))
           Padding(
             padding: const EdgeInsets.fromLTRB(36, 0, 36, 6),
@@ -400,7 +360,6 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
               ),
             ),
           ),
-        // ── Hauptinhalt ────────────────────────────────────────────────────
         Expanded(child: Center(child: SizedBox(
           width: 880,
           child: fq == null
@@ -421,13 +380,12 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
                   )),
                 ]),
         ))),
-        // ── Fortschrittsbalken unten ────────────────────────────────────────
         Container(
           height: 64,
           padding: const EdgeInsets.symmetric(horizontal: 40),
           color: const Color(0xC005070D),
           child: Row(children: [
-            Text('${s.teamA.name}',
+            Text(s.teamA.name,
                 style: _bc(13, FontWeight.w400, Colors.white38, letterSpacing: 1)),
             const SizedBox(width: 10),
             Text('${ff.punkteA}',
@@ -446,7 +404,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
             Text('${ff.punkteB}',
                 style: _bc(22, FontWeight.w900, ff.dran == 'B' ? _kTeamB : Colors.white38)),
             const SizedBox(width: 10),
-            Text('${s.teamB.name}',
+            Text(s.teamB.name,
                 style: _bc(13, FontWeight.w400, Colors.white38, letterSpacing: 1)),
           ]),
         ),
@@ -467,7 +425,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
         Text('SPIELENDE', style: _bc(18, FontWeight.w300, Colors.white38, letterSpacing: 7)),
         const SizedBox(height: 28),
         if (draw)
-          Text('UNENTSCHIEDEN', style: _bc(58, FontWeight.w900, _kGold, letterSpacing: 4))
+          Text('UNENTSCHIEDEN', style: _bc(58, FontWeight.w900, Colors.white, letterSpacing: 4))
         else ...[
           Text(winner.name, style: _bc(72, FontWeight.w900, wc, letterSpacing: 2)),
           const SizedBox(height: 8),
@@ -485,15 +443,10 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
   }
 
   // ══ HELPERS ═════════════════════════════════════════════════════════════════
-  Widget _questionBox(String frage) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-    decoration: BoxDecoration(
-      color: Colors.black.withOpacity(0.45),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.white.withOpacity(0.12), width: 1),
-    ),
-    child: Text(frage, textAlign: TextAlign.center,
-        style: _bc(28, FontWeight.w700, Colors.white, height: 1.3)),
+  Widget _questionBox(String frage) => Text(
+    frage,
+    textAlign: TextAlign.center,
+    style: _bc(42, FontWeight.w800, Colors.white, height: 1.25),
   );
 
   Widget _scoreTile(String name, int pts, Color c, {bool highlight = false}) => Container(
@@ -511,6 +464,178 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
       Text('Pkt', style: _bc(14, FontWeight.w300, Colors.white38, letterSpacing: 3)),
     ]),
   );
+}
+
+// ════ RUNDENENDE ANIMATION ═══════════════════════════════════════════════════
+class _RundenendeAnim extends StatefulWidget {
+  final SpielState100Leute s;
+  const _RundenendeAnim({super.key, required this.s});
+  @override State<_RundenendeAnim> createState() => _RundenendeAnimState();
+}
+
+class _RundenendeAnimState extends State<_RundenendeAnim>
+    with TickerProviderStateMixin {
+  late final AnimationController _flyCtrl;
+  late final AnimationController _countCtrl;
+  int  _shownScore = 0;
+  bool _showBadge  = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final re   = widget.s.rundenende;
+    final isA  = re?.gewinner == 'A';
+    final topf = re?.topf ?? 0;
+    final end  = isA ? widget.s.teamA.punkte : widget.s.teamB.punkte;
+    _shownScore = (end - topf).clamp(0, 999999);
+
+    _flyCtrl   = AnimationController(vsync: this, duration: const Duration(milliseconds: 850));
+    _countCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
+
+    _flyCtrl.addStatusListener((st) {
+      if (st == AnimationStatus.completed && mounted) {
+        setState(() => _showBadge = false);
+        _countCtrl.forward();
+      }
+    });
+    _countCtrl.addListener(() {
+      final v    = _countCtrl.value;
+      final ease = 1.0 - (1.0 - v) * (1.0 - v) * (1.0 - v);
+      final next = ((end - topf) + topf * ease).round();
+      if (mounted) setState(() => _shownScore = next);
+    });
+
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) setState(() => _showBadge = true);
+    });
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) _flyCtrl.forward();
+    });
+  }
+
+  @override
+  void dispose() { _flyCtrl.dispose(); _countCtrl.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) {
+    final s    = widget.s;
+    final re   = s.rundenende;
+    final isA  = re?.gewinner == 'A';
+    final c    = isA ? _kTeamA : _kTeamB;
+    final name = re?.gewinner != null ? s.teamFor(re!.gewinner!).name : '—';
+    final topf = re?.topf ?? 0;
+
+    return Stack(children: [
+      // Hintergründe
+      Positioned.fill(child: Row(children: [
+        Expanded(child: _TeamBg(team: s.teamA, isLeft: true,  active: isA,  color: _kTeamA)),
+        Expanded(child: _TeamBg(team: s.teamB, isLeft: false, active: !isA, color: _kTeamB)),
+      ])),
+      // Trennlinie
+      Positioned.fill(child: IgnorePointer(child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [Container(width: 2, decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
+            colors: [Colors.transparent, Color(0x40FFFFFF), Colors.transparent],
+          ),
+        ))],
+      ))),
+      // Haupt-Layout + Animation
+      Positioned.fill(child: LayoutBuilder(builder: (ctx, bc) {
+        final sw = bc.maxWidth;
+        final sh = bc.maxHeight;
+
+        // Badge Startposition: zentriert, 58% von oben
+        final startX = sw / 2.0;
+        final startY = sh * 0.58;
+
+        // Score-Label Ziel: bottom=28, left=40 (A) oder right=40 (B)
+        // Label ist ca. 180px breit, 78px hoch
+        const sW = 180.0, sH = 78.0;
+        final txA = 40.0 + sW / 2;
+        final tyA = sh - 28.0 - sH / 2;
+        final txB = sw - 40.0 - sW / 2;
+        final tx  = isA ? txA : txB;
+        final ty  = tyA;
+
+        return Stack(children: [
+          // Team-Name + Rundeninfo
+          Positioned(top: sh * 0.27, left: 0, right: 0,
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text('RUNDE ${s.runde} GEWONNEN',
+                  textAlign: TextAlign.center,
+                  style: _bc(24, FontWeight.w300, Colors.white38, letterSpacing: 6)),
+              const SizedBox(height: 18),
+              Text(name, textAlign: TextAlign.center,
+                  style: _bc(88, FontWeight.w900, c, letterSpacing: 2)),
+            ]),
+          ),
+          // Score A
+          Positioned(bottom: 28, left: 40,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, children: [
+              Text(s.teamA.name, style: _bc(18, FontWeight.w700,
+                  isA ? Colors.white : Colors.white60, letterSpacing: 1)),
+              Text(isA ? '$_shownScore' : '${s.teamA.punkte}',
+                  style: _bc(54, FontWeight.w900,
+                      isA ? _kTeamA : _kTeamA.withOpacity(0.65), height: 1.0)),
+            ]),
+          ),
+          // Score B
+          Positioned(bottom: 28, right: 40,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min, children: [
+              Text(s.teamB.name, style: _bc(18, FontWeight.w700,
+                  !isA ? Colors.white : Colors.white60, letterSpacing: 1)),
+              Text(!isA ? '$_shownScore' : '${s.teamB.punkte}',
+                  style: _bc(54, FontWeight.w900,
+                      !isA ? _kTeamB : _kTeamB.withOpacity(0.65), height: 1.0)),
+            ]),
+          ),
+          // Fliegendes Badge
+          if (_showBadge)
+            AnimatedBuilder(
+              animation: _flyCtrl,
+              builder: (_, __) {
+                final t     = CurvedAnimation(
+                    parent: _flyCtrl, curve: Curves.easeInCubic).value;
+                final x     = startX + (tx - startX) * t;
+                final y     = startY + (ty - startY) * t;
+                final scale = 1.0 - 0.55 * t;
+                final fade  = (1.0 - t * 1.5).clamp(0.0, 1.0);
+                return Positioned(
+                  left: x, top: y,
+                  child: FractionalTranslation(
+                    translation: const Offset(-0.5, -0.5),
+                    child: Opacity(
+                      opacity: fade,
+                      child: Transform.scale(
+                        scale: scale,
+                        child: Text('+$topf',
+                          style: _bc(68, FontWeight.w900, Colors.white).copyWith(
+                            shadows: [Shadow(color: c.withOpacity(0.7), blurRadius: 48)]),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+        ]);
+      })),
+      // Logo (immer ganz oben)
+      Positioned(top: 22, left: 0, right: 0,
+        child: Center(child: RichText(text: TextSpan(children: [
+          TextSpan(text: 'SCHLAG', style: _bc(15, FontWeight.w700, const Color(0xFF5B6478), letterSpacing: 4)),
+          TextSpan(text: 'FERTIG', style: _bc(15, FontWeight.w700, Colors.white.withOpacity(0.7), letterSpacing: 4)),
+          TextSpan(text: '  ·  100 LEUTE GEFRAGT',
+              style: _bc(15, FontWeight.w400, const Color(0xFF5B6478), letterSpacing: 4)),
+        ]))),
+      ),
+    ]);
+  }
 }
 
 // ════ TEAM-HINTERGRUND MIT FOTO + PULS-GLOW ══════════════════════════════════
@@ -552,9 +677,7 @@ class _TeamBgState extends State<_TeamBg> with SingleTickerProviderStateMixin {
       builder: (ctx, _) {
         final glow = widget.active ? (0.25 + _anim.value * 0.45) : 0.0;
         return Stack(children: [
-          // Basis-Dunkel
           Container(color: const Color(0xFF050810)),
-          // Team-Foto (Graustufen, abgedunkelt)
           if (fotoUrl != null)
             Positioned.fill(child: ColorFiltered(
               colorFilter: const ColorFilter.matrix([
@@ -567,7 +690,6 @@ class _TeamBgState extends State<_TeamBg> with SingleTickerProviderStateMixin {
                   opacity: const AlwaysStoppedAnimation(0.32),
                   errorBuilder: (_, __, ___) => const SizedBox()),
             )),
-          // Farbiger Gradient-Overlay
           Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: widget.isLeft ? Alignment.centerLeft : Alignment.centerRight,
@@ -576,7 +698,6 @@ class _TeamBgState extends State<_TeamBg> with SingleTickerProviderStateMixin {
               stops: const [0.0, 0.70],
             ),
           ))),
-          // Pulsierender Glow (radial, von innen nach außen)
           Positioned.fill(child: Opacity(
             opacity: glow,
             child: DecoratedBox(decoration: BoxDecoration(
@@ -701,16 +822,16 @@ class _FlipTileState extends State<_FlipTile>
   );
 
   Widget _back() {
-    final bc = widget.teamColor ?? _kGold;
+    final bc = widget.teamColor ?? Colors.white;
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft, end: Alignment.bottomRight,
-          colors: [Color(0xFF1C1608), Color(0xFF0C0A03)],
+          colors: [Color(0xFF0F1520), Color(0xFF07090F)],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: bc, width: 1.5),
-        boxShadow: [BoxShadow(color: bc.withOpacity(0.25), blurRadius: 22)],
+        boxShadow: [BoxShadow(color: bc.withOpacity(0.18), blurRadius: 22)],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(children: [

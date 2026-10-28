@@ -162,7 +162,7 @@ def _neue_duell():
 def _neuer_ff():
     return {"fragen": [], "aktuell": 0, "dran": "A", "timer_laueft": False,
             "timer_rest": 0, "punkte_a": 0, "punkte_b": 0,
-            "fertig_a": False, "fertig_b": False}
+            "fertig_a": False, "fertig_b": False, "spieler_bereit": True}
 
 def _neuer_state():
     return {
@@ -617,6 +617,7 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         ]
         ff["timer_rest"] = state["config"]["ff_zeit1"]
         state["ff"] = ff
+        _ff_timer_starten()
         _broadcast()
 
     @socketio.on("ff_aufdecken", namespace=NAMESPACE)
@@ -654,10 +655,11 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         naechste = ak + 1
         if naechste >= len(ff["fragen"]):
             if ff["dran"] == "A":
-                ff["fertig_a"] = True
-                ff["dran"]     = "B"
-                ff["aktuell"]  = 0
-                ff["timer_rest"] = state["config"]["ff_zeit2"]
+                ff["fertig_a"]     = True
+                ff["dran"]         = "B"
+                ff["aktuell"]      = 0
+                ff["timer_rest"]   = state["config"]["ff_zeit2"]
+                ff["spieler_bereit"] = False
                 _broadcast()
             else:
                 ff["fertig_b"] = True
@@ -665,6 +667,17 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         else:
             ff["aktuell"] = naechste
             _broadcast()
+
+    @socketio.on("ff_spieler_bereit", namespace=NAMESPACE)
+    def _on_ff_spieler_bereit(data=None):
+        ff = state.get("ff")
+        if not ff or state.get("phase") != "fastfive":
+            return
+        if not ff.get("fertig_a") or ff.get("spieler_bereit"):
+            return
+        ff["spieler_bereit"] = True
+        _ff_timer_starten()
+        _broadcast()
 
     @socketio.on("ff_timer_start", namespace=NAMESPACE)
     def _on_ff_timer_start(data=None):
