@@ -64,8 +64,12 @@ class SocketService {
 
   IO.Socket connectNamespace(String ns) {
     final existing = _namespaces[ns];
-    if (existing != null) return existing;
+    if (existing != null) {
+      print('SocketIO NS[$ns]: cached socket zurückgegeben, connected=${existing.connected}');
+      return existing;
+    }
 
+    print('SocketIO NS[$ns]: erstelle neuen Socket → $_serverUrl$ns');
     final socket = IO.io(
       '$_serverUrl$ns',
       IO.OptionBuilder()
@@ -75,6 +79,10 @@ class SocketService {
           .setReconnectionDelay(2000)
           .build(),
     );
+    socket.onConnect((_) => print('SocketIO NS[$ns]: VERBUNDEN'));
+    socket.onConnectError((e) => print('SocketIO NS[$ns]: FEHLER: $e'));
+    socket.onDisconnect((_) => print('SocketIO NS[$ns]: GETRENNT'));
+    socket.onError((e) => print('SocketIO NS[$ns]: ERROR: $e'));
     _namespaces[ns] = socket;
     return socket;
   }

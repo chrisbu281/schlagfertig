@@ -23,12 +23,19 @@ class _DisplayScreenState extends State<DisplayScreen> {
 
     final ns = SocketService().connectNamespace('/100leute');
     _onState = (data) {
+      print('DisplayScreen: state event → type=${data.runtimeType}, beamer_aktiv=${data is Map ? data["beamer_aktiv"] : "?"}');
       if (data is Map && mounted) {
-        final s = SpielState100Leute.fromMap(data);
-        setState(() => _activeGame = s.beamerAktiv ? '100leute' : null);
+        try {
+          final s = SpielState100Leute.fromMap(data);
+          setState(() => _activeGame = s.beamerAktiv ? '100leute' : null);
+          print('DisplayScreen: activeGame=${_activeGame}');
+        } catch (e, st) {
+          print('DisplayScreen: fromMap FEHLER: $e\n$st');
+        }
       }
     };
     ns.on('state', _onState);
+    print('DisplayScreen: state-Listener registriert auf NS[/100leute]');
   }
 
   @override
