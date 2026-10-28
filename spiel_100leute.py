@@ -370,7 +370,8 @@ def starte_beamer():
             _steuerung["stop_pygame"]()
         except Exception as e:
             print(f"100leute: stop_pygame Fehler: {e}")
-    _starte_buzzer_reader()
+    # quiz_buzzer.py gibt GPIO asynchron frei – kurze Pause damit gpio_cleanup() abgeschlossen ist
+    threading.Timer(1.0, _starte_buzzer_reader).start()
     state["beamer_aktiv"] = True
     _broadcast()
     print("100leute: Beamer aktiv – Flutter-Display übernimmt")
