@@ -333,9 +333,22 @@ def _buzzer_reader_loop():
         print("100leute: keine Buzzer-Pins gemappt.")
         return
 
-    h = lgpio.gpiochip_open(0)
+    try:
+        h = lgpio.gpiochip_open(0)
+    except Exception as e:
+        print(f"100leute: GPIO-Chip konnte nicht geöffnet werden ({e})")
+        return
     for pin in pin_team:
-        lgpio.gpio_claim_input(h, pin, lgpio.SET_PULL_UP)
+        try:
+            lgpio.gpio_free(h, pin)  # freigeben falls vom Vorgängerprozess noch belegt
+        except Exception:
+            pass
+        try:
+            lgpio.gpio_claim_input(h, pin, lgpio.SET_PULL_UP)
+        except Exception as e:
+            print(f"100leute: GPIO Pin {pin} konnte nicht beansprucht werden ({e}) – Buzzer deaktiviert")
+            lgpio.gpiochip_close(h)
+            return
     letzter = {pin: 1 for pin in pin_team}
     print(f"100leute: Buzzer-Reader aktiv (Pins {list(pin_team)})")
 
