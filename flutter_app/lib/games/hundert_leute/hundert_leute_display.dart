@@ -14,7 +14,8 @@ const _kTeamB  = Color(0xFFE0473A);
 TextStyle _bc(double size, FontWeight weight, Color color,
     {double? letterSpacing, double? height}) =>
     GoogleFonts.barlowCondensed(fontSize: size, fontWeight: weight, color: color,
-        letterSpacing: letterSpacing, height: height);
+        letterSpacing: letterSpacing, height: height,
+        decoration: TextDecoration.none);
 
 // ═════════════════════════════════════════════════════════════════════════════
 class HundertLeuteDisplay extends StatefulWidget {
@@ -195,7 +196,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
         Text('GEWINNER DES DUELLS',
             style: _bc(16, FontWeight.w300, Colors.white38, letterSpacing: 5)),
         const SizedBox(height: 12),
-        Text('🏆  ${s.teamFor(d.gewinner!).name}  spielt die Hauptrunde',
+        Text('>> ${s.teamFor(d.gewinner!).name}  spielt die Hauptrunde',
             style: _bc(40, FontWeight.w900, c, letterSpacing: 1)),
       ]);
     }
@@ -207,7 +208,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
           color: c.withOpacity(0.2), borderRadius: BorderRadius.circular(12),
           border: Border.all(color: c, width: 2),
         ),
-        child: Text('⚡  ${s.teamFor(d.ersterTeam!).name} hat zuerst gebuzzert!',
+        child: Text('>> ${s.teamFor(d.ersterTeam!).name} hat zuerst gebuzzert!',
             style: _bc(32, FontWeight.w800, Colors.white)),
       );
     }
@@ -290,10 +291,10 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
             }),
             const Spacer(),
             if (isStehlen && s.aktivesTeam != null)
-              Text('💰  ${s.teamFor(s.aktivesTeam!).name} ist dran – eine Chance!',
+              Text('** ${s.teamFor(s.aktivesTeam!).name} – eine Chance!',
                   style: _bc(17, FontWeight.w700, Colors.orange, letterSpacing: 0.5))
             else if (s.aktivesTeam != null)
-              Text('🎯  ${s.teamFor(s.aktivesTeam!).name} ist dran',
+              Text('>> ${s.teamFor(s.aktivesTeam!).name} ist dran',
                   style: _bc(17, FontWeight.w400, Colors.white60, letterSpacing: 0.5)),
           ]),
         ]),
@@ -314,7 +315,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
         Text('RUNDE ${s.runde} GEWONNEN',
             style: _bc(20, FontWeight.w300, Colors.white38, letterSpacing: 6)),
         const SizedBox(height: 20),
-        Text('🏆  $name', style: _bc(64, FontWeight.w900, c, letterSpacing: 2)),
+        Text(name, style: _bc(64, FontWeight.w900, c, letterSpacing: 2)),
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
@@ -461,7 +462,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
         else ...[
           Text(winner.name, style: _bc(72, FontWeight.w900, wc, letterSpacing: 2)),
           const SizedBox(height: 8),
-          Text('🏆  GEWINNT DAS SPIEL!',
+          Text('GEWINNT DAS SPIEL!',
               style: _bc(26, FontWeight.w900, Colors.white70, letterSpacing: 4)),
         ],
         const SizedBox(height: 48),
