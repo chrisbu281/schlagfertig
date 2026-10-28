@@ -18,7 +18,8 @@ const _kWhite22    = Color(0x38FFFFFF);
 const _kWhite15    = Color(0x26FFFFFF);
 
 class HundertLeuteDisplay extends StatefulWidget {
-  const HundertLeuteDisplay({super.key});
+  final SpielState100Leute? initialState;
+  const HundertLeuteDisplay({super.key, this.initialState});
 
   @override
   State<HundertLeuteDisplay> createState() => _HundertLeuteDisplayState();
@@ -32,6 +33,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
   @override
   void initState() {
     super.initState();
+    _state = widget.initialState;
     _ns = SocketService().connectNamespace('/100leute');
     _onState = (data) {
       if (data is Map && mounted) {

@@ -12,7 +12,7 @@ class DisplayScreen extends StatefulWidget {
 
 class _DisplayScreenState extends State<DisplayScreen> {
   bool _connected = true;
-  String? _activeGame;
+  SpielState100Leute? _state100;
   late final void Function(dynamic) _onState;
 
   @override
@@ -23,19 +23,16 @@ class _DisplayScreenState extends State<DisplayScreen> {
 
     final ns = SocketService().connectNamespace('/100leute');
     _onState = (data) {
-      print('DisplayScreen: state event → type=${data.runtimeType}, beamer_aktiv=${data is Map ? data["beamer_aktiv"] : "?"}');
       if (data is Map && mounted) {
         try {
           final s = SpielState100Leute.fromMap(data);
-          setState(() => _activeGame = s.beamerAktiv ? '100leute' : null);
-          print('DisplayScreen: activeGame=${_activeGame}');
-        } catch (e, st) {
-          print('DisplayScreen: fromMap FEHLER: $e\n$st');
+          setState(() => _state100 = s);
+        } catch (e) {
+          print('DisplayScreen: fromMap FEHLER: $e');
         }
       }
     };
     ns.on('state', _onState);
-    print('DisplayScreen: state-Listener registriert auf NS[/100leute]');
   }
 
   @override
@@ -49,8 +46,9 @@ class _DisplayScreenState extends State<DisplayScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_activeGame == '100leute') {
-      return const HundertLeuteDisplay();
+    final s = _state100;
+    if (s != null && s.beamerAktiv) {
+      return HundertLeuteDisplay(initialState: s);
     }
     return _buildIdle();
   }
