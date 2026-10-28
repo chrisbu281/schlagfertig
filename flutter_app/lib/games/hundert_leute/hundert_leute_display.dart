@@ -50,15 +50,24 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
   @override
   Widget build(BuildContext context) {
     final s = _state;
-    if (s == null || !s.beamerAktiv) return _buildIdle(s);
-    return switch (s.phase) {
-      'buzzerduell'              => _buildBuzzerduell(s),
-      'hauptrunde' || 'stehlen'  => _buildHauptrunde(s),
-      'rundenende'               => _buildRundenende(s),
-      'fastfive'                 => _buildFastFive(s),
-      'ende'                     => _buildEnde(s),
-      _                          => _buildIdle(s),
-    };
+    // DefaultTextStyle.none setzt alle vom Theme geerbten Dekorationen zurück
+    Widget inner;
+    if (s == null || !s.beamerAktiv) {
+      inner = _buildIdle(s);
+    } else {
+      inner = switch (s.phase) {
+        'buzzerduell'              => _buildBuzzerduell(s),
+        'hauptrunde' || 'stehlen'  => _buildHauptrunde(s),
+        'rundenende'               => _buildRundenende(s),
+        'fastfive'                 => _buildFastFive(s),
+        'ende'                     => _buildEnde(s),
+        _                          => _buildIdle(s),
+      };
+    }
+    return DefaultTextStyle(
+      style: const TextStyle(decoration: TextDecoration.none, color: Colors.white),
+      child: inner,
+    );
   }
 
   // ══ IDLE ════════════════════════════════════════════════════════════════════
