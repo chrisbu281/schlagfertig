@@ -1221,6 +1221,47 @@ def system_update_check():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+def _starte_flutter_rebuild():
+    """Startet Flutter-Build als unabhängigen Hintergrundprozess.
+    Läuft auch nach dem Server-Neustart weiter und startet dann den Flutter-Display neu."""
+    flutter_dir = os.path.join(BASIS, "flutter_app")
+    if not os.path.isdir(flutter_dir):
+        return
+    # Flutter-Binary suchen: Login-Shell (hat die richtige PATH mit ~/flutter/bin)
+    flutter = ""
+    try:
+        r = subprocess.run(["bash", "-lc", "command -v flutter"], capture_output=True, text=True, timeout=5)
+        flutter = r.stdout.strip()
+    except Exception:
+        pass
+    if not flutter or not os.path.isfile(flutter):
+        for cand in ["/home/pi/flutter/bin/flutter", os.path.expanduser("~/flutter/bin/flutter"), "/opt/flutter/bin/flutter"]:
+            if os.path.isfile(cand):
+                flutter = cand
+                break
+    if not flutter or not os.path.isfile(flutter):
+        print("Flutter-Display-Build übersprungen: Flutter nicht gefunden")
+        return
+    log = "/tmp/flutter-build.log"
+    try:
+        # preexec_fn=os.setsid: Kind-Prozess in eigener Session → überlebt den Server-Neustart
+        subprocess.Popen(
+            ["bash", "-c",
+             f"echo '[$(date)] Flutter-Build nach Update gestartet' >> {log}"
+             f" && cd {flutter_dir}"
+             f" && {flutter} build linux --release >> {log} 2>&1"
+             f" && pkill -f 'release/bundle/schlagfertig' 2>/dev/null"
+             f"; echo '[$(date)] Flutter-Build beendet' >> {log}"],
+            close_fds=True,
+            preexec_fn=os.setsid,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        print("Flutter-Display-Build im Hintergrund gestartet (Log: /tmp/flutter-build.log)")
+    except Exception as e:
+        print(f"Flutter-Display-Build konnte nicht gestartet werden: {e}")
+
+
 @app.route("/api/system/update", methods=["POST"])
 def system_update():
     def do_update():
@@ -1235,6 +1276,7 @@ def system_update():
                 )
         except Exception:
             pass
+        _starte_flutter_rebuild()
         time.sleep(1)
         os.system("sudo systemctl restart schlagfertig")
     threading.Thread(target=do_update, daemon=True).start()
