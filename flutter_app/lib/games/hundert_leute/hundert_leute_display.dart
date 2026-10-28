@@ -27,21 +27,25 @@ class HundertLeuteDisplay extends StatefulWidget {
 class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
   late final IO.Socket _ns;
   SpielState100Leute? _state;
+  late final void Function(dynamic) _onState;
 
   @override
   void initState() {
     super.initState();
     _ns = SocketService().connectNamespace('/100leute');
-    _ns.on('state', (data) {
+    _onState = (data) {
       if (data is Map && mounted) {
         setState(() => _state = SpielState100Leute.fromMap(data));
       }
-    });
+    };
+    _ns.on('state', _onState);
   }
 
   @override
   void dispose() {
-    _ns.off('state');
+    // Nur diesen spezifischen Callback entfernen, nicht alle 'state'-Listener
+    // (der Namespace-Socket ist geteilt – display_screen.dart hat ebenfalls einen Listener)
+    _ns.off('state', _onState);
     super.dispose();
   }
 

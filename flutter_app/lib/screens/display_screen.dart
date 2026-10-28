@@ -13,6 +13,7 @@ class DisplayScreen extends StatefulWidget {
 class _DisplayScreenState extends State<DisplayScreen> {
   bool _connected = true;
   String? _activeGame;
+  late final void Function(dynamic) _onState;
 
   @override
   void initState() {
@@ -20,20 +21,22 @@ class _DisplayScreenState extends State<DisplayScreen> {
     SocketService().on('connect', (_) => setState(() => _connected = true));
     SocketService().on('disconnect', (_) => setState(() => _connected = false));
 
-    // Listen on /100leute namespace to know when beamer is active
     final ns = SocketService().connectNamespace('/100leute');
-    ns.on('state', (data) {
+    _onState = (data) {
       if (data is Map && mounted) {
         final s = SpielState100Leute.fromMap(data);
         setState(() => _activeGame = s.beamerAktiv ? '100leute' : null);
       }
-    });
+    };
+    ns.on('state', _onState);
   }
 
   @override
   void dispose() {
     SocketService().off('connect');
     SocketService().off('disconnect');
+    final ns = SocketService().connectNamespace('/100leute');
+    ns.off('state', _onState);
     super.dispose();
   }
 
