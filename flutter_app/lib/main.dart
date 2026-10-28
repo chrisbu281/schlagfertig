@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'screens/startup_screen.dart';
 
 void main() {
@@ -23,6 +24,9 @@ class SchlagfertigApp extends StatelessWidget {
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFFF5C518),
           surface: Color(0xFF0D1117),
+        ),
+        textTheme: GoogleFonts.barlowCondensedTextTheme(
+          ThemeData.dark().textTheme,
         ),
         inputDecorationTheme: const InputDecorationTheme(
           border: OutlineInputBorder(),

@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../../core/socket_service.dart';
 import '../../core/game_state.dart';
+
+// Barlow Condensed Helfer
+TextStyle _bc(double size, FontWeight weight, Color color, {double? letterSpacing, double? height}) =>
+    GoogleFonts.barlowCondensed(fontSize: size, fontWeight: weight, color: color,
+        letterSpacing: letterSpacing, height: height);
 
 // ── Farbpalette ──────────────────────────────────────────────────────────────
 const _kGold       = Color(0xFFF5C518);
@@ -79,26 +85,23 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             // Großer Logo-Text
             RichText(
-              text: const TextSpan(
-                style: TextStyle(fontSize: 80, fontWeight: FontWeight.w900, letterSpacing: 8),
+              text: TextSpan(
                 children: [
-                  TextSpan(text: 'SCHLAG', style: TextStyle(color: Colors.white)),
-                  TextSpan(text: 'FERTIG', style: TextStyle(color: _kGold)),
+                  TextSpan(text: 'SCHLAG', style: _bc(96, FontWeight.w900, Colors.white, letterSpacing: 6)),
+                  TextSpan(text: 'FERTIG', style: _bc(96, FontWeight.w900, _kGold, letterSpacing: 6)),
                 ],
               ),
             ),
             const SizedBox(height: 10),
-            const Text('100 LEUTE GEFRAGT',
-                style: TextStyle(color: Colors.white38, fontSize: 22, letterSpacing: 6, fontWeight: FontWeight.w300)),
+            Text('100 LEUTE GEFRAGT',
+                style: _bc(26, FontWeight.w300, Colors.white38, letterSpacing: 8)),
             if (s != null && (s.teamA.name != 'Team A' || s.teamB.name != 'Team B')) ...[
               const SizedBox(height: 60),
               Row(mainAxisSize: MainAxisSize.min, children: [
                 _idleBadge(s.teamA.name, _kTeamABrt),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Text('VS', style: TextStyle(
-                    color: Colors.white.withOpacity(0.3),
-                    fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: 4)),
+                  child: Text('VS', style: _bc(24, FontWeight.w900, Colors.white30, letterSpacing: 4)),
                 ),
                 _idleBadge(s.teamB.name, _kTeamBBrt),
               ]),
@@ -116,7 +119,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
       borderRadius: BorderRadius.circular(8),
       border: Border.all(color: color.withOpacity(0.6), width: 2),
     ),
-    child: Text(name, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+    child: Text(name, style: _bc(24, FontWeight.w700, Colors.white)),
   );
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -134,8 +137,8 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
           if (s.aktiveFrage != null)
             _questionBox(s.aktiveFrage!.frage)
           else
-            const Center(child: Text('Warten auf Frage…',
-                style: TextStyle(color: Colors.white38, fontSize: 28))),
+            Center(child: Text('Warten auf Frage…',
+              style: _bc(28, FontWeight.w300, Colors.white38, letterSpacing: 2))),
           const SizedBox(height: 48),
           _buildBuzzerStatus(s),
         ],
@@ -149,10 +152,9 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
       final w = s.teamFor(d.gewinner!);
       final c = d.gewinner == 'A' ? _kTeamABrt : _kTeamBBrt;
       return Center(child: Column(children: [
-        const Text('GEWINNER DES DUELLS',
-            style: TextStyle(color: Colors.white38, fontSize: 16, letterSpacing: 4)),
+        Text('GEWINNER DES DUELLS', style: _bc(16, FontWeight.w300, Colors.white38, letterSpacing: 5)),
         const SizedBox(height: 12),
-        Text(w.name, style: TextStyle(color: c, fontSize: 52, fontWeight: FontWeight.w900, letterSpacing: 2)),
+        Text(w.name, style: _bc(58, FontWeight.w900, c, letterSpacing: 2)),
       ]));
     }
     if (d.ersterTeam != null) {
@@ -165,8 +167,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: c, width: 2),
         ),
-        child: Text('${t.name} hat gebuzzt!',
-            style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+        child: Text('${t.name} hat gebuzzt!', style: _bc(36, FontWeight.w800, Colors.white)),
       ));
     }
     if (d.buzzerOffen) {
@@ -178,13 +179,12 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: _kGold, width: 2.5),
           ),
-          child: const Text('BUZZER OFFEN',
-              style: TextStyle(color: _kGold, fontSize: 38, fontWeight: FontWeight.w900, letterSpacing: 6)),
+          child: Text('BUZZER OFFEN', style: _bc(48, FontWeight.w900, _kGold, letterSpacing: 8)),
         ),
       ));
     }
-    return const Center(child: Text('Warten auf Moderator…',
-        style: TextStyle(color: Colors.white24, fontSize: 20)));
+    return Center(child: Text('Warten auf Moderator…',
+        style: _bc(20, FontWeight.w300, Colors.white24, letterSpacing: 2)));
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -237,7 +237,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
           borderRadius: BorderRadius.circular(6),
         ),
         child: Text('RUNDE ${s.runde} / ${s.config.runden}',
-            style: const TextStyle(color: Colors.white54, fontSize: 16, letterSpacing: 3, fontWeight: FontWeight.w500)),
+            style: _bc(16, FontWeight.w500, Colors.white54, letterSpacing: 3)),
       ),
       const Spacer(),
       if (s.phase == 'stehlen')
@@ -248,14 +248,12 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
             borderRadius: BorderRadius.circular(6),
             border: Border.all(color: Colors.orange.withOpacity(0.8), width: 1.5),
           ),
-          child: const Text('STEHLEN',
-              style: TextStyle(color: Colors.orange, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 3)),
+          child: Text('STEHLEN', style: _bc(17, FontWeight.w900, Colors.orange, letterSpacing: 3)),
         ),
       const Spacer(),
       Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        const Text('TOPF', style: TextStyle(color: Colors.white38, fontSize: 12, letterSpacing: 3)),
-        Text('${s.rundentopf} PKT',
-            style: const TextStyle(color: _kGold, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: 1)),
+        Text('TOPF', style: _bc(12, FontWeight.w300, Colors.white38, letterSpacing: 3)),
+        Text('${s.rundentopf} PKT', style: _bc(22, FontWeight.w900, _kGold, letterSpacing: 1)),
       ]),
     ]);
   }
@@ -286,11 +284,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
           ),
           alignment: Alignment.center,
           child: Text('${idx + 1}',
-              style: TextStyle(
-                color: a.auf ? _kGold : Colors.white30,
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-              )),
+              style: _bc(22, FontWeight.w900, a.auf ? _kGold : Colors.white30)),
         ),
         // Antwort-Text
         Expanded(
@@ -298,12 +292,9 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text(
               a.auf ? a.text.toUpperCase() : '— — —',
-              style: TextStyle(
-                color: a.auf ? Colors.white : _kWhite22,
-                fontSize: 22,
-                fontWeight: a.auf ? FontWeight.w700 : FontWeight.w400,
-                letterSpacing: a.auf ? 0.5 : 2,
-              ),
+              style: _bc(24, a.auf ? FontWeight.w700 : FontWeight.w400,
+                  a.auf ? Colors.white : _kWhite22,
+                  letterSpacing: a.auf ? 0.5 : 3),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -315,11 +306,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Text(
             a.auf ? '${a.punkte}' : '?',
-            style: TextStyle(
-              color: a.auf ? _kGold : _kWhite15,
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
-            ),
+            style: _bc(28, FontWeight.w900, a.auf ? _kGold : _kWhite15),
           ),
         ),
       ]),
@@ -346,9 +333,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
             ),
             child: Center(
               child: Text(hit ? '✕' : '',
-                  style: TextStyle(
-                    color: hit ? _kStrike : Colors.transparent,
-                    fontSize: 20, fontWeight: FontWeight.w900)),
+                  style: _bc(20, FontWeight.w900, hit ? _kStrike : Colors.transparent)),
             ),
           ),
         );
@@ -370,11 +355,9 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
         Positioned.fill(child: CustomPaint(painter: _DotGridPainter())),
         Center(
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Text('RUNDE GEWONNEN',
-                style: TextStyle(color: Colors.white38, fontSize: 18, letterSpacing: 5)),
+            Text('RUNDE GEWONNEN', style: _bc(20, FontWeight.w400, Colors.white38, letterSpacing: 6)),
             const SizedBox(height: 20),
-            Text(winnerName,
-                style: TextStyle(color: color, fontSize: 68, fontWeight: FontWeight.w900, letterSpacing: 2)),
+            Text(winnerName, style: _bc(76, FontWeight.w900, color, letterSpacing: 2)),
             const SizedBox(height: 28),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 18),
@@ -384,7 +367,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
                 border: Border.all(color: _kGold, width: 2),
               ),
               child: Text('+${re?.topf ?? 0} Punkte',
-                  style: const TextStyle(color: _kGold, fontSize: 36, fontWeight: FontWeight.w900)),
+                  style: _bc(38, FontWeight.w900, _kGold, letterSpacing: 1)),
             ),
             const SizedBox(height: 56),
             Row(mainAxisSize: MainAxisSize.min, children: [
@@ -407,8 +390,8 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
       return Container(
         color: _kDark,
         child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Text('FAST', style: TextStyle(color: Colors.white38, fontSize: 28, letterSpacing: 8, fontWeight: FontWeight.w300)),
-          const Text('FIVE', style: TextStyle(color: _kGold, fontSize: 80, fontWeight: FontWeight.w900, letterSpacing: 12)),
+          Text('FAST', style: _bc(30, FontWeight.w300, Colors.white38, letterSpacing: 12)),
+          Text('FIVE', style: _bc(88, FontWeight.w900, _kGold, letterSpacing: 14)),
           const SizedBox(height: 48),
           Row(mainAxisSize: MainAxisSize.min, children: [
             _scoreTile(s.teamA.name, s.teamA.punkte, _kTeamABrt),
@@ -440,17 +423,12 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
                 border: Border.all(color: dranColor, width: 2),
               ),
               child: Text('FAST FIVE · $dranName',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900,
-                      fontSize: 20, letterSpacing: 2)),
+                  style: _bc(20, FontWeight.w900, Colors.white, letterSpacing: 2)),
             ),
             const Spacer(),
             if (ff.timerLaueft || ff.timerRest > 0) ...[
               Text('${ff.timerRest}s',
-                  style: TextStyle(
-                    color: timerWarn ? _kStrike : Colors.white70,
-                    fontSize: timerWarn ? 40 : 32,
-                    fontWeight: FontWeight.w900,
-                  )),
+                  style: _bc(timerWarn ? 44 : 34, FontWeight.w900, timerWarn ? _kStrike : Colors.white70)),
             ],
           ]),
           // Timer-Bar
@@ -502,18 +480,16 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
                             ),
                             alignment: Alignment.center,
                             child: Text('${i + 1}',
-                                style: TextStyle(
-                                  color: a.auf ? tColor : Colors.white30,
-                                  fontSize: 20, fontWeight: FontWeight.w900)),
+                                style: _bc(22, FontWeight.w900, a.auf ? tColor : Colors.white30)),
                           ),
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               child: Text(
                                 a.auf ? a.text.toUpperCase() : '— — —',
-                                style: TextStyle(
-                                  color: a.auf ? Colors.white : _kWhite22,
-                                  fontSize: 22, fontWeight: a.auf ? FontWeight.w700 : FontWeight.w400),
+                                style: _bc(23, a.auf ? FontWeight.w700 : FontWeight.w400,
+                                    a.auf ? Colors.white : _kWhite22,
+                                    letterSpacing: a.auf ? 0.5 : 3),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -522,9 +498,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
                             width: 72,
                             alignment: Alignment.center,
                             child: Text(a.auf ? '${a.punkte}' : '?',
-                                style: TextStyle(
-                                  color: a.auf ? _kGold : _kWhite15,
-                                  fontSize: 26, fontWeight: FontWeight.w900)),
+                                style: _bc(28, FontWeight.w900, a.auf ? _kGold : _kWhite15)),
                           ),
                         ]),
                       ),
@@ -534,22 +508,18 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
               ),
             ),
           ] else
-            const Expanded(child: Center(
+            Expanded(child: Center(
               child: Text('Nächste Frage…',
-                  style: TextStyle(color: Colors.white24, fontSize: 28)),
+                  style: _bc(28, FontWeight.w300, Colors.white24, letterSpacing: 2)),
             )),
           const SizedBox(height: 10),
           // FF-Punkte
           Row(children: [
             Text('A: ${ff.punkteA} Pkt',
-                style: TextStyle(
-                    color: ff.dran == 'A' ? _kTeamABrt : Colors.white38,
-                    fontWeight: FontWeight.bold, fontSize: 18)),
+                style: _bc(20, FontWeight.w700, ff.dran == 'A' ? _kTeamABrt : Colors.white38, letterSpacing: 1)),
             const Spacer(),
             Text('B: ${ff.punkteB} Pkt',
-                style: TextStyle(
-                    color: ff.dran == 'B' ? _kTeamBBrt : Colors.white38,
-                    fontWeight: FontWeight.bold, fontSize: 18)),
+                style: _bc(20, FontWeight.w700, ff.dran == 'B' ? _kTeamBBrt : Colors.white38, letterSpacing: 1)),
           ]),
         ],
       ),
@@ -569,18 +539,15 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
         Positioned.fill(child: CustomPaint(painter: _DotGridPainter())),
         Center(
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Text('SPIELENDE',
-                style: TextStyle(color: Colors.white38, fontSize: 18, letterSpacing: 6)),
+            Text('SPIELENDE', style: _bc(18, FontWeight.w300, Colors.white38, letterSpacing: 7)),
             const SizedBox(height: 28),
             if (draw)
-              const Text('UNENTSCHIEDEN',
-                  style: TextStyle(color: _kGold, fontSize: 56, fontWeight: FontWeight.w900, letterSpacing: 3))
+              Text('UNENTSCHIEDEN', style: _bc(58, FontWeight.w900, _kGold, letterSpacing: 4))
             else ...[
               Text(aWins ? s.teamA.name : s.teamB.name,
-                  style: TextStyle(color: winnerColor, fontSize: 68, fontWeight: FontWeight.w900, letterSpacing: 2)),
+                  style: _bc(72, FontWeight.w900, winnerColor, letterSpacing: 2)),
               const SizedBox(height: 8),
-              const Text('S I E G T !',
-                  style: TextStyle(color: _kGold, fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: 10)),
+              Text('S I E G T !', style: _bc(28, FontWeight.w900, _kGold, letterSpacing: 10)),
             ],
             const SizedBox(height: 56),
             Row(mainAxisSize: MainAxisSize.min, children: [
@@ -646,38 +613,26 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
               borderRadius: BorderRadius.circular(5),
               border: Border.all(color: _kGold.withOpacity(0.7), width: 1.5),
             ),
-            child: const Text('AM ZUG',
-                style: TextStyle(color: _kGold, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 3)),
+            child: Text('AM ZUG', style: _bc(13, FontWeight.w900, _kGold, letterSpacing: 3)),
           ),
         ),
         // TEAM A / B Label
         Text('TEAM $key',
-            style: TextStyle(color: bright.withOpacity(active ? 0.9 : 0.5), fontSize: 13,
-                fontWeight: FontWeight.w900, letterSpacing: 4)),
+            style: _bc(15, FontWeight.w900, bright.withOpacity(active ? 0.9 : 0.5), letterSpacing: 5)),
         const SizedBox(height: 8),
         // Team-Name
         Text(team.name,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: active ? Colors.white : Colors.white60,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: _bc(22, FontWeight.w700, active ? Colors.white : Colors.white60),
             maxLines: 2,
             overflow: TextOverflow.ellipsis),
         const SizedBox(height: 28),
         // Punktzahl — groß
         Text('${team.punkte}',
-            style: TextStyle(
-              color: active ? _kGold : Colors.white60,
-              fontSize: 72,
-              fontWeight: FontWeight.w900,
-              height: 1.0,
-            )),
+            style: _bc(88, FontWeight.w900, active ? _kGold : Colors.white60, height: 1.0)),
         const SizedBox(height: 4),
-        Text('PUNKTE',
-            style: TextStyle(color: active ? Colors.white38 : Colors.white24,
-                fontSize: 12, letterSpacing: 4)),
+        Text('PUNKTE', style: _bc(14, FontWeight.w400,
+            active ? Colors.white38 : Colors.white24, letterSpacing: 5)),
       ]),
     );
   }
@@ -694,7 +649,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text('RUNDE ${s.runde} / ${s.config.runden}',
-          style: const TextStyle(color: Colors.white54, fontSize: 16, letterSpacing: 4, fontWeight: FontWeight.w500)),
+          style: _bc(16, FontWeight.w500, Colors.white54, letterSpacing: 4)),
     ),
   );
 
@@ -707,12 +662,7 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
     ),
     child: Text(frage,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 28,
-          fontWeight: FontWeight.w600,
-          height: 1.35,
-        )),
+        style: _bc(32, FontWeight.w600, Colors.white, height: 1.3)),
   );
 
   Widget _scoreTile(String name, int pts, Color color, {bool highlight = false}) => Container(
@@ -724,11 +674,11 @@ class _HundertLeuteDisplayState extends State<HundertLeuteDisplay> {
       boxShadow: highlight ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 20)] : null,
     ),
     child: Column(children: [
-      Text(name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+      Text(name, style: _bc(18, FontWeight.w700, Colors.white, letterSpacing: 0.5)),
       const SizedBox(height: 6),
-      Text('$pts', style: TextStyle(color: color, fontSize: 52, fontWeight: FontWeight.w900, height: 1.0)),
+      Text('$pts', style: _bc(56, FontWeight.w900, color, height: 1.0)),
       const SizedBox(height: 2),
-      const Text('Pkt', style: TextStyle(color: Colors.white38, fontSize: 14)),
+      Text('Pkt', style: _bc(14, FontWeight.w300, Colors.white38, letterSpacing: 3)),
     ]),
   );
 }
