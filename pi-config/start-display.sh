@@ -66,6 +66,10 @@ while true; do
 
     # Rebuild wenn: Dart-Quellen neuer als Binary, oder Binary fehlt
     FLUTTER_CMD=$(command -v flutter 2>/dev/null || echo "")
+    # Fallback: Flutter nicht im PATH aber am bekannten Installationspfad
+    if [ -z "$FLUTTER_CMD" ] && [ -x "/home/pi/flutter/bin/flutter" ]; then
+        FLUTTER_CMD="/home/pi/flutter/bin/flutter"
+    fi
     if [ -n "$FLUTTER_CMD" ]; then
         if [ -z "$FLUTTER_BIN" ] || find "$FLUTTER_LIB_DIR" -name "*.dart" -newer "$FLUTTER_BIN" -print -quit 2>/dev/null | grep -q .; then
             echo "[$(date '+%H:%M:%S')] Dart-Quellen aktualisiert – Flutter-Rebuild läuft..." >> "$LOG"
