@@ -53,21 +53,37 @@ else
     xrandr --auto 2>/dev/null || true
 fi
 
-# Flutter-Binary prüfen
-if [ -z "$FLUTTER_BIN" ] || [ ! -x "$FLUTTER_BIN" ]; then
-    echo "FEHLER: Flutter-Release-Binary nicht gefunden unter $FLUTTER_BUILD_DIR"
-    echo "Bitte zuerst auf dem Pi ausführen:"
-    echo "  cd /home/pi/schlagfertig/flutter_app && flutter build linux --release"
-    exit 1
-fi
-
 LOG="/tmp/schlagfertig-display.log"
 echo "=== Display-Start $(date) ===" >> "$LOG"
-echo "Flutter-Binary: $FLUTTER_BIN" >> "$LOG"
 
-# Flutter mit Neustart-Schleife (crasht es, startet es neu)
+FLUTTER_APP_DIR="/home/pi/schlagfertig/flutter_app"
+FLUTTER_LIB_DIR="$FLUTTER_APP_DIR/lib"
+
+# Flutter mit Neustart-Schleife; baut automatisch neu wenn Dart-Quellen aktualisiert wurden
 while true; do
-    echo "[$(date '+%H:%M:%S')] Starte Flutter..." >> "$LOG"
+    # Binary-Pfad bei jedem Loop-Durchlauf neu ermitteln (nach Rebuild ggf. neuer Pfad)
+    FLUTTER_BIN=$(find "$FLUTTER_BUILD_DIR" -name "schlagfertig" -path "*/release/bundle/*" 2>/dev/null | head -1)
+
+    # Rebuild wenn: Dart-Quellen neuer als Binary, oder Binary fehlt
+    FLUTTER_CMD=$(command -v flutter 2>/dev/null || echo "")
+    if [ -n "$FLUTTER_CMD" ]; then
+        if [ -z "$FLUTTER_BIN" ] || find "$FLUTTER_LIB_DIR" -name "*.dart" -newer "$FLUTTER_BIN" -print -quit 2>/dev/null | grep -q .; then
+            echo "[$(date '+%H:%M:%S')] Dart-Quellen aktualisiert – Flutter-Rebuild läuft..." >> "$LOG"
+            cd "$FLUTTER_APP_DIR" && "$FLUTTER_CMD" build linux --release >> "$LOG" 2>&1 \
+                && echo "[$(date '+%H:%M:%S')] Flutter-Build OK" >> "$LOG" \
+                || echo "[$(date '+%H:%M:%S')] Flutter-Build FEHLGESCHLAGEN" >> "$LOG"
+            FLUTTER_BIN=$(find "$FLUTTER_BUILD_DIR" -name "schlagfertig" -path "*/release/bundle/*" 2>/dev/null | head -1)
+        fi
+    fi
+
+    if [ -z "$FLUTTER_BIN" ] || [ ! -x "$FLUTTER_BIN" ]; then
+        echo "[$(date '+%H:%M:%S')] FEHLER: Flutter-Binary nicht gefunden – Neustart in 30s" >> "$LOG"
+        echo "  Manuell ausführen: cd $FLUTTER_APP_DIR && flutter build linux --release" >> "$LOG"
+        sleep 30
+        continue
+    fi
+
+    echo "[$(date '+%H:%M:%S')] Starte Flutter ($FLUTTER_BIN)..." >> "$LOG"
 
     DISPLAY=:0 "$FLUTTER_BIN" >> "$LOG" 2>&1 &
     FLUTTER_PID=$!

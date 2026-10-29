@@ -1240,7 +1240,9 @@ def _starte_flutter_rebuild():
                 flutter = cand
                 break
     if not flutter or not os.path.isfile(flutter):
-        print("Flutter-Display-Build übersprungen: Flutter nicht gefunden")
+        # Flutter nicht gefunden – Binary trotzdem beenden damit start-display.sh einen Rebuild auslösen kann
+        print("Flutter nicht gefunden – Flutter-Display wird neu gestartet (start-display.sh baut neu)")
+        subprocess.run(["pkill", "-f", "release/bundle/schlagfertig"], capture_output=True)
         return
     log = "/tmp/flutter-build.log"
     try:
@@ -1260,6 +1262,7 @@ def _starte_flutter_rebuild():
         print("Flutter-Display-Build im Hintergrund gestartet (Log: /tmp/flutter-build.log)")
     except Exception as e:
         print(f"Flutter-Display-Build konnte nicht gestartet werden: {e}")
+        subprocess.run(["pkill", "-f", "release/bundle/schlagfertig"], capture_output=True)
 
 
 @app.route("/api/system/update", methods=["POST"])
