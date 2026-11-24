@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Party Display</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#050810;overflow:hidden;cursor:none}
+
+/* ── Szenen ─────────────────────────────────────────────────── */
+.scene{
+  position:fixed;inset:0;
+  opacity:0;pointer-events:none;
+  transition:opacity .7s ease;z-index:1;
+}
+.scene.active{opacity:1;pointer-events:all;z-index:2}
+iframe.scene{width:100%;height:100%;border:none;background:#000}
+
+/* ── Arm-Overlay ─────────────────────────────────────────────── */
+#arm{
+  position:fixed;inset:0;z-index:100;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:#050810;cursor:pointer;
+  transition:opacity .6s ease;
+}
+#arm.gone{opacity:0;pointer-events:none}
+#arm .a-title{
+  font-family:"Chakra Petch",monospace;font-weight:700;font-size:clamp(28px,5vw,72px);
+  letter-spacing:.3em;color:#e8b33a;text-transform:uppercase;
+}
+#arm .a-hint{
+  font-family:"Chakra Petch",monospace;font-size:clamp(13px,2vw,22px);
+  color:rgba(255,255,255,.35);letter-spacing:.2em;margin-top:28px;
+  animation:blink 2s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:.35}50%{opacity:.9}}
+
+/* ── Idle-Szene ──────────────────────────────────────────────── */
+#scene-idle{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:#050810;
+  /*
+   * HINTERGRUNDBILD HIER EINTRAGEN:
+   * background: url('/dein-bild.jpg') center/cover no-repeat;
+   *
+   * Dann noch einen dunklen Overlay ergänzen damit der Text lesbar bleibt:
+   * Dazu die .idle-overlay Klasse im HTML-Div aktivieren.
+  */
+}
+canvas#stars{position:absolute;inset:0;z-index:0}
+.idle-overlay{
+  position:absolute;inset:0;z-index:1;
+  background:linear-gradient(to bottom,rgba(5,8,16,.55) 0%,rgba(5,8,16,.3) 50%,rgba(5,8,16,.7) 100%);
+}
+.idle-content{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;align-items:center;gap:clamp(24px,4vh,60px);
+  padding:40px 20px;text-align:center;
+}
+.year-line{
+  font-family:"Chakra Petch",monospace;font-weight:300;
+  font-size:clamp(14px,2vw,26px);letter-spacing:.45em;
+  color:rgba(232,179,58,.7);text-transform:uppercase;
+}
+.silvester-title{
+  font-family:"Chakra Petch",monospace;font-weight:700;
+  font-size:clamp(44px,9vw,130px);letter-spacing:.15em;
+  color:#fff;text-shadow:0 0 60px rgba(232,179,58,.4),0 0 120px rgba(232,179,58,.15);
+  line-height:1;text-transform:uppercase;
+}
+.countdown{
+  display:flex;gap:clamp(16px,4vw,56px);align-items:flex-start;
+}
+.cd-unit{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+.cd-num{
+  font-family:"JetBrains Mono",monospace;font-weight:700;
+  font-size:clamp(44px,9vw,120px);line-height:1;
+  color:#fff;
+  text-shadow:0 0 40px rgba(232,179,58,.5);
+  min-width:2ch;text-align:center;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(232,179,58,.2);
+  border-radius:8px;padding:clamp(8px,1.5vh,20px) clamp(10px,1.5vw,24px);
+}
+.cd-label{
+  font-family:"Chakra Petch",monospace;font-size:clamp(10px,1.1vw,16px);
+  letter-spacing:.3em;color:rgba(232,179,58,.6);text-transform:uppercase;
+}
+.cd-sep{
+  font-family:"JetBrains Mono",monospace;font-weight:700;
+  font-size:clamp(44px,9vw,120px);line-height:1;color:rgba(232,179,58,.3);
+  align-self:flex-start;padding-top:clamp(8px,1.5vh,20px);
+}
+.bottom-brand{
+  font-family:"Chakra Petch",monospace;font-weight:300;
+  font-size:clamp(10px,1.2vw,18px);letter-spacing:.5em;
+  color:rgba(255,255,255,.18);text-transform:uppercase;
+  position:fixed;bottom:28px;left:0;right:0;text-align:center;
+}
+.countdown-done{
+  font-family:"Chakra Petch",monospace;font-weight:700;
+  font-size:clamp(32px,6vw,80px);letter-spacing:.2em;
+  color:#e8b33a;text-shadow:0 0 60px rgba(232,179,58,.8);
+  text-transform:uppercase;
+}
+
+/* ── Szenen-Label (kurz sichtbar beim Wechsel) ─────────────── */
+#scene-toast{
+  position:fixed;bottom:40px;left:50%;transform:translateX(-50%);z-index:50;
+  font-family:"Chakra Petch",monospace;font-size:14px;letter-spacing:.2em;
+  color:rgba(255,255,255,.5);background:rgba(0,0,0,.7);
+  border:1px solid rgba(255,255,255,.1);
+  padding:8px 20px;border-radius:4px;
+  opacity:0;pointer-events:none;transition:opacity .4s;
+}
+#scene-toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- Arm-Overlay ──────────────────────────────────────────────── -->
+<div id="arm">
+  <div class="a-title">BEAMER-ANZEIGE</div>
+  <div class="a-hint">hier klicken zum starten</div>
+</div>
+
+<!-- Szene: Idle (Silvester-Countdown) ───────────────────────── -->
+<div id="scene-idle" class="scene active">
+  <canvas id="stars"></canvas>
+  <div class="idle-overlay"></div>
+  <div class="idle-content">
+    <div class="year-line" id="year-line">SILVESTER</div>
+    <div class="silvester-title">SILVESTER</div>
+    <div class="countdown" id="countdown">
+      <div class="cd-unit"><div class="cd-num" id="cd-d">--</div><div class="cd-label">Tage</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-num" id="cd-h">--</div><div class="cd-label">Stunden</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-num" id="cd-m">--</div><div class="cd-label">Minuten</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-num" id="cd-s">--</div><div class="cd-label">Sekunden</div></div>
+    </div>
+  </div>
+  <div class="bottom-brand">Schlagfertig · Party Hub</div>
+</div>
+
+<!-- Szene: Zufallsgenerator ─────────────────────────────────── -->
+<iframe id="scene-zufall" class="scene" src="/zufall#anzeige" allow="autoplay"></iframe>
+
+<!-- Szene: 100 Leute gefragt ────────────────────────────────── -->
+<iframe id="scene-100leute" class="scene" src="/spiel/100leute" allow="autoplay"></iframe>
+
+<!-- Szene: Kahoot (Platzhalter) ─────────────────────────────── -->
+<div id="scene-kahoot" class="scene" style="background:#0a0a1a;display:flex;align-items:center;justify-content:center">
+  <div style="font-family:'Chakra Petch',monospace;color:rgba(255,255,255,.2);font-size:3vw;letter-spacing:.3em">KAHOOT</div>
+</div>
+
+<!-- Szenen-Toast ─────────────────────────────────────────────── -->
+<div id="scene-toast"></div>
+
+<script src="/sio.js"></script>
+<script>
+// ── Sternfeld-Animation ──────────────────────────────────────
+(function(){
+  const cv=document.getElementById('stars'),cx=cv.getContext('2d');
+  const S=[];
+  function resize(){cv.width=innerWidth;cv.height=innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<180;i++)S.push({x:Math.random(),y:Math.random(),r:Math.random()*1.4+.3,a:Math.random(),da:(Math.random()-.5)*.008});
+  function draw(){
+    cx.clearRect(0,0,cv.width,cv.height);
+    S.forEach(s=>{
+      s.a+=s.da;if(s.a<.05||s.a>.9)s.da*=-1;
+      cx.beginPath();cx.arc(s.x*cv.width,s.y*cv.height,s.r,0,Math.PI*2);
+      cx.fillStyle=`rgba(255,255,255,${s.a*.55})`;cx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── Countdown ────────────────────────────────────────────────
+(function(){
+  const now=new Date();
+  const thisYear=now.getFullYear();
+  const nextYear=thisYear+1;
+  document.getElementById('year-line').textContent=`SILVESTER ${thisYear} · ${nextYear}`;
+  document.querySelector('.silvester-title').textContent=`SILVESTER`;
+
+  const target=new Date(nextYear,0,1,0,0,0);
+
+  function update(){
+    const diff=target-new Date();
+    if(diff<=0){
+      document.getElementById('countdown').innerHTML='<div class="countdown-done">🎉 FROHES NEUES JAHR! 🎉</div>';
+      return;
+    }
+    const d=Math.floor(diff/86400000);
+    const h=Math.floor((diff%86400000)/3600000);
+    const m=Math.floor((diff%3600000)/60000);
+    const s=Math.floor((diff%60000)/1000);
+    const p=n=>String(n).padStart(2,'0');
+    document.getElementById('cd-d').textContent=d;
+    document.getElementById('cd-h').textContent=p(h);
+    document.getElementById('cd-m').textContent=p(m);
+    document.getElementById('cd-s').textContent=p(s);
+  }
+  update();setInterval(update,1000);
+})();
+
+// ── Szenen-Steuerung ─────────────────────────────────────────
+let currentScene='idle';
+
+function showScene(name,label){
+  if(name===currentScene)return;
+  currentScene=name;
+
+  document.querySelectorAll('.scene').forEach(s=>s.classList.remove('active'));
+  const target=document.getElementById('scene-'+name);
+  if(target)target.classList.add('active');
+
+  // Zufallsgenerator: autoArm senden
+  if(name==='zufall'){
+    const f=document.getElementById('scene-zufall');
+    if(f)setTimeout(()=>f.contentWindow.postMessage({type:'autoArm'},'*'),500);
+  }
+
+  // Kurzen Toast anzeigen
+  if(label){
+    const t=document.getElementById('scene-toast');
+    t.textContent=label;t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer=setTimeout(()=>t.classList.remove('show'),2500);
+  }
+}
+
+// ── SocketIO /hub ─────────────────────────────────────────────
+let armed=false;
+
+function armDisplay(){
+  if(armed)return;
+  armed=true;
+  const overlay=document.getElementById('arm');
+  overlay.classList.add('gone');
+  setTimeout(()=>overlay.style.display='none',700);
+  try{document.documentElement.requestFullscreen().catch(()=>{});}catch(e){}
+}
+
+document.getElementById('arm').addEventListener('click',armDisplay);
+
+function tryConnectHub(){
+  if(typeof io==='undefined'){
+    setTimeout(tryConnectHub,500);return;
+  }
+  const hub=io('/hub');
+  hub.on('connect',()=>{
+    console.log('[hub] verbunden');
+  });
+  hub.on('scene',data=>{
+    if(!data||!data.name)return;
+    const labels={idle:'Wartescreen',zufall:'Zufallsgenerator','100leute':'100 Leute gefragt',kahoot:'Kahoot'};
+    showScene(data.name,labels[data.name]||data.name);
+  });
+  hub.on('disconnect',()=>{
+    console.log('[hub] getrennt – reconnect …');
+  });
+}
+tryConnectHub();
+
+// Tastatur: F = Vollbild toggle, Escape = Idle
+document.addEventListener('keydown',e=>{
+  if(e.key==='f'||e.key==='F'){try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{});}catch(e){}}
+  if(e.key==='Escape'&&document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Party-Steuerzentrale</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070a12; --panel:#0d1320; --line:#1a2535; --text:#cdd8e6; --dim:#637485;
+  --accent:#e8b33a; --ok:#3ddc97; --warn:#ff8a65;
+  --sz:clamp(13px,1.1vw,15px);
+}
+*{box-sizing:border-box}
+html{background:var(--bg);color:var(--text);font:var(--sz)/1.5 "JetBrains Mono",ui-monospace,monospace}
+body{margin:0;min-height:100vh;padding-bottom:60px}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.header{
+  position:sticky;top:0;z-index:10;
+  background:var(--bg);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:16px;padding:14px 24px;
+}
+.brand{
+  font-family:"Chakra Petch";font-weight:700;font-size:16px;
+  letter-spacing:.2em;color:var(--accent);white-space:nowrap;
+}
+.brand small{font-weight:400;font-size:11px;color:var(--dim);letter-spacing:.1em;margin-left:8px}
+
+.scene-bar{
+  display:flex;align-items:center;gap:10px;margin-left:auto;
+  font-size:12px;color:var(--dim);
+}
+.scene-badge{
+  display:flex;align-items:center;gap:7px;
+  background:var(--panel);border:1px solid var(--line);
+  padding:6px 14px;border-radius:20px;font-size:12px;
+}
+.scene-dot{width:8px;height:8px;border-radius:50%;background:#3a4a5c;flex-shrink:0;transition:background .4s}
+.scene-dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+#scene-name{color:var(--text);font-family:"Chakra Petch";letter-spacing:.1em;font-size:12px;text-transform:uppercase}
+
+.btn-idle{
+  background:none;border:1px solid var(--line);color:var(--dim);
+  padding:7px 14px;border-radius:4px;font-size:12px;white-space:nowrap;
+}
+.btn-idle:hover{border-color:var(--dim);color:var(--text)}
+
+.btn-display{
+  background:var(--accent);border:1px solid var(--accent);color:#111;
+  font-family:"Chakra Petch";font-weight:700;letter-spacing:.12em;
+  padding:7px 16px;border-radius:4px;font-size:12px;white-space:nowrap;
+}
+.btn-display:hover{filter:brightness(1.1)}
+
+/* ── Verbindungs-Status ──────────────────────────────────────── */
+.conn-bar{
+  padding:7px 24px;background:#07080f;border-bottom:1px solid var(--line);
+  font-size:11px;color:var(--dim);display:flex;align-items:center;gap:8px;
+}
+.conn-bar i{width:7px;height:7px;border-radius:50%;background:#3a4a5c;display:inline-block;flex-shrink:0}
+.conn-bar.on{color:var(--ok)}.conn-bar.on i{background:var(--ok)}
+.conn-bar.off{color:#ff7070}.conn-bar.off i{background:#ff7070}
+
+/* ── Haupt-Layout ────────────────────────────────────────────── */
+.main{max-width:1140px;margin:0 auto;padding:28px 20px}
+.section-title{
+  font-family:"Chakra Petch";font-size:11px;letter-spacing:.35em;
+  color:var(--dim);text-transform:uppercase;margin-bottom:16px;
+  display:flex;align-items:center;gap:12px;
+}
+.section-title::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ── Spiele-Grid ─────────────────────────────────────────────── */
+.game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:36px}
+.game-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:20px;display:flex;flex-direction:column;gap:14px;
+  transition:border-color .2s;
+  position:relative;overflow:hidden;
+}
+.game-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--card-accent,var(--accent));
+  opacity:.6;
+}
+.game-card.active{border-color:rgba(232,179,58,.4)}
+.game-card.active::before{opacity:1}
+.game-card.disabled{opacity:.45}
+
+.card-head{display:flex;align-items:center;gap:12px}
+.card-icon{font-size:28px;line-height:1;width:40px;text-align:center}
+.card-title{font-family:"Chakra Petch";font-size:15px;font-weight:700;letter-spacing:.1em;color:var(--text)}
+.card-sub{font-size:12px;color:var(--dim);margin-top:1px}
+.card-desc{font-size:12px;color:var(--dim);line-height:1.6}
+.card-status{
+  font-size:11px;color:var(--ok);font-family:"Chakra Petch";letter-spacing:.1em;
+  opacity:0;transition:opacity .3s;
+}
+.card-status.show{opacity:1}
+
+.card-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:none;border:1px solid var(--line);color:var(--dim);padding:9px 14px;border-radius:4px;font-size:12px}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#111;font-family:"Chakra Petch";font-weight:700;letter-spacing:.1em}
+.btn.pri:hover:not(:disabled){filter:brightness(1.1)}
+.btn.sec{border-color:#2a3d55;color:var(--dim)}
+.btn.sec:hover:not(:disabled){border-color:var(--dim);color:var(--text)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.soon-badge{font-size:11px;color:#3a4a5c;border:1px solid #1a2535;padding:4px 10px;border-radius:3px;align-self:center}
+
+/* ── Quick-Links ─────────────────────────────────────────────── */
+.links-grid{display:flex;flex-wrap:wrap;gap:10px}
+.link-chip{
+  display:flex;align-items:center;gap:7px;
+  background:var(--panel);border:1px solid var(--line);
+  padding:9px 14px;border-radius:4px;font-size:12px;color:var(--dim);
+  cursor:pointer;transition:border-color .15s,color .15s;
+}
+.link-chip:hover{border-color:var(--dim);color:var(--text)}
+.link-chip .chip-icon{font-size:14px}
+
+/* ── Info-Box ─────────────────────────────────────────────────── */
+.info-box{
+  background:rgba(232,179,58,.06);border:1px solid rgba(232,179,58,.18);
+  border-radius:6px;padding:14px 16px;font-size:12px;color:rgba(232,179,58,.7);
+  line-height:1.6;margin-top:8px;
+}
+.info-box a{color:var(--accent)}
+
+@media(max-width:600px){
+  .header{flex-wrap:wrap;gap:10px}
+  .scene-bar{margin-left:0;width:100%;justify-content:flex-end}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">PARTY HUB <small>STEUERZENTRALE</small></div>
+  <div class="scene-bar">
+    <div class="scene-badge">
+      <div class="scene-dot" id="conn-dot"></div>
+      <span>Beamer:</span>
+      <span id="scene-name">–</span>
+    </div>
+    <button class="btn-idle" onclick="showScene('idle')" title="Wartescreen auf dem Beamer zeigen">⬛ Wartescreen</button>
+    <button class="btn-display" onclick="openDisplay()">Display öffnen ↗</button>
+  </div>
+</div>
+
+<div class="conn-bar off" id="conn-bar">
+  <i></i><span id="conn-text">Verbinde mit Server …</span>
+</div>
+
+<div class="main">
+
+  <!-- ── Spiele ───────────────────────────────────────────── -->
+  <div class="section-title">Spiele</div>
+  <div class="game-grid">
+
+    <!-- Zufallsgenerator ────────────────────────────────── -->
+    <div class="game-card" id="card-zufall" style="--card-accent:#3ddc97">
+      <div class="card-head">
+        <div class="card-icon">🎲</div>
+        <div>
+          <div class="card-title">Zufallsgenerator</div>
+          <div class="card-sub">Spieler auswählen &amp; Teams einteilen</div>
+        </div>
+      </div>
+      <div class="card-desc">Spieler in den Topf werfen, zufällig ziehen oder Teams bilden. Steuerung läuft im Browser, Ergebnis wird auf dem Beamer angezeigt.</div>
+      <div class="card-status" id="status-zufall">▶ Läuft auf Beamer</div>
+      <div class="card-actions">
+        <button class="btn pri" onclick="launchZufall()">▶ Auf Beamer zeigen</button>
+        <button class="btn sec" onclick="openTab('/zufall')">Steuerung öffnen ↗</button>
+      </div>
+    </div>
+
+    <!-- 100 Leute gefragt ────────────────────────────────── -->
+    <div class="game-card" id="card-100leute" style="--card-accent:#4da3ff">
+      <div class="card-head">
+        <div class="card-icon">💯</div>
+        <div>
+          <div class="card-title">100 Leute gefragt</div>
+          <div class="card-sub">Family-Feud – Antworten erraten</div>
+        </div>
+      </div>
+      <div class="card-desc">Zwei Teams treten gegeneinander an und müssen erraten, was die häufigsten Antworten einer Umfrage sind.</div>
+      <div class="card-status" id="status-100leute">▶ Läuft auf Beamer</div>
+      <div class="card-actions">
+        <button class="btn pri" onclick="launch100leute()">▶ Auf Beamer zeigen</button>
+        <button class="btn sec" onclick="openTab('/moderator/100leute')">Moderator öffnen ↗</button>
+      </div>
+    </div>
+
+    <!-- Kahoot ───────────────────────────────────────────── -->
+    <div class="game-card disabled" id="card-kahoot" style="--card-accent:#c77dff">
+      <div class="card-head">
+        <div class="card-icon">❓</div>
+        <div>
+          <div class="card-title">Quiz-Spiel</div>
+          <div class="card-sub">Demnächst verfügbar</div>
+        </div>
+      </div>
+      <div class="card-desc">Hier kommt das Kahoot-artige Quiz-Spiel rein. Spiel-Code aus dem anderen Chat einfügen, dann wird es hier automatisch integriert.</div>
+      <div class="card-actions">
+        <div class="soon-badge">KOMMT NOCH</div>
+      </div>
+    </div>
+
+    <!-- + Neues Spiel ────────────────────────────────────── -->
+    <!-- ANLEITUNG FÜR NEUE SPIELE (als Kommentar, damit du es leicht findest):
+         1. HTML-Datei für Display-Ansicht hinzufügen (z.B. meinspiel_display.html)
+         2. Route in party_app.py hinzufügen:
+              @app.route('/meinspiel')
+              def r_meinspiel():
+                  return send_from_directory(BASIS, 'meinspiel_display.html')
+         3. Iframe in party_display.html hinzufügen:
+              <iframe id="scene-meinspiel" class="scene" src="/meinspiel"></iframe>
+         4. Karte hier im Dashboard hinzufügen (copy-paste von oben)
+         5. launchMeinspiel()-Funktion unten im Script ergänzen -->
+
+  </div>
+
+  <!-- ── Quick Links ──────────────────────────────────────── -->
+  <div class="section-title">Schnell-Links</div>
+  <div class="links-grid">
+    <div class="link-chip" onclick="openTab('/moderator/100leute')"><span class="chip-icon">🎙</span> Moderator 100 Leute</div>
+    <div class="link-chip" onclick="openTab('/100leute/buzz/A')"><span class="chip-icon">🔵</span> Buzzer Team A</div>
+    <div class="link-chip" onclick="openTab('/100leute/buzz/B')"><span class="chip-icon">🔴</span> Buzzer Team B</div>
+    <div class="link-chip" onclick="openTab('/zufall')"><span class="chip-icon">🎲</span> Zufallsgenerator</div>
+    <div class="link-chip" onclick="openDisplay()"><span class="chip-icon">📺</span> Display öffnen</div>
+  </div>
+
+  <div class="info-box" style="margin-top:24px">
+    <strong>Setup:</strong>
+    Display-Fenster auf dem Beamer öffnen → <code>localhost:5000/display</code>.
+    Dann einmal dort klicken zum Aktivieren.
+    Danach kannst du hier die Spiele starten – der Beamer wechselt automatisch.<br>
+    <strong>Offline-Modus:</strong> Falls kein Internet → <code>socket.io.min.js</code> in den Projektordner legen.
+  </div>
+
+</div>
+
+<script src="/sio.js"></script>
+<script>
+let hub = null;
+let connected = false;
+let currentScene = 'idle';
+
+// ── SocketIO verbinden ────────────────────────────────────────
+function connect() {
+  if (typeof io === 'undefined') { setTimeout(connect, 500); return; }
+  hub = io('/hub');
+
+  hub.on('connect', () => {
+    connected = true;
+    setConnStatus(true);
+  });
+  hub.on('disconnect', () => {
+    connected = false;
+    setConnStatus(false);
+  });
+  hub.on('scene', data => {
+    if (data && data.name) updateSceneUI(data.name);
+  });
+}
+connect();
+
+function setConnStatus(on) {
+  const bar = document.getElementById('conn-bar');
+  const dot = document.getElementById('conn-dot');
+  const txt = document.getElementById('conn-text');
+  bar.className = 'conn-bar ' + (on ? 'on' : 'off');
+  dot.className = 'scene-dot ' + (on ? 'on' : '');
+  txt.textContent = on ? 'Mit Server verbunden' : 'Verbindung unterbrochen …';
+}
+
+function updateSceneUI(name) {
+  currentScene = name;
+  const labels = { idle: 'Wartescreen', zufall: 'Zufallsgenerator', '100leute': '100 Leute', kahoot: 'Kahoot' };
+  document.getElementById('scene-name').textContent = labels[name] || name;
+
+  // Aktive Karte hervorheben
+  document.querySelectorAll('.game-card').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById('card-' + name);
+  if (card) card.classList.add('active');
+
+  // Status-Labels zeigen/verstecken
+  document.querySelectorAll('.card-status').forEach(s => s.classList.remove('show'));
+  const st = document.getElementById('status-' + name);
+  if (st) st.classList.add('show');
+}
+
+// ── Szene senden ─────────────────────────────────────────────
+function showScene(name) {
+  if (!hub) return;
+  hub.emit('show_scene', { name });
+}
+
+// ── Launch-Funktionen ─────────────────────────────────────────
+function launchZufall() {
+  showScene('zufall');
+  // Steuerung in neuem Tab öffnen (kurze Verzögerung damit Beamer zuerst wechselt)
+  setTimeout(() => openTab('/zufall'), 300);
+}
+
+function launch100leute() {
+  showScene('100leute');
+  setTimeout(() => openTab('/moderator/100leute'), 300);
+}
+
+// ── Hilfsfunktionen ───────────────────────────────────────────
+function openTab(url) {
+  window.open(url, '_blank');
+}
+
+function openDisplay() {
+  window.open('/display', 'party-display',
+    'width=1280,height=720,toolbar=0,menubar=0,location=0,status=0');
+}
+</script>
+</body>
+</html>
