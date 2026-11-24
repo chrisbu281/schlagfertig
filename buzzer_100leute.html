@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Buzzer · 100 Leute</title>
+<style>
+:root {
+  --c: #2f6fed; --cd: #152f7a; --cl: rgba(47,111,237,.35);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body {
+  height:100%; background:#070a14; color:#fff;
+  font-family:system-ui,-apple-system,sans-serif;
+  overflow:hidden; -webkit-tap-highlight-color:transparent; user-select:none;
+}
+.page {
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; height:100vh; gap:clamp(16px,4vh,32px);
+  padding:20px; position:relative;
+}
+#conn {
+  position:absolute; top:16px; right:16px;
+  width:10px; height:10px; border-radius:50%;
+  background:#e0473a; transition:background .3s;
+}
+#conn.on { background:#33c46a; }
+
+/* Team selector (when no team in URL) */
+#selector { display:flex; flex-direction:column; align-items:center; gap:20px; width:100%; max-width:400px; }
+#selector .sel-title { font-size:clamp(18px,5vw,28px); font-weight:700; color:rgba(255,255,255,.6); letter-spacing:2px; }
+#selector .sel-btn {
+  width:100%; padding:clamp(20px,5vh,32px);
+  border-radius:20px; border:none; font-size:clamp(22px,6vw,36px);
+  font-weight:900; letter-spacing:2px; cursor:pointer;
+  transition:transform .1s, box-shadow .1s; color:#fff;
+}
+#selector .sel-btn:active { transform:scale(.96); }
+#selector .sel-btn.A { background:linear-gradient(135deg,#2f6fed,#152f7a); box-shadow:0 0 40px rgba(47,111,237,.4); }
+#selector .sel-btn.B { background:linear-gradient(135deg,#e0473a,#8f1a1a); box-shadow:0 0 40px rgba(224,71,58,.4); }
+
+/* Buzzer view */
+#buzzer-view { display:none; flex-direction:column; align-items:center; gap:clamp(14px,3.5vh,28px); width:100%; }
+#team-label {
+  font-size:clamp(26px,7vw,52px); font-weight:900; letter-spacing:3px;
+  color:var(--c); text-shadow:0 0 40px var(--cl);
+}
+#phase-hint {
+  font-size:clamp(13px,3.5vw,18px); color:rgba(255,255,255,.35);
+  letter-spacing:1px; text-align:center; transition:color .3s;
+}
+#phase-hint.aktiv { color:rgba(255,255,255,.85); }
+
+.buzz-wrap { position:relative; }
+.buzz-ring {
+  position:absolute; inset:-18px; border-radius:50%;
+  border:2px solid var(--c); opacity:.25; pointer-events:none;
+}
+#buzz-btn {
+  --sz: min(58vw, 54vh, 300px);
+  width:var(--sz); height:var(--sz); border-radius:50%;
+  background:radial-gradient(circle at 35% 32%, var(--c), var(--cd));
+  border:none; cursor:pointer; color:#fff;
+  font-size:clamp(22px,5.5vw,40px); font-weight:900; letter-spacing:3px;
+  box-shadow:0 0 70px var(--cl), 0 24px 60px rgba(0,0,0,.55);
+  transition:transform .1s cubic-bezier(.2,.8,.2,1), box-shadow .1s;
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:6px;
+  -webkit-tap-highlight-color:transparent; position:relative;
+}
+#buzz-btn:active, #buzz-btn.pressed {
+  transform:scale(.91);
+  box-shadow:0 0 120px var(--c), 0 12px 30px rgba(0,0,0,.55);
+}
+#buzz-btn .bi { font-size:1.5em; line-height:1; }
+#buzz-btn .bt { font-size:.44em; letter-spacing:4px; opacity:.75; }
+
+#buzz-btn.disabled {
+  filter:brightness(.45) saturate(.4);
+  cursor:default;
+}
+#buzz-btn.disabled:active { transform:none; box-shadow:0 0 70px var(--cl), 0 24px 60px rgba(0,0,0,.55); }
+
+#feedback {
+  font-size:clamp(16px,4vw,24px); font-weight:700; color:var(--c);
+  min-height:1.6em; text-align:center;
+  opacity:0; transform:translateY(6px);
+  transition:opacity .18s, transform .18s;
+}
+#feedback.zeig { opacity:1; transform:translateY(0); }
+#key-hint { font-size:11px; color:rgba(255,255,255,.18); letter-spacing:1px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="conn"></div>
+
+  <!-- Team-Auswahl (wenn kein Team in URL) -->
+  <div id="selector">
+    <div class="sel-title">TEAM WÄHLEN</div>
+    <button class="sel-btn A" onclick="waehleTeam('A')">🔵 Team A</button>
+    <button class="sel-btn B" onclick="waehleTeam('B')">🔴 Team B</button>
+  </div>
+
+  <!-- Buzzer-Ansicht (nach Teamwahl) -->
+  <div id="buzzer-view">
+    <div id="team-label">Team –</div>
+    <div id="phase-hint">Verbinde …</div>
+    <div class="buzz-wrap">
+      <div class="buzz-ring"></div>
+      <button id="buzz-btn" onclick="buzz()">
+        <span class="bi">🔔</span>
+        <span class="bt">BUZZ!</span>
+      </button>
+    </div>
+    <div id="feedback"></div>
+    <div id="key-hint">oder Leertaste drücken</div>
+  </div>
+</div>
+
+<script src="/sio.js"></script>
+<script>
+// Team aus URL-Pfad lesen: /100leute/buzz/A → "A"
+let team = window.location.pathname.split('/').filter(Boolean).pop().toUpperCase();
+if (team !== 'A' && team !== 'B') team = null;
+
+const FARBEN = {
+  A: { c:'#2f6fed', cd:'#152f7a', cl:'rgba(47,111,237,.35)' },
+  B: { c:'#e0473a', cd:'#8f1a1a', cl:'rgba(224,71,58,.35)' },
+};
+
+function wendeTeamFarbe(t) {
+  const f = FARBEN[t];
+  document.documentElement.style.setProperty('--c',  f.c);
+  document.documentElement.style.setProperty('--cd', f.cd);
+  document.documentElement.style.setProperty('--cl', f.cl);
+}
+
+function zeigeBuzzer(t) {
+  team = t;
+  wendeTeamFarbe(t);
+  document.getElementById('selector').style.display   = 'none';
+  document.getElementById('buzzer-view').style.display = 'flex';
+  updateUI();
+}
+
+function waehleTeam(t) {
+  history.pushState({}, '', window.location.pathname.replace(/\/?$/, '') + '/' + t);
+  zeigeBuzzer(t);
+}
+
+if (team) zeigeBuzzer(team);
+
+// ── SocketIO ──
+const socket = io('/100leute');
+let state = null;
+let canBuzz = false;
+let feedTimer = null;
+
+socket.on('connect',    () => document.getElementById('conn').classList.add('on'));
+socket.on('disconnect', () => {
+  document.getElementById('conn').classList.remove('on');
+  if (team) setHint('Verbindung unterbrochen …', false);
+});
+socket.on('state', s => { state = s; if (team) updateUI(); });
+
+function updateUI() {
+  if (!state || !team) return;
+  const teamObj = (state.teams || {})[team] || {};
+  const name = teamObj.name || ('Team ' + team);
+  document.getElementById('team-label').textContent = name;
+
+  const phase = state.phase || 'setup';
+  const d = state.duell || {};
+  const offen = d.buzzer_offen && !d.erster_team;
+  canBuzz = phase === 'buzzerduell' && !!offen;
+
+  document.getElementById('buzz-btn').classList.toggle('disabled', !canBuzz);
+
+  const hinweise = {
+    setup:       'Warte auf Spielstart …',
+    buzzerduell: offen ? '⚡ JETZT BUZZERN!' : (d.erster_team ? 'Zu spät …' : 'Warte auf Frage …'),
+    hauptrunde:  'Hauptrunde läuft',
+    stehlen:     'Stehlen-Phase',
+    rundenende:  'Runde beendet',
+    fastfive:    'Fast Five',
+    ende:        'Spiel beendet',
+  };
+  setHint(hinweise[phase] || phase, canBuzz);
+}
+
+function setHint(text, aktiv) {
+  const el = document.getElementById('phase-hint');
+  el.textContent = text;
+  el.classList.toggle('aktiv', !!aktiv);
+}
+
+function buzz() {
+  if (!canBuzz || !team) return;
+  socket.emit('sim_buzzer', { team });
+  feedback('GEBUZZT! 🔔');
+  const btn = document.getElementById('buzz-btn');
+  btn.classList.add('pressed');
+  setTimeout(() => btn.classList.remove('pressed'), 180);
+}
+
+function feedback(msg) {
+  const el = document.getElementById('feedback');
+  el.textContent = msg;
+  el.classList.add('zeig');
+  if (feedTimer) clearTimeout(feedTimer);
+  feedTimer = setTimeout(() => el.classList.remove('zeig'), 1600);
+}
+
+// Keyboard: Leertaste oder Enter = buzz
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'Enter') {
+    e.preventDefault();
+    buzz();
+  }
+});
+</script>
+</body>
+</html>

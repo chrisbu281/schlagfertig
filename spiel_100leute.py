@@ -406,6 +406,11 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
             return ("", 404)
         return send_from_directory(BASIS, fn)
 
+    @app.route("/100leute/buzz")
+    @app.route("/100leute/buzz/<team>")
+    def buzzer_100leute(team=None):
+        return send_from_directory(BASIS, "buzzer_100leute.html")
+
     @socketio.on("connect", namespace=NAMESPACE)
     def _on_connect():
         emit("state", state)

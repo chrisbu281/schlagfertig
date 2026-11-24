@@ -530,6 +530,7 @@ function renderBuzzerduell(el, teams) {
         </button>
       </div>
       <div style="font-size:11px;color:rgba(255,255,255,.18);margin-top:10px">Buzzer drücken – oder oben antippen</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.12);margin-top:4px">⌨ Leertaste = ${escHtml(teamA)} · Enter = ${escHtml(teamB)}</div>
     </div>`;
   } else if (d.gewinner) {
     // Both answered – winner determined
@@ -600,6 +601,16 @@ function renderBuzzerduell(el, teams) {
 
 function frageFreigeben() { emit('frage_freigeben'); }
 function simBuzzer(team) { emit('sim_buzzer', {team}); }
+
+// Keyboard-Shortcuts: Leertaste = Team A buzzen, Enter = Team B buzzen
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if (S?.phase !== 'buzzerduell') return;
+  const d = S?.duell || {};
+  if (!d.buzzer_offen || d.erster_team) return;
+  if (e.code === 'Space') { e.preventDefault(); simBuzzer('A'); toast('⌨ ' + (S?.teams?.A?.name || 'Team A') + ' gebuzzt'); }
+  if (e.code === 'Enter') { e.preventDefault(); simBuzzer('B'); toast('⌨ ' + (S?.teams?.B?.name || 'Team B') + ' gebuzzt'); }
+});
 function duellAntwort(team, val) {
   const idx = (val === '' || val === -1 || val === '-1') ? -1 : parseInt(val);
   emit('duell_antwort', {team, idx});
