@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Silvester-Quiz – Beamer</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#46178f;color:#fff}
+#app{height:100%;display:flex;flex-direction:column;padding:3vh 3vw;gap:2.5vh}
+.title{font-size:6vh;font-weight:800;text-align:center}
+.lobby{flex:1;display:flex;gap:3vw;min-height:0}
+.join{background:#fff;color:#333;border-radius:2vh;padding:3vh;text-align:center;font-size:3vh;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 auto}
+#qr{width:46vh;height:46vh;margin-bottom:2vh}#qr svg{width:100%;height:100%}
+.join b{display:block;font-size:4vh;color:#46178f;margin-top:1.5vh}
+.hint{margin-top:2.5vh;font-size:2.4vh;color:#555;max-width:46vh;line-height:1.35}
+.side{flex:1;display:flex;flex-direction:column;min-height:0}
+.chips{display:flex;flex-wrap:wrap;gap:1.2vh;justify-content:flex-start;align-content:flex-start;flex:1;overflow:hidden}
+.chip{background:rgba(255,255,255,.18);padding:1.2vh 2.2vh;border-radius:1vh;font-size:3vh;font-weight:700}
+.qhead{display:flex;justify-content:space-between;font-size:3vh;opacity:.9}
+.qtext{background:#fff;color:#222;border-radius:1.5vh;padding:3vh;font-size:5vh;font-weight:800;text-align:center;line-height:1.25}
+.mid{flex:1;display:flex;align-items:center;justify-content:space-between;gap:3vw}
+.timer{width:18vh;height:18vh;border-radius:50%;background:#864cbf;display:flex;align-items:center;justify-content:center;font-size:8vh;font-weight:800}
+.count{font-size:3.5vh;text-align:center}
+.count b{display:block;font-size:8vh}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5vh}
+.a{border-radius:1.2vh;padding:2.4vh 3vh;font-size:4vh;font-weight:800;display:flex;align-items:center;gap:2.5vh;min-height:12vh}
+.a .s{font-size:5vh}
+.a .n{margin-left:auto;font-size:4vh}
+.c0{background:#e21b3c}.c1{background:#1368ce}.c2{background:#d89e00}.c3{background:#26890c}
+.dim{opacity:.28}
+.bars{display:flex;align-items:flex-end;justify-content:center;gap:4vw;height:30vh}
+.barw{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:4vh;font-weight:800;gap:1vh}
+.bar{width:10vw;border-radius:1vh 1vh 0 0;min-height:1vh}
+.board{display:flex;flex-direction:column;justify-content:center;gap:2vh;flex:1;max-width:1100px;width:100%;margin:0 auto}
+.row{display:flex;align-items:center;background:rgba(255,255,255,.14);border-radius:1.2vh;padding:2.4vh 3.5vh;font-size:4.6vh;font-weight:700}
+.row .r{width:7vh;opacity:.8}.row .p{margin-left:auto}.row .g{margin-left:3vh;font-size:2.6vh;opacity:.75;width:16vh;text-align:right}
+.row.top{background:#fff;color:#46178f}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:2vw;flex:1}
+.pod{width:22vw;text-align:center;font-weight:800}
+.pod .blk{border-radius:1.5vh 1.5vh 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:2vh;font-size:9vh}
+.pod .nm{font-size:4.2vh;margin-bottom:1vh}.pod .sc{font-size:3vh;opacity:.85;margin-bottom:1vh}
+.ctl{display:flex;justify-content:space-between;align-items:center;font-size:2.2vh;opacity:.75}
+.btn{font:inherit;font-size:2.6vh;font-weight:700;background:#fff;color:#46178f;border:0;border-radius:1vh;padding:1.2vh 3vh;cursor:pointer}
+.btn.sec{background:rgba(255,255,255,.2);color:#fff;margin-right:1vw}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="/qrcode.js"></script>
+<script>
+const app = document.getElementById('app');
+const SH = ['▲', '◆', '●', '■'];
+let lastKey = null;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function api(path, body) {
+  const opt = body !== undefined ? {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : {cache:'no-store'};
+  return (await fetch(path, opt)).json();
+}
+async function next() { lastKey = null; render(await api('/api/host/next', {})); }
+
+document.addEventListener('keydown', e => {
+  if ([' ', 'Enter', 'ArrowRight', 'PageDown'].includes(e.key)) { e.preventDefault(); next(); }
+});
+
+function controls() { return ''; }
+
+function render(s) {
+  const t = document.getElementById('timer');
+  if (t && s.remaining != null) t.textContent = Math.ceil(s.remaining);
+  const c = document.getElementById('cnt');
+  if (c && s.answered !== undefined) c.textContent = `${s.answered} / ${s.players.length}`;
+  const key = JSON.stringify([s.phase, s.q && s.q.nr, s.phase === 'lobby' ? s.players : 0]);
+  if (key === lastKey) return;
+  lastKey = key;
+
+  if (s.phase === 'lobby') {
+    app.innerHTML = `<div class="title">🎆 Silvester-Quiz</div>
+      <div class="lobby">
+        <div class="join"><div id="qr"></div>Mit dem WLAN verbinden,<br>QR-Code scannen<b>${esc(s.url.replace('http://', ''))}</b><div class="hint">📱 Tipp: Automatische Bildschirm-Sperre fürs Quiz ausschalten – oder das Handy zwischendurch kurz antippen.</div></div>
+        <div class="side"><div style="font-size:3.4vh;font-weight:800;margin-bottom:2vh">${s.players.length} Spieler dabei · ${s.total} Fragen</div>
+        <div class="chips">${s.players.map(n => `<div class="chip">${esc(n)}</div>`).join('')}</div></div>
+      </div>
+      ${controls()}`;
+    const qr = qrcode(0, 'M'); qr.addData(s.url); qr.make();
+    document.getElementById('qr').innerHTML = qr.createSvgTag({cellSize: 8, margin: 2, scalable: true});
+  } else if (s.phase === 'question') {
+    app.innerHTML = `<div class="qhead"><span>Frage ${s.q.nr} von ${s.q.total}</span><span>${s.q.seconds ? s.q.seconds + ' Sekunden' : 'ohne Zeitlimit'}</span></div>
+      <div class="qtext">${esc(s.q.text)}</div>
+      <div class="mid">${s.remaining != null ? `<div class="timer" id="timer">${Math.ceil(s.remaining)}</div>` : '<div></div>'}
+        <div class="count">Antworten<b id="cnt">${s.answered} / ${s.players.length}</b></div></div>
+      <div class="grid">${s.q.answers.map((a, i) => `<div class="a c${i}"><span class="s">${SH[i]}</span>${esc(a)}</div>`).join('')}</div>
+      ${controls()}`;
+  } else if (s.phase === 'reveal') {
+    const max = Math.max(1, ...s.counts);
+    app.innerHTML = `<div class="qhead"><span>Frage ${s.q.nr} von ${s.q.total}</span><span></span></div>
+      <div class="qtext">${esc(s.q.text)}</div>
+      <div class="bars">${s.counts.map((n, i) => `<div class="barw ${i === s.correct ? '' : 'dim'}">${n}${i === s.correct ? ' ✔' : ''}
+        <div class="bar c${i}" style="height:${Math.round(n / max * 80)}%"></div><span>${SH[i]}</span></div>`).join('')}</div>
+      <div class="grid">${s.q.answers.map((a, i) => `<div class="a c${i} ${i === s.correct ? '' : 'dim'}"><span class="s">${SH[i]}</span>${esc(a)}${i === s.correct ? '<span class="n">✔</span>' : ''}</div>`).join('')}</div>
+      ${controls()}`;
+  } else if (s.phase === 'leaderboard') {
+    app.innerHTML = `<div class="title">Zwischenstand</div>
+      <div class="board">${s.board.slice(0, 5).map((p, i) => `<div class="row ${i === 0 ? 'top' : ''}">
+        <span class="r">${i + 1}.</span><span>${esc(p.name)}${p.up > 0 ? ' <small>▲' + p.up + '</small>' : ''}</span>
+        <span class="p">${p.score}</span><span class="g">${p.gained ? '+' + p.gained : ''}</span></div>`).join('')}</div>
+      ${controls()}`;
+  } else if (s.phase === 'final') {
+    const b = s.board;
+    const pod = (p, place, h, color) => p ? `<div class="pod"><div class="nm">${esc(p.name)}</div><div class="sc">${p.score} Punkte</div>
+      <div class="blk" style="height:${h}vh;background:${color}">${place}</div></div>` : '<div class="pod"></div>';
+    app.innerHTML = `<div class="title">🎆 Siegerehrung 🎆</div>
+      <div class="podium">${pod(b[1], 2, 26, '#1368ce')}${pod(b[0], 1, 38, '#d89e00')}${pod(b[2], 3, 18, '#e21b3c')}</div>
+      ${controls('final')}`;
+  }
+}
+
+async function poll() {
+  try { render(await api('/api/host/state')); } catch (e) {}
+}
+poll();
+setInterval(poll, 500);
+</script>
+</body>
+</html>

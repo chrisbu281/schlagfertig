@@ -4,7 +4,7 @@ Schlagfertig Party Hub – Cross-Platform Server
 Starten: python party_app.py
 Läuft auf Windows, Mac und Linux – kein Raspberry Pi nötig.
 """
-import os, sys, threading, webbrowser, time
+import os, sys, subprocess, threading, webbrowser, time
 from flask import Flask, send_from_directory, redirect, jsonify
 from flask_socketio import SocketIO, emit
 
@@ -67,6 +67,20 @@ def hub_show_scene(data):
     _scene = {'name': name}
     emit('scene', _scene, namespace=HUB, broadcast=True)
 
+_quiz_proc = None
+
+def _start_quiz():
+    global _quiz_proc
+    quiz_path = os.path.join(BASIS, 'quiz_server.py')
+    fragen_path = os.path.join(BASIS, 'fragen.json')
+    if not os.path.exists(quiz_path) or not os.path.exists(fragen_path):
+        print("⚠  quiz_server.py oder fragen.json nicht gefunden – Quiz nicht gestartet")
+        return
+    env = os.environ.copy()
+    env['QUIZ_NO_BROWSER'] = '1'
+    _quiz_proc = subprocess.Popen([sys.executable, quiz_path], env=env, cwd=BASIS)
+    print("✓  Quiz-Server gestartet (Port 8080)")
+
 @app.route('/api/scene')
 def api_scene():
     return jsonify(_scene)
@@ -75,6 +89,7 @@ def api_scene():
 if __name__ == '__main__':
     PORT = 5000
     URL = f'http://localhost:{PORT}'
+    _start_quiz()
 
     print(f"""
 🎉  Schlagfertig Party Hub

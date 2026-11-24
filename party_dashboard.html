@@ -195,18 +195,20 @@ button{font:inherit;cursor:pointer}
       </div>
     </div>
 
-    <!-- Kahoot ───────────────────────────────────────────── -->
-    <div class="game-card disabled" id="card-kahoot" style="--card-accent:#c77dff">
+    <!-- Bibel-Quiz ──────────────────────────────────────── -->
+    <div class="game-card" id="card-quiz" style="--card-accent:#c77dff">
       <div class="card-head">
-        <div class="card-icon">❓</div>
+        <div class="card-icon">✝️</div>
         <div>
-          <div class="card-title">Quiz-Spiel</div>
-          <div class="card-sub">Demnächst verfügbar</div>
+          <div class="card-title">Bibel-Quiz</div>
+          <div class="card-sub">32 Fragen – Kahoot-Stil</div>
         </div>
       </div>
-      <div class="card-desc">Hier kommt das Kahoot-artige Quiz-Spiel rein. Spiel-Code aus dem anderen Chat einfügen, dann wird es hier automatisch integriert.</div>
+      <div class="card-desc">Spieler verbinden sich per QR-Code mit dem Handy. Der Beamer zeigt Fragen und Ergebnisse. Moderation über die Admin-Seite.</div>
+      <div class="card-status" id="status-quiz">▶ Läuft auf Beamer</div>
       <div class="card-actions">
-        <div class="soon-badge">KOMMT NOCH</div>
+        <button class="btn pri" onclick="launchQuiz()">▶ Auf Beamer zeigen</button>
+        <button class="btn sec" onclick="openTab('http://localhost:8080/admin')">Admin öffnen ↗</button>
       </div>
     </div>
 
@@ -232,6 +234,7 @@ button{font:inherit;cursor:pointer}
     <div class="link-chip" onclick="openTab('/100leute/buzz/B')"><span class="chip-icon">🔴</span> Buzzer Team B</div>
     <div class="link-chip" onclick="openTab('/zufall')"><span class="chip-icon">🎲</span> Zufallsgenerator</div>
     <div class="link-chip" onclick="openDisplay()"><span class="chip-icon">📺</span> Display öffnen</div>
+    <div class="link-chip" onclick="openTab('http://localhost:8080/admin')"><span class="chip-icon">✝️</span> Quiz-Admin</div>
   </div>
 
   <div class="info-box" style="margin-top:24px">
@@ -280,7 +283,7 @@ function setConnStatus(on) {
 
 function updateSceneUI(name) {
   currentScene = name;
-  const labels = { idle: 'Wartescreen', zufall: 'Zufallsgenerator', '100leute': '100 Leute', kahoot: 'Kahoot' };
+  const labels = { idle: 'Wartescreen', zufall: 'Zufallsgenerator', '100leute': '100 Leute', quiz: 'Bibel-Quiz' };
   document.getElementById('scene-name').textContent = labels[name] || name;
 
   // Aktive Karte hervorheben
@@ -310,6 +313,11 @@ function launchZufall() {
 function launch100leute() {
   showScene('100leute');
   setTimeout(() => openTab('/moderator/100leute'), 300);
+}
+
+function launchQuiz() {
+  showScene('quiz');
+  setTimeout(() => openTab('http://localhost:8080/admin'), 300);
 }
 
 // ── Hilfsfunktionen ───────────────────────────────────────────

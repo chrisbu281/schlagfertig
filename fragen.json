@@ -1,0 +1,354 @@
+[
+ {
+  "frage": "Welches ist das längste Kapitel der Bibel?",
+  "antworten": [
+   "Psalm 23",
+   "Psalm 119",
+   "Jesaja 53",
+   "1. Mose 1"
+  ],
+  "richtig": 2,
+  "sekunden": 20
+ },
+ {
+  "frage": "Welches ist das kürzeste Kapitel der Bibel?",
+  "antworten": [
+   "Psalm 134",
+   "Obadja 1",
+   "Johannes 11",
+   "Psalm 117"
+  ],
+  "richtig": 4,
+  "sekunden": 20
+ },
+ {
+  "frage": "Wer war der älteste Mensch in der Bibel, und wie alt wurde er?",
+  "antworten": [
+   "Metuschelach – 969 Jahre",
+   "Adam – 930 Jahre",
+   "Jered – 962 Jahre",
+   "Noah – 950 Jahre"
+  ],
+  "richtig": 1,
+  "sekunden": 30
+ },
+ {
+  "frage": "Wie hießen die beiden Säulen im Tempel Salomos?",
+  "antworten": [
+   "Urim und Tummim",
+   "Gog und Magog",
+   "Boas und Jachin",
+   "Ebal und Garizim"
+  ],
+  "richtig": 3,
+  "sekunden": 30
+ },
+ {
+  "frage": "Wer war die einzige in der Bibel erwähnte Richterin Israels?",
+  "antworten": [
+   "Mirjam",
+   "Jaël",
+   "Debora",
+   "Hanna"
+  ],
+  "richtig": 3,
+  "sekunden": 20
+ },
+ {
+  "frage": "Mit welchem Material war die Bundeslade überzogen?",
+  "antworten": [
+   "Gold",
+   "Silber",
+   "Bronze",
+   "Elfenbein"
+  ],
+  "richtig": 1,
+  "sekunden": 20
+ },
+ {
+  "frage": "Wie viele Gemeinden erhielten im Buch der Offenbarung Briefe?",
+  "antworten": [
+   "Zwölf",
+   "Fünf",
+   "Vier",
+   "Sieben"
+  ],
+  "richtig": 4,
+  "sekunden": 20
+ },
+ {
+  "frage": "Welcher Prophet wurde in einem feurigen Wagen in den Himmel aufgenommen?",
+  "antworten": [
+   "Henoch",
+   "Elia",
+   "Elisa",
+   "Jesaja"
+  ],
+  "richtig": 2,
+  "sekunden": 20
+ },
+ {
+  "frage": "Welche vier Flüsse werden im Zusammenhang mit dem Garten Eden genannt?",
+  "antworten": [
+   "Pischon, Gihon, Tigris, Euphrat",
+   "Jordan, Nil, Tigris, Euphrat",
+   "Pischon, Jordan, Kidron, Euphrat",
+   "Gihon, Nil, Arnon, Tigris"
+  ],
+  "richtig": 1,
+  "sekunden": 30
+ },
+ {
+  "frage": "Wie hieß der im Neuen Testament erwähnte Cousin von Barnabas?",
+  "antworten": [
+   "Silas",
+   "Timotheus",
+   "Markus",
+   "Lukas"
+  ],
+  "richtig": 3,
+  "sekunden": 20
+ },
+ {
+  "frage": "Wie hieß Abrahams Neffe?",
+  "antworten": [
+   "Nahor",
+   "Lot",
+   "Laban",
+   "Ismael"
+  ],
+  "richtig": 2,
+  "sekunden": 20
+ },
+ {
+  "frage": "Wie alt war Abraham, als Isaak geboren wurde?",
+  "antworten": [
+   "75 Jahre",
+   "90 Jahre",
+   "120 Jahre",
+   "100 Jahre"
+  ],
+  "richtig": 4,
+  "sekunden": 20
+ },
+ {
+  "frage": "Welche Königin besuchte Salomo, um seine Weisheit zu prüfen?",
+  "antworten": [
+   "Isebel",
+   "Ester",
+   "Kandake",
+   "Die Königin von Saba"
+  ],
+  "richtig": 4,
+  "sekunden": 20
+ },
+ {
+  "frage": "Was stand bei Belsazars Festmahl an der Wand?",
+  "antworten": [
+   "„Talita kum“",
+   "„Mene, Mene, Tekel, Upharsin“",
+   "„Eli, Eli, lama asabtani“",
+   "„Hosianna in der Höhe“"
+  ],
+  "richtig": 2,
+  "sekunden": 30
+ },
+ {
+  "frage": "Wer ersetzte Judas Iskariot als zwölften Apostel?",
+  "antworten": [
+   "Barnabas",
+   "Josef Barsabbas",
+   "Matthias",
+   "Paulus"
+  ],
+  "richtig": 3,
+  "sekunden": 30
+ },
+ {
+  "frage": "Welches Handwerk übte der Apostel Paulus aus?",
+  "antworten": [
+   "Zeltmacher",
+   "Zöllner",
+   "Fischer",
+   "Zimmermann"
+  ],
+  "richtig": 1,
+  "sekunden": 20
+ },
+ {
+  "frage": "Welches Buch des Alten Testaments erwähnt Gott nicht namentlich?",
+  "antworten": [
+   "Rut",
+   "Ester",
+   "Jona",
+   "Nehemia"
+  ],
+  "richtig": 2,
+  "sekunden": 20
+ },
+ {
+  "frage": "Was ist der „Pentateuch“?",
+  "antworten": [
+   "Die ersten fünf Bücher der Bibel",
+   "Die vier Evangelien",
+   "Die fünf Bücher der Psalmen",
+   "Die Briefe des Paulus"
+  ],
+  "richtig": 1,
+  "sekunden": 30
+ },
+ {
+  "frage": "Wer war während des Prozesses gegen Jesus Hohepriester?",
+  "antworten": [
+   "Pilatus",
+   "Gamaliel",
+   "Herodes",
+   "Kaiphas"
+  ],
+  "richtig": 4,
+  "sekunden": 20
+ },
+ {
+  "frage": "Was bedeutet „Golgatha“?",
+  "antworten": [
+   "„Ort der Oliven“",
+   "„Haus des Brotes“",
+   "„Schädelstätte“",
+   "„Tal der Tränen“"
+  ],
+  "richtig": 3,
+  "sekunden": 20
+ },
+ {
+  "frage": "Wie viele Menschen waren auf Noahs Arche?",
+  "antworten": [
+   "Sechs",
+   "Zehn",
+   "Acht",
+   "Zwölf"
+  ],
+  "richtig": 3,
+  "sekunden": 20
+ },
+ {
+  "frage": "Welche zwei Personen des AT erschienen bei der Verklärung zusammen mit Jesus?",
+  "antworten": [
+   "Abraham und Mose",
+   "Elia und Elisa",
+   "David und Salomo",
+   "Mose und Elia"
+  ],
+  "richtig": 4,
+  "sekunden": 20
+ },
+ {
+  "frage": "Wofür stehen die vier apokalyptischen Reiter in der Offenbarung?",
+  "antworten": [
+   "Eroberung, Krieg, Hunger, Tod",
+   "Glaube, Liebe, Hoffnung, Gnade",
+   "Hochmut, Neid, Zorn, Gier",
+   "Feuer, Wasser, Erde, Luft"
+  ],
+  "richtig": 1,
+  "sekunden": 30
+ },
+ {
+  "frage": "Welcher Prophet sollte eine untreue Frau heiraten, als Sinnbild für Israels Untreue?",
+  "antworten": [
+   "Jeremia",
+   "Hosea",
+   "Amos",
+   "Micha"
+  ],
+  "richtig": 2,
+  "sekunden": 20
+ },
+ {
+  "frage": "Welcher babylonische König träumte von einer großen Statue aus verschiedenen Materialien?",
+  "antworten": [
+   "Belsazar",
+   "Kyrus",
+   "Darius",
+   "Nebukadnezar"
+  ],
+  "richtig": 4,
+  "sekunden": 20
+ },
+ {
+  "frage": "Wer war der erste christliche Märtyrer?",
+  "antworten": [
+   "Stephanus",
+   "Jakobus",
+   "Petrus",
+   "Philippus"
+  ],
+  "richtig": 1,
+  "sekunden": 20
+ },
+ {
+  "frage": "Was ist die „Septuaginta“?",
+  "antworten": [
+   "Lateinische Bibelübersetzung",
+   "Aramäische Übersetzung des AT",
+   "Griechische Übersetzung des AT",
+   "Sammlung von 70 Psalmen"
+  ],
+  "richtig": 3,
+  "sekunden": 30
+ },
+ {
+  "frage": "In welchem Brief beschreibt Paulus die „Waffenrüstung Gottes“?",
+  "antworten": [
+   "Römerbrief",
+   "Epheserbrief",
+   "Galaterbrief",
+   "Philipperbrief"
+  ],
+  "richtig": 2,
+  "sekunden": 20
+ },
+ {
+  "frage": "In welchem Teich sollte sich ein Blinder auf Jesu Anweisung waschen?",
+  "antworten": [
+   "Siloah",
+   "Betesda",
+   "Gihon",
+   "Jordan"
+  ],
+  "richtig": 1,
+  "sekunden": 30
+ },
+ {
+  "frage": "Wie viele Söhne hatte Jakob?",
+  "antworten": [
+   "Zehn",
+   "Zwölf",
+   "Elf",
+   "Dreizehn"
+  ],
+  "richtig": 2,
+  "sekunden": 20
+ },
+ {
+  "frage": "Wer sagte: „Soll ich meines Bruders Hüter sein?“",
+  "antworten": [
+   "Esau",
+   "Ruben",
+   "Lot",
+   "Kain"
+  ],
+  "richtig": 4,
+  "sekunden": 20
+ },
+ {
+  "frage": "Aus welchem Holz wurde Noahs Arche gebaut?",
+  "antworten": [
+   "Zedernholz",
+   "Akazienholz",
+   "Gopherholz",
+   "Eichenholz"
+  ],
+  "richtig": 3,
+  "sekunden": 30
+ }
+]

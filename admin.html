@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Silvester-Quiz – Moderator</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f2f0f7;color:#222}
+header{background:#46178f;color:#fff;padding:14px 24px;display:flex;align-items:center;gap:16px}
+header h1{font-size:22px;margin:0;flex:1}
+.wrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;padding:20px 24px;align-items:start}
+.card{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:20px}
+h2{font-size:17px;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+.step{background:#46178f;color:#fff;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:14px}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:8px 14px;background:#e6e1f2;color:#46178f;font-weight:600}
+button:disabled{opacity:.4;cursor:default}
+.primary{background:#26890c;color:#fff;font-size:20px;padding:14px 26px}
+.danger{background:#fde4e8;color:#b0122d}
+.light{background:rgba(255,255,255,.2);color:#fff}
+.qlist{max-height:52vh;overflow:auto;border:1px solid #eee;border-radius:8px}
+.qi{display:flex;gap:10px;padding:8px 10px;border-bottom:1px solid #f0f0f0;align-items:flex-start;cursor:pointer}
+.qi:hover{background:#faf8ff}
+.qi input{margin-top:4px;transform:scale(1.2)}
+.qi .t{font-weight:600}.qi .s{font-size:13px;color:#2b7a0b}
+.qi .n{color:#999;width:28px;flex:0 0 auto}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+label.opt{display:flex;gap:8px;align-items:center;padding:6px 0;cursor:pointer}
+select{font:inherit;padding:4px 8px}
+.locked{opacity:.55;pointer-events:none}
+.note{font-size:13px;color:#777}
+.status{font-size:15px;margin-bottom:12px}
+.cur{background:#f7f5fc;border-radius:8px;padding:12px;margin:12px 0}
+.cur .q{font-weight:700;margin-bottom:8px}
+.ans{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ans div{padding:6px 8px;border-radius:6px;color:#fff;font-weight:600;font-size:14px}
+.c0{background:#e21b3c}.c1{background:#1368ce}.c2{background:#d89e00}.c3{background:#26890c}
+.wrong{opacity:.3}
+table{width:100%;border-collapse:collapse;font-size:15px}
+td{padding:6px 4px;border-bottom:1px solid #f0f0f0}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.on{background:#26890c}.off{background:#ccc}
+.x{background:none;color:#b0122d;padding:2px 6px}
+.big{font-size:28px;font-weight:800}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎆 Silvester-Quiz · Moderator</h1>
+  <button class="light" onclick="window.open('/host','beamer')">Beamer-Ansicht öffnen</button>
+</header>
+<div class="wrap">
+  <div id="setup"></div>
+  <div>
+    <div class="card" id="game"></div>
+    <div class="card" id="players"></div>
+  </div>
+</div>
+<script>
+const SH = ['▲', '◆', '●', '■'];
+const PHASE = {lobby:'Warteraum – Gäste können beitreten', question:'Frage läuft', reveal:'Auflösung', leaderboard:'Zwischenstand', final:'Siegerehrung'};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S = null, setupKey = null;
+
+async function api(path, body) {
+  const opt = body !== undefined ? {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : {cache:'no-store'};
+  return (await fetch(path, opt)).json();
+}
+async function act(a, body) { const r = await api('/api/admin/' + a, body || {}); if (r.error) alert(r.error); else render(r); }
+function saveSettings(patch) { act('settings', patch); }
+
+function renderSetup(s) {
+  const st = s.settings, lockedCls = s.phase === 'lobby' ? '' : 'locked';
+  const sel = new Set(st.selected);
+  const timerVal = typeof st.timer === 'number' ? 'fest' : st.timer;
+  document.getElementById('setup').innerHTML = `
+  <div class="card ${lockedCls}">
+    <h2><span class="step">1</span>Fragen auswählen <span class="note">(${st.selected.length} von ${s.questions.length})</span></h2>
+    <div class="row"><button onclick="selAll(true)">Alle</button><button onclick="selAll(false)">Keine</button>
+      <span class="note">Reihenfolge = Reihenfolge der Liste</span></div>
+    <div class="qlist">${s.questions.map((q, i) => `
+      <label class="qi"><input type="checkbox" data-i="${i}" ${sel.has(i) ? 'checked' : ''}>
+        <span class="n">${i + 1}.</span>
+        <span><div class="t">${esc(q.text)}</div><div class="s">✔ ${esc(q.answers[q.richtig - 1])}</div></span></label>`).join('')}
+    </div>
+  </div>
+  <div class="card ${lockedCls}">
+    <h2><span class="step">2</span>Timer</h2>
+    <label class="opt"><input type="radio" name="tm" value="aus" ${timerVal === 'aus' ? 'checked' : ''}> Ohne Timer – du löst per „Weiter" auf (jede richtige Antwort = 1000 Punkte)</label>
+    <label class="opt"><input type="radio" name="tm" value="frage" ${timerVal === 'frage' ? 'checked' : ''}> Zeit je Frage (20 bzw. 30 Sekunden, wie hinterlegt)</label>
+    <label class="opt"><input type="radio" name="tm" value="fest" ${timerVal === 'fest' ? 'checked' : ''}> Einheitlich:
+      <select id="secs">${[10, 15, 20, 30, 45, 60, 90, 120].map(n => `<option ${st.timer === n ? 'selected' : ''}>${n}</option>`).join('')}</select> Sekunden</label>
+    <div class="note">Mit Timer gibt es mehr Punkte für schnelle Antworten (500–1000).</div>
+  </div>
+  <div class="card ${lockedCls}">
+    <h2><span class="step">3</span>Reihenfolge</h2>
+    <label class="opt"><input type="checkbox" id="shuf" ${st.shuffle ? 'checked' : ''}> Fragen beim Start zufällig mischen</label>
+  </div>
+  ${s.phase !== 'lobby' ? '<div class="note">Einstellungen sind während des Spiels gesperrt. „Neues Spiel" entsperrt sie.</div>' : ''}`;
+
+  document.querySelectorAll('.qi input').forEach(cb => cb.onchange = () => {
+    const chosen = [...document.querySelectorAll('.qi input')].filter(c => c.checked).map(c => +c.dataset.i);
+    saveSettings({selected: chosen});
+  });
+  document.querySelectorAll('input[name=tm]').forEach(r => r.onchange = timerChanged);
+  document.getElementById('secs').onchange = () => { document.querySelector('input[value=fest]').checked = true; timerChanged(); };
+  document.getElementById('shuf').onchange = e => saveSettings({shuffle: e.target.checked});
+}
+function timerChanged() {
+  const v = document.querySelector('input[name=tm]:checked').value;
+  saveSettings({timer: v === 'fest' ? +document.getElementById('secs').value : v});
+}
+function selAll(on) { saveSettings({selected: on ? S.questions.map((_, i) => i) : []}); }
+
+function renderGame(s) {
+  let btn = 'Weiter ▶';
+  if (s.phase === 'lobby') btn = 'Quiz starten ▶';
+  if (s.phase === 'question') btn = 'Auflösen ▶';
+  if (s.phase === 'reveal') btn = (s.pos >= s.playlist.length - 1) ? 'Siegerehrung ▶' : 'Zwischenstand ▶';
+  if (s.phase === 'leaderboard') btn = 'Nächste Frage ▶';
+  let cur = '';
+  if (s.phase === 'question' || s.phase === 'reveal') {
+    cur = `<div class="cur"><div class="note">Frage ${s.q.nr} von ${s.q.total}${s.remaining != null ? ` · noch <b>${Math.ceil(s.remaining)} s</b>` : ''} · ${s.answered} / ${s.players.length} geantwortet</div>
+      <div class="q">${esc(s.q.text)}</div>
+      <div class="ans">${s.q.answers.map((a, i) => `<div class="c${i} ${i === s.correct ? '' : 'wrong'}">${SH[i]} ${esc(a)}${i === s.correct ? ' ✔' : ''}${s.counts ? ` (${s.counts[i]})` : ''}</div>`).join('')}</div></div>`;
+  }
+  const timerTxt = s.settings.timer === 'aus' ? 'ohne Timer' : s.settings.timer === 'frage' ? 'Timer je Frage' : `Timer ${s.settings.timer} s`;
+  document.getElementById('game').innerHTML = `
+    <h2><span class="step">4</span>Spiel</h2>
+    <div class="status"><b>${PHASE[s.phase]}</b><br><span class="note">${s.total} Fragen · ${timerTxt}${s.settings.shuffle ? ' · gemischt' : ''}</span></div>
+    ${cur}
+    <div class="row">
+      <button class="primary" onclick="act('next')" ${s.phase === 'final' || (s.phase === 'lobby' && !s.settings.selected.length) ? 'disabled' : ''}>${s.phase === 'final' ? 'Spiel beendet' : btn}</button>
+      <button class="danger" onclick="if(confirm('Neues Spiel? Punkte werden auf 0 gesetzt, Spieler bleiben angemeldet.')) act('reset')">Neues Spiel</button>
+    </div>
+    <div class="note">Weiter auch mit Leertaste, Enter, → oder Präsentations-Klicker – auf dieser Seite oder in der Beamer-Ansicht.</div>`;
+}
+
+function renderPlayers(s) {
+  const showAns = s.phase === 'question' || s.phase === 'reveal';
+  document.getElementById('players').innerHTML = `
+    <h2>Spieler <span class="big" style="margin-left:auto">${s.playerList.length}</span></h2>
+    ${s.playerList.length ? `<table>${s.playerList.map((p, i) => `<tr>
+      <td style="width:30px">${i + 1}.</td>
+      <td><span class="dot ${p.online ? 'on' : 'off'}" title="${p.online ? 'verbunden' : 'nicht verbunden'}"></span>${esc(p.name)}</td>
+      <td>${showAns ? (p.answered ? '✅' : '⏳') : ''}</td>
+      <td style="text-align:right">${p.score}</td>
+      <td style="width:30px"><button class="x" title="Entfernen" data-n="${esc(p.name)}">✕</button></td></tr>`).join('')}</table>`
+      : `<div class="note">Noch niemand da. Gäste scannen den QR-Code auf dem Beamer oder öffnen <b>${esc(s.url)}</b>.</div>`}
+    <div class="note" style="margin-top:8px">● grün = Handy verbunden · ✅ = hat geantwortet</div>`;
+  document.querySelectorAll('.x').forEach(b => b.onclick = () => { if (confirm(`„${b.dataset.n}" entfernen?`)) act('kick', {name: b.dataset.n}); });
+}
+
+function render(s) {
+  S = s;
+  const key = JSON.stringify([s.settings, s.phase === 'lobby']);
+  if (key !== setupKey) {
+    setupKey = key;
+    const ql = document.querySelector('.qlist'), top = ql ? ql.scrollTop : 0;
+    renderSetup(s);
+    document.querySelector('.qlist').scrollTop = top;
+  }
+  renderGame(s);
+  renderPlayers(s);
+}
+
+document.addEventListener('keydown', e => {
+  if (['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(e.target.tagName)) return;
+  if ([' ', 'Enter', 'ArrowRight', 'PageDown'].includes(e.key) && S && S.phase !== 'final') { e.preventDefault(); act('next'); }
+});
+
+async function poll() { try { render(await api('/api/admin/state')); } catch (e) {} }
+poll();
+setInterval(poll, 800);
+</script>
+</body>
+</html>

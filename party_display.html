@@ -154,10 +154,8 @@ canvas#stars{position:absolute;inset:0;z-index:0}
 <!-- Szene: 100 Leute gefragt ────────────────────────────────── -->
 <iframe id="scene-100leute" class="scene" src="/spiel/100leute" allow="autoplay"></iframe>
 
-<!-- Szene: Kahoot (Platzhalter) ─────────────────────────────── -->
-<div id="scene-kahoot" class="scene" style="background:#0a0a1a;display:flex;align-items:center;justify-content:center">
-  <div style="font-family:'Chakra Petch',monospace;color:rgba(255,255,255,.2);font-size:3vw;letter-spacing:.3em">KAHOOT</div>
-</div>
+<!-- Szene: Bibel-Quiz ───────────────────────────────────────── -->
+<iframe id="scene-quiz" class="scene" src="http://localhost:8080/host" allow="autoplay"></iframe>
 
 <!-- Szenen-Toast ─────────────────────────────────────────────── -->
 <div id="scene-toast"></div>
@@ -262,7 +260,7 @@ function tryConnectHub(){
   });
   hub.on('scene',data=>{
     if(!data||!data.name)return;
-    const labels={idle:'Wartescreen',zufall:'Zufallsgenerator','100leute':'100 Leute gefragt',kahoot:'Kahoot'};
+    const labels={idle:'Wartescreen',zufall:'Zufallsgenerator','100leute':'100 Leute gefragt',quiz:'Bibel-Quiz'};
     showScene(data.name,labels[data.name]||data.name);
   });
   hub.on('disconnect',()=>{
