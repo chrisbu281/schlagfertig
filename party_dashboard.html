@@ -40,7 +40,7 @@ button{font:inherit;cursor:pointer}
 }
 .scene-dot{width:8px;height:8px;border-radius:50%;background:#3a4a5c;flex-shrink:0;transition:background .4s}
 .scene-dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
-#scene-name{color:var(--text);font-family:"Chakra Petch";letter-spacing:.1em;font-size:12px;text-transform:uppercase}
+.scene-name{color:var(--text);font-family:"Chakra Petch";letter-spacing:.1em;font-size:12px;text-transform:uppercase}
 
 .btn-idle{
   background:none;border:1px solid var(--line);color:var(--dim);
@@ -109,7 +109,6 @@ button{font:inherit;cursor:pointer}
 .btn.sec{border-color:#2a3d55;color:var(--dim)}
 .btn.sec:hover:not(:disabled){border-color:var(--dim);color:var(--text)}
 .btn:disabled{opacity:.35;cursor:not-allowed}
-.soon-badge{font-size:11px;color:#3a4a5c;border:1px solid #1a2535;padding:4px 10px;border-radius:3px;align-self:center}
 
 /* ── Quick-Links ─────────────────────────────────────────────── */
 .links-grid{display:flex;flex-wrap:wrap;gap:10px}
@@ -128,23 +127,71 @@ button{font:inherit;cursor:pointer}
   border-radius:6px;padding:14px 16px;font-size:12px;color:rgba(232,179,58,.7);
   line-height:1.6;margin-top:8px;
 }
-.info-box a{color:var(--accent)}
 
-@media(max-width:600px){
+/* ── Game-Overlay ────────────────────────────────────────────── */
+#game-overlay{
+  display:none;
+  position:fixed;inset:0;z-index:100;
+  flex-direction:column;
+  background:var(--bg);
+}
+#game-overlay.open{display:flex}
+
+.game-topbar{
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+  padding:11px 20px;
+  background:var(--panel);border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
+}
+.btn-back{
+  display:flex;align-items:center;gap:7px;
+  background:none;border:1px solid var(--line);color:var(--dim);
+  padding:7px 14px;border-radius:4px;font-size:12px;white-space:nowrap;
+  transition:border-color .15s,color .15s;
+}
+.btn-back:hover{border-color:var(--dim);color:var(--text)}
+
+.game-topbar-title{
+  display:flex;align-items:center;gap:9px;
+  font-family:"Chakra Petch";font-weight:700;letter-spacing:.12em;font-size:14px;
+}
+.game-topbar-title .g-icon{font-size:20px;line-height:1}
+
+.btn-beamer{
+  background:var(--accent);border:1px solid var(--accent);color:#111;
+  font-family:"Chakra Petch";font-weight:700;letter-spacing:.12em;
+  padding:7px 18px;border-radius:4px;font-size:12px;white-space:nowrap;
+  transition:filter .15s,background .2s,color .2s;
+}
+.btn-beamer:hover{filter:brightness(1.1)}
+.btn-beamer.on-air{
+  background:var(--ok);border-color:var(--ok);color:#0a1a12;
+}
+
+.game-topbar .scene-bar{margin-left:auto}
+
+#game-frame{
+  flex:1;border:none;background:#000;display:block;min-height:0;
+}
+
+@media(max-width:700px){
   .header{flex-wrap:wrap;gap:10px}
   .scene-bar{margin-left:0;width:100%;justify-content:flex-end}
+  .game-topbar{gap:8px}
+  .game-topbar .scene-bar{display:none}
 }
 </style>
 </head>
 <body>
 
+<!-- ── Haupt-Header ───────────────────────────────────────────── -->
 <div class="header">
   <div class="brand">PARTY HUB <small>STEUERZENTRALE</small></div>
   <div class="scene-bar">
     <div class="scene-badge">
       <div class="scene-dot" id="conn-dot"></div>
       <span>Beamer:</span>
-      <span id="scene-name">–</span>
+      <span class="scene-name" id="scene-name">–</span>
     </div>
     <button class="btn-idle" onclick="showScene('idle')" title="Wartescreen auf dem Beamer zeigen">⬛ Wartescreen</button>
     <button class="btn-display" onclick="openDisplay()">Display öffnen ↗</button>
@@ -155,9 +202,9 @@ button{font:inherit;cursor:pointer}
   <i></i><span id="conn-text">Verbinde mit Server …</span>
 </div>
 
+<!-- ── Haupt-Inhalt ───────────────────────────────────────────── -->
 <div class="main">
 
-  <!-- ── Spiele ───────────────────────────────────────────── -->
   <div class="section-title">Spiele</div>
   <div class="game-grid">
 
@@ -170,11 +217,10 @@ button{font:inherit;cursor:pointer}
           <div class="card-sub">Spieler auswählen &amp; Teams einteilen</div>
         </div>
       </div>
-      <div class="card-desc">Spieler in den Topf werfen, zufällig ziehen oder Teams bilden. Steuerung läuft im Browser, Ergebnis wird auf dem Beamer angezeigt.</div>
+      <div class="card-desc">Spieler in den Topf werfen, zufällig ziehen oder Teams bilden. Steuerung läuft im Browser, Ergebnis auf dem Beamer.</div>
       <div class="card-status" id="status-zufall">▶ Läuft auf Beamer</div>
       <div class="card-actions">
-        <button class="btn pri" onclick="launchZufall()">▶ Auf Beamer zeigen</button>
-        <button class="btn sec" onclick="openTab('/zufall')">Steuerung öffnen ↗</button>
+        <button class="btn pri" onclick="openGame('zufall')">▶ Öffnen</button>
       </div>
     </div>
 
@@ -190,8 +236,9 @@ button{font:inherit;cursor:pointer}
       <div class="card-desc">Zwei Teams treten gegeneinander an und müssen erraten, was die häufigsten Antworten einer Umfrage sind.</div>
       <div class="card-status" id="status-100leute">▶ Läuft auf Beamer</div>
       <div class="card-actions">
-        <button class="btn pri" onclick="launch100leute()">▶ Auf Beamer zeigen</button>
-        <button class="btn sec" onclick="openTab('/moderator/100leute')">Moderator öffnen ↗</button>
+        <button class="btn pri" onclick="openGame('100leute')">▶ Öffnen</button>
+        <button class="btn sec" onclick="openTab('/100leute/buzz/A')">Buzzer A ↗</button>
+        <button class="btn sec" onclick="openTab('/100leute/buzz/B')">Buzzer B ↗</button>
       </div>
     </div>
 
@@ -207,12 +254,11 @@ button{font:inherit;cursor:pointer}
       <div class="card-desc">Spieler verbinden sich per QR-Code mit dem Handy. Der Beamer zeigt Fragen und Ergebnisse. Moderation über die Admin-Seite.</div>
       <div class="card-status" id="status-quiz">▶ Läuft auf Beamer</div>
       <div class="card-actions">
-        <button class="btn pri" onclick="launchQuiz()">▶ Auf Beamer zeigen</button>
-        <button class="btn sec" onclick="openTab('http://localhost:8080/admin')">Admin öffnen ↗</button>
+        <button class="btn pri" onclick="openGame('quiz')">▶ Öffnen</button>
       </div>
     </div>
 
-    <!-- Agentenspiel ────────────────────────────────────────── -->
+    <!-- Agentenspiel ────────────────────────────────────── -->
     <div class="game-card" id="card-agentenspiel" style="--card-accent:#ff6b6b">
       <div class="card-head">
         <div class="card-icon">🕵️</div>
@@ -224,96 +270,122 @@ button{font:inherit;cursor:pointer}
       <div class="card-desc">Gäste melden sich per Telegram an, bekommen eine Agenten-Identität und spionieren sich gegenseitig aus. Enthüllung auf dem Beamer.</div>
       <div class="card-status" id="status-agentenspiel">▶ Läuft auf Beamer</div>
       <div class="card-actions">
-        <button class="btn pri" onclick="launchAgentenspiel()">▶ Auf Beamer zeigen</button>
-        <button class="btn sec" onclick="openTab('http://localhost:8090')">Zentrale öffnen ↗</button>
+        <button class="btn pri" onclick="openGame('agentenspiel')">▶ Öffnen</button>
       </div>
     </div>
 
     <!-- + Neues Spiel ────────────────────────────────────── -->
     <!-- ANLEITUNG FÜR NEUE SPIELE (als Kommentar, damit du es leicht findest):
-         1. HTML-Datei für Display-Ansicht hinzufügen (z.B. meinspiel_display.html)
-         2. Route in party_app.py hinzufügen:
-              @app.route('/meinspiel')
-              def r_meinspiel():
-                  return send_from_directory(BASIS, 'meinspiel_display.html')
-         3. Iframe in party_display.html hinzufügen:
-              <iframe id="scene-meinspiel" class="scene" src="/meinspiel"></iframe>
-         4. Karte hier im Dashboard hinzufügen (copy-paste von oben)
-         5. launchMeinspiel()-Funktion unten im Script ergänzen -->
+         1. GAMES-Objekt im Script unten um Eintrag erweitern:
+              meinspiel: { title:'Mein Spiel', icon:'🎮', ctrl:'/meinspiel', scene:'meinspiel' }
+         2. Karte hier im HTML hinzufügen (copy-paste von oben, openGame('meinspiel'))
+         3. Iframe in party_display.html hinzufügen
+         4. Route in party_app.py hinzufügen
+         Das wars – der Back-Button und der Beamer-Button funktionieren automatisch. -->
 
   </div>
 
   <!-- ── Quick Links ──────────────────────────────────────── -->
   <div class="section-title">Schnell-Links</div>
   <div class="links-grid">
-    <div class="link-chip" onclick="openTab('/moderator/100leute')"><span class="chip-icon">🎙</span> Moderator 100 Leute</div>
     <div class="link-chip" onclick="openTab('/100leute/buzz/A')"><span class="chip-icon">🔵</span> Buzzer Team A</div>
     <div class="link-chip" onclick="openTab('/100leute/buzz/B')"><span class="chip-icon">🔴</span> Buzzer Team B</div>
-    <div class="link-chip" onclick="openTab('/zufall')"><span class="chip-icon">🎲</span> Zufallsgenerator</div>
     <div class="link-chip" onclick="openDisplay()"><span class="chip-icon">📺</span> Display öffnen</div>
-    <div class="link-chip" onclick="openTab('http://localhost:8080/admin')"><span class="chip-icon">✝️</span> Quiz-Admin</div>
-    <div class="link-chip" onclick="openTab('http://localhost:8090')"><span class="chip-icon">🕵️</span> Agentenspiel-Zentrale</div>
-    <div class="link-chip" onclick="openTab('http://localhost:8090/beamer')"><span class="chip-icon">📺</span> Agentenspiel-Beamer</div>
+    <div class="link-chip" onclick="showScene('idle')"><span class="chip-icon">⬛</span> Beamer → Wartescreen</div>
   </div>
 
   <div class="info-box" style="margin-top:24px">
     <strong>Setup:</strong>
     Display-Fenster auf dem Beamer öffnen → <code>localhost:5000/display</code>.
-    Dann einmal dort klicken zum Aktivieren.
-    Danach kannst du hier die Spiele starten – der Beamer wechselt automatisch.<br>
+    Einmal dort klicken zum Aktivieren. Dann hier Spiel öffnen, einrichten, und auf
+    <strong>Auf Beamer zeigen</strong> drücken. Zurück → Beamer springt automatisch auf Wartescreen.<br>
     <strong>Offline-Modus:</strong> Falls kein Internet → <code>socket.io.min.js</code> in den Projektordner legen.
   </div>
 
 </div>
 
+<!-- ── Game-Overlay ──────────────────────────────────────────── -->
+<div id="game-overlay">
+  <div class="game-topbar">
+    <button class="btn-back" onclick="goBack()">← Zurück</button>
+    <div class="game-topbar-title">
+      <span class="g-icon" id="game-icon"></span>
+      <span id="game-title"></span>
+    </div>
+    <button class="btn-beamer" id="btn-beamer" onclick="sendToBeamer()">▶ Auf Beamer zeigen</button>
+    <div class="scene-bar">
+      <div class="scene-badge">
+        <div class="scene-dot" id="conn-dot-2"></div>
+        <span>Beamer:</span>
+        <span class="scene-name" id="scene-name-2">–</span>
+      </div>
+      <button class="btn-idle" onclick="showScene('idle')" title="Wartescreen">⬛ Wartescreen</button>
+    </div>
+  </div>
+  <iframe id="game-frame" src="" allow="autoplay; camera; microphone"></iframe>
+</div>
+
 <script src="/sio.js"></script>
 <script>
+// ── Spielkonfiguration ────────────────────────────────────────
+const GAMES = {
+  zufall:       { title: 'Zufallsgenerator',    icon: '🎲', ctrl: '/zufall',                     scene: 'zufall' },
+  '100leute':   { title: '100 Leute gefragt',   icon: '💯', ctrl: '/moderator/100leute',         scene: '100leute' },
+  quiz:         { title: 'Bibel-Quiz',           icon: '✝️', ctrl: 'http://localhost:8080/admin', scene: 'quiz' },
+  agentenspiel: { title: 'Operation Silvester',  icon: '🕵️', ctrl: 'http://localhost:8090',      scene: 'agentenspiel' },
+};
+
+const LABELS = { idle: 'Wartescreen', zufall: 'Zufallsgenerator', '100leute': '100 Leute', quiz: 'Bibel-Quiz', agentenspiel: 'Agentenspiel' };
+
 let hub = null;
 let connected = false;
 let currentScene = 'idle';
+let activeGame = null;
 
 // ── SocketIO verbinden ────────────────────────────────────────
 function connect() {
   if (typeof io === 'undefined') { setTimeout(connect, 500); return; }
   hub = io('/hub');
-
-  hub.on('connect', () => {
-    connected = true;
-    setConnStatus(true);
-  });
-  hub.on('disconnect', () => {
-    connected = false;
-    setConnStatus(false);
-  });
-  hub.on('scene', data => {
-    if (data && data.name) updateSceneUI(data.name);
-  });
+  hub.on('connect',    () => { connected = true;  setConnStatus(true); });
+  hub.on('disconnect', () => { connected = false; setConnStatus(false); });
+  hub.on('scene', data => { if (data?.name) updateSceneUI(data.name); });
 }
 connect();
 
 function setConnStatus(on) {
-  const bar = document.getElementById('conn-bar');
-  const dot = document.getElementById('conn-dot');
-  const txt = document.getElementById('conn-text');
-  bar.className = 'conn-bar ' + (on ? 'on' : 'off');
-  dot.className = 'scene-dot ' + (on ? 'on' : '');
-  txt.textContent = on ? 'Mit Server verbunden' : 'Verbindung unterbrochen …';
+  document.getElementById('conn-bar').className = 'conn-bar ' + (on ? 'on' : 'off');
+  document.getElementById('conn-text').textContent = on ? 'Mit Server verbunden' : 'Verbindung unterbrochen …';
+  ['conn-dot', 'conn-dot-2'].forEach(id => {
+    document.getElementById(id).className = 'scene-dot ' + (on ? 'on' : '');
+  });
 }
 
 function updateSceneUI(name) {
   currentScene = name;
-  const labels = { idle: 'Wartescreen', zufall: 'Zufallsgenerator', '100leute': '100 Leute', quiz: 'Bibel-Quiz', agentenspiel: 'Agentenspiel' };
-  document.getElementById('scene-name').textContent = labels[name] || name;
+  const label = LABELS[name] || name;
+  document.getElementById('scene-name').textContent = label;
+  document.getElementById('scene-name-2').textContent = label;
 
   // Aktive Karte hervorheben
   document.querySelectorAll('.game-card').forEach(c => c.classList.remove('active'));
   const card = document.getElementById('card-' + name);
   if (card) card.classList.add('active');
 
-  // Status-Labels zeigen/verstecken
+  // Status-Labels zeigen
   document.querySelectorAll('.card-status').forEach(s => s.classList.remove('show'));
   const st = document.getElementById('status-' + name);
   if (st) st.classList.add('show');
+
+  // Beamer-Button im Overlay aktualisieren
+  refreshBeamerBtn();
+}
+
+function refreshBeamerBtn() {
+  if (!activeGame) return;
+  const btn = document.getElementById('btn-beamer');
+  const onAir = currentScene === GAMES[activeGame].scene;
+  btn.className = 'btn-beamer' + (onAir ? ' on-air' : '');
+  btn.textContent = onAir ? '✓ Läuft auf Beamer' : '▶ Auf Beamer zeigen';
 }
 
 // ── Szene senden ─────────────────────────────────────────────
@@ -322,26 +394,37 @@ function showScene(name) {
   hub.emit('show_scene', { name });
 }
 
-// ── Launch-Funktionen ─────────────────────────────────────────
-function launchZufall() {
-  showScene('zufall');
-  // Steuerung in neuem Tab öffnen (kurze Verzögerung damit Beamer zuerst wechselt)
-  setTimeout(() => openTab('/zufall'), 300);
+// ── Game-Overlay öffnen ───────────────────────────────────────
+function openGame(key) {
+  const g = GAMES[key];
+  if (!g) return;
+  activeGame = key;
+
+  document.getElementById('game-icon').textContent = g.icon;
+  document.getElementById('game-title').textContent = g.title;
+  document.getElementById('game-frame').src = g.ctrl;
+  refreshBeamerBtn();
+
+  document.getElementById('game-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 
-function launch100leute() {
-  showScene('100leute');
-  setTimeout(() => openTab('/moderator/100leute'), 300);
+// ── Auf Beamer senden ─────────────────────────────────────────
+function sendToBeamer() {
+  if (!activeGame) return;
+  showScene(GAMES[activeGame].scene);
 }
 
-function launchQuiz() {
-  showScene('quiz');
-  setTimeout(() => openTab('http://localhost:8080/admin'), 300);
-}
-
-function launchAgentenspiel() {
-  showScene('agentenspiel');
-  setTimeout(() => openTab('http://localhost:8090'), 300);
+// ── Zurück zur Übersicht ──────────────────────────────────────
+function goBack() {
+  showScene('idle');
+  document.getElementById('game-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  // Iframe entladen damit laufende Prozesse stoppen
+  setTimeout(() => {
+    document.getElementById('game-frame').src = '';
+    activeGame = null;
+  }, 300);
 }
 
 // ── Hilfsfunktionen ───────────────────────────────────────────
