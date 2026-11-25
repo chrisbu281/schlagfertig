@@ -212,10 +212,11 @@ body.display .tnames,body.clean .tnames{display:none!important}
 (function(){
 const KEY='zentrale_zufall_v1';
 let ROLE='control';
-// In iframe → immer Display-Modus
+// In iframe → Display-Modus, außer ?ctrl=1 erzwingt Steuerung
 const inIframe = window.self !== window.top;
+const _forceCtrl = new URLSearchParams(location.search).get('ctrl')==='1';
 try{if(sessionStorage.getItem('zz_role')==='display')ROLE='display';}catch(e){}
-if((location.hash||'').toLowerCase()==='#anzeige'||inIframe)ROLE='display';
+if((location.hash||'').toLowerCase()==='#anzeige'||(inIframe&&!_forceCtrl))ROLE='display';
 let S={people:[],opts:{mode:'p',players:1,teams:2,teamSize:0,excl:false,snd:true,photos:true,teamNames:[]}};
 const DEF_TEAMS=['Alpha','Bravo','Charlie','Delta','Echo','Foxtrot'];
 const teamLabel=i=>{const v=(S.opts.teamNames[i]||'').trim();if(!v||DEF_TEAMS.includes(v))return 'Team '+(v||DEF_TEAMS[i]);return v;};
