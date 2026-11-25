@@ -167,7 +167,7 @@ def _neuer_ff():
 def _neuer_state():
     return {
         "phase": "setup",
-        "config": {"runden": 3, "ff_timer": True, "ff_zeit1": 20, "ff_zeit2": 25,
+        "config": {"runden": 3, "ff_aktiv": True, "ff_timer": True, "ff_zeit1": 20, "ff_zeit2": 25,
                    "ff_ziel": 400, "buzzer_a": 1, "buzzer_b": 2},
         "teams": {
             "A": {"name": "Team A", "foto": "", "punkte": 0},
@@ -278,7 +278,10 @@ def _naechste_runde():
     state["duell"]        = _neue_duell()
     state["rundenende"]   = None
     if state["runde"] >= state["config"]["runden"]:
-        state["phase"] = "fastfive"
+        if state["config"].get("ff_aktiv", True):
+            state["phase"] = "fastfive"
+        else:
+            state["phase"] = "ende"
     else:
         state["runde"] += 1
         state["phase"] = "buzzerduell"

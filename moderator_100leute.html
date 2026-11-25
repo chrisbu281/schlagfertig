@@ -364,18 +364,28 @@ function renderSetup(el, teams, cfg) {
 
   <div class="karte">
     <div class="karte-title">Spielkonfiguration</div>
-    <div class="setup-reihe">
+    <div class="setup-reihe" style="margin-bottom:12px">
       <div style="flex:1">
         <div class="inp-label">Runden</div>
         <input class="inp" id="inp-runden" type="number" min="1" max="10" value="${cfg.runden||3}">
       </div>
-      <div style="flex:1">
-        <div class="inp-label">FF Timer Runde 1 (s)</div>
-        <input class="inp" id="inp-ff1" type="number" min="10" max="60" value="${cfg.ff_zeit1||20}">
-      </div>
-      <div style="flex:1">
-        <div class="inp-label">FF Timer Runde 2 (s)</div>
-        <input class="inp" id="inp-ff2" type="number" min="10" max="60" value="${cfg.ff_zeit2||25}">
+    </div>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px">
+      <input type="checkbox" id="inp-ff-aktiv" ${cfg.ff_aktiv!==false?'checked':''}
+        style="width:18px;height:18px;accent-color:#f59e0b;cursor:pointer;flex-shrink:0"
+        onchange="document.getElementById('ff-timer-felder').style.display=this.checked?'block':'none'">
+      <span style="font-size:14px;font-weight:600">⚡ Fast Five Runde spielen</span>
+    </label>
+    <div id="ff-timer-felder" style="${cfg.ff_aktiv!==false?'':'display:none'}">
+      <div class="setup-reihe">
+        <div style="flex:1">
+          <div class="inp-label">FF Timer Runde 1 (s)</div>
+          <input class="inp" id="inp-ff1" type="number" min="10" max="60" value="${cfg.ff_zeit1||20}">
+        </div>
+        <div style="flex:1">
+          <div class="inp-label">FF Timer Runde 2 (s)</div>
+          <input class="inp" id="inp-ff2" type="number" min="10" max="60" value="${cfg.ff_zeit2||25}">
+        </div>
       </div>
     </div>
   </div>
@@ -425,6 +435,7 @@ function holzeSetupDaten() {
   return {
     config: {
       runden:    parseInt(document.getElementById('inp-runden')?.value)||3,
+      ff_aktiv:  document.getElementById('inp-ff-aktiv')?.checked ?? true,
       ff_timer:  true,
       ff_zeit1:  parseInt(document.getElementById('inp-ff1')?.value)||20,
       ff_zeit2:  parseInt(document.getElementById('inp-ff2')?.value)||25,
@@ -471,18 +482,6 @@ function renderBuzzerduell(el, teams) {
   }
 
   const antworten = af.antworten || [];
-  let boardHtml = '<div class="mod-board" style="margin-bottom:12px">';
-  antworten.forEach((a, i) => {
-    const vonKlasse = a.auf ? (a.von ? 'von-'+a.von.toLowerCase() : 'auf') : '';
-    boardHtml += `
-    <div class="mod-tile ${a.auf?'auf':''} ${vonKlasse}" title="${escHtml(a.text)} (${a.punkte} Pts)">
-      <span class="mt-nr">${i+1}</span>
-      <span class="mt-text">${escHtml(a.text)}</span>
-      <span class="mt-pkt">${a.punkte}</span>
-      ${a.auf ? '<span class="mt-auf">✓</span>' : ''}
-    </div>`;
-  });
-  boardHtml += '</div>';
 
   // Determine duell state
   const erster   = d.erster_team || null; // who buzzed first ('A'/'B'/null)
@@ -591,10 +590,6 @@ function renderBuzzerduell(el, teams) {
   <div class="karte">
     <div class="karte-title">Frage</div>
     <div style="font-size:16px;font-weight:700;line-height:1.4">${escHtml(af.frage)}</div>
-  </div>
-  <div class="karte">
-    <div class="karte-title">Antworten (Moderator-Sicht)</div>
-    ${boardHtml}
   </div>
   ${activeHtml}`;
 }

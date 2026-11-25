@@ -89,23 +89,31 @@
   .puls{animation:puls 2s ease-in-out infinite;}
   @keyframes puls{0%,100%{opacity:.5}50%{opacity:1}}
 
-  /* Setup-Screen – Video mit Text */
-  #setup-screen{position:fixed;inset:0;background:#000;z-index:1000;display:none;
+  /* Setup-Screen – Idle-Wartebildschirm */
+  #setup-screen{position:fixed;inset:0;
+    background:radial-gradient(ellipse at 50% 35%,#1a0d2e 0%,#0a0514 50%,#050810 100%);
+    z-index:1000;display:none;
     align-items:center;justify-content:center;flex-direction:column;gap:0;overflow:hidden;}
-  #setup-video{width:100%;height:100%;object-fit:contain;position:absolute;inset:0;
+  #setup-bg-img{position:absolute;inset:0;width:100%;height:100%;
+    object-fit:cover;z-index:0;opacity:.45;}
+  .setup-overlay{position:absolute;inset:0;
+    background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.2) 0%,rgba(0,0,0,.65) 100%);
     z-index:1;}
-  .setup-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,
-    rgba(0,0,0,.7) 60%,rgba(0,0,0,.95) 100%);z-index:2;}
-  .setup-content{position:absolute;bottom:0;left:0;right:0;z-index:3;display:flex;
-    flex-direction:column;align-items:center;justify-content:flex-end;
-    padding-bottom:clamp(40px,10vh,100px);width:100%;text-align:center;}
-  .setup-logo{font-size:clamp(80px,12vw,140px);font-weight:900;letter-spacing:8px;
-    text-transform:uppercase;color:#fff;text-shadow:0 8px 50px rgba(0,0,0,.95),
-    0 0 40px rgba(245,197,24,.4);line-height:1.0;margin:0;}
-  .setup-waiting{font-size:clamp(14px,1.5vw,20px);color:#aab;letter-spacing:2px;
-    text-transform:uppercase;margin-top:clamp(16px,1.5vw,32px);
-    animation:pulse-wait 2s ease-in-out infinite;}
-  @keyframes pulse-wait{0%,100%{opacity:.6}50%{opacity:1}}
+  .setup-content{position:absolute;inset:0;z-index:2;display:flex;
+    flex-direction:column;align-items:center;justify-content:center;
+    padding:40px;text-align:center;gap:clamp(16px,3vh,40px);}
+  .setup-brand{font-family:"Chakra Petch",monospace;font-size:clamp(10px,1.1vw,15px);
+    letter-spacing:8px;color:rgba(255,255,255,.25);text-transform:uppercase;font-weight:300;}
+  .setup-logo{font-family:"Chakra Petch",monospace;font-size:clamp(48px,8vw,110px);
+    font-weight:900;letter-spacing:4px;text-transform:uppercase;color:#fff;
+    text-shadow:0 0 60px rgba(245,197,24,.55),0 8px 40px rgba(0,0,0,.8);
+    line-height:1.1;margin:0;}
+  .setup-logo span{color:var(--gold);}
+  .setup-waiting{font-family:"Chakra Petch",monospace;
+    font-size:clamp(18px,2.2vw,28px);color:rgba(200,200,230,.75);
+    letter-spacing:4px;text-transform:uppercase;font-weight:300;
+    animation:pulse-wait 2.5s ease-in-out infinite;}
+  @keyframes pulse-wait{0%,100%{opacity:.4}50%{opacity:1}}
 
   /* Spielende – Sieger-Bounce + Feuerwerk */
   .ende-sieger{font-size:clamp(52px,8vw,100px);font-weight:900;color:var(--gold);
@@ -543,13 +551,12 @@ function renderPhase(phase){
         sEl.id = 'setup-screen';
         document.body.insertBefore(sEl, document.getElementById('buehne'));
         sEl.innerHTML = `
-          <video id="setup-video" autoplay loop muted playsinline>
-            <source src="/static/intro.mp4" type="video/mp4">
-          </video>
+          <img id="setup-bg-img" src="/static/100leute_idle.jpg" alt="" onerror="this.style.display='none'">
           <div class="setup-overlay"></div>
           <div class="setup-content">
-            <div class="setup-logo">SCHLAGFERTIG</div>
-            <div class="setup-waiting">⏳ Warten auf Moderator …</div>
+            <div class="setup-brand">SCHLAGFERTIG</div>
+            <div class="setup-logo">100 <span>LEUTE</span><br>GEFRAGT</div>
+            <div class="setup-waiting">Warte auf Moderator …</div>
           </div>`;
       }
       sEl.style.display = 'flex';
