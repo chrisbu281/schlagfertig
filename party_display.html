@@ -157,6 +157,9 @@ canvas#stars{position:absolute;inset:0;z-index:0}
 <!-- Szene: Bibel-Quiz ───────────────────────────────────────── -->
 <iframe id="scene-quiz" class="scene" src="http://localhost:8080/host" allow="autoplay"></iframe>
 
+<!-- Szene: Agentenspiel ─────────────────────────────────────── -->
+<iframe id="scene-agentenspiel" class="scene" src="http://localhost:8090/beamer" allow="autoplay"></iframe>
+
 <!-- Szenen-Toast ─────────────────────────────────────────────── -->
 <div id="scene-toast"></div>
 
@@ -260,7 +263,7 @@ function tryConnectHub(){
   });
   hub.on('scene',data=>{
     if(!data||!data.name)return;
-    const labels={idle:'Wartescreen',zufall:'Zufallsgenerator','100leute':'100 Leute gefragt',quiz:'Bibel-Quiz'};
+    const labels={idle:'Wartescreen',zufall:'Zufallsgenerator','100leute':'100 Leute gefragt',quiz:'Bibel-Quiz',agentenspiel:'Operation Silvester'};
     showScene(data.name,labels[data.name]||data.name);
   });
   hub.on('disconnect',()=>{

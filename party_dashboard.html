@@ -212,6 +212,23 @@ button{font:inherit;cursor:pointer}
       </div>
     </div>
 
+    <!-- Agentenspiel ────────────────────────────────────────── -->
+    <div class="game-card" id="card-agentenspiel" style="--card-accent:#ff6b6b">
+      <div class="card-head">
+        <div class="card-icon">🕵️</div>
+        <div>
+          <div class="card-title">Operation Silvester</div>
+          <div class="card-sub">Agentenspiel via Telegram</div>
+        </div>
+      </div>
+      <div class="card-desc">Gäste melden sich per Telegram an, bekommen eine Agenten-Identität und spionieren sich gegenseitig aus. Enthüllung auf dem Beamer.</div>
+      <div class="card-status" id="status-agentenspiel">▶ Läuft auf Beamer</div>
+      <div class="card-actions">
+        <button class="btn pri" onclick="launchAgentenspiel()">▶ Auf Beamer zeigen</button>
+        <button class="btn sec" onclick="openTab('http://localhost:8090')">Zentrale öffnen ↗</button>
+      </div>
+    </div>
+
     <!-- + Neues Spiel ────────────────────────────────────── -->
     <!-- ANLEITUNG FÜR NEUE SPIELE (als Kommentar, damit du es leicht findest):
          1. HTML-Datei für Display-Ansicht hinzufügen (z.B. meinspiel_display.html)
@@ -235,6 +252,8 @@ button{font:inherit;cursor:pointer}
     <div class="link-chip" onclick="openTab('/zufall')"><span class="chip-icon">🎲</span> Zufallsgenerator</div>
     <div class="link-chip" onclick="openDisplay()"><span class="chip-icon">📺</span> Display öffnen</div>
     <div class="link-chip" onclick="openTab('http://localhost:8080/admin')"><span class="chip-icon">✝️</span> Quiz-Admin</div>
+    <div class="link-chip" onclick="openTab('http://localhost:8090')"><span class="chip-icon">🕵️</span> Agentenspiel-Zentrale</div>
+    <div class="link-chip" onclick="openTab('http://localhost:8090/beamer')"><span class="chip-icon">📺</span> Agentenspiel-Beamer</div>
   </div>
 
   <div class="info-box" style="margin-top:24px">
@@ -283,7 +302,7 @@ function setConnStatus(on) {
 
 function updateSceneUI(name) {
   currentScene = name;
-  const labels = { idle: 'Wartescreen', zufall: 'Zufallsgenerator', '100leute': '100 Leute', quiz: 'Bibel-Quiz' };
+  const labels = { idle: 'Wartescreen', zufall: 'Zufallsgenerator', '100leute': '100 Leute', quiz: 'Bibel-Quiz', agentenspiel: 'Agentenspiel' };
   document.getElementById('scene-name').textContent = labels[name] || name;
 
   // Aktive Karte hervorheben
@@ -318,6 +337,11 @@ function launch100leute() {
 function launchQuiz() {
   showScene('quiz');
   setTimeout(() => openTab('http://localhost:8080/admin'), 300);
+}
+
+function launchAgentenspiel() {
+  showScene('agentenspiel');
+  setTimeout(() => openTab('http://localhost:8090'), 300);
 }
 
 // ── Hilfsfunktionen ───────────────────────────────────────────

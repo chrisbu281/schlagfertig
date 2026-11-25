@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Zentrale – Operation Silvester</title>
+<style>
+  :root { --bg:#14181f; --panel:#1f252f; --line:#323a46; --text:#ece6d8; --muted:#9aa3ae;
+          --gold:#d9a441; --red:#e0574a; --green:#5fb36b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 system-ui, sans-serif; }
+  header { display:flex; align-items:center; gap:16px; padding:14px 24px; border-bottom:1px solid var(--line);
+           position:sticky; top:0; background:var(--bg); z-index:5; }
+  header h1 { font-size:18px; margin:0; letter-spacing:2px; color:var(--gold); }
+  .badge { padding:3px 10px; border-radius:99px; background:var(--panel); border:1px solid var(--line); font-size:13px; }
+  .badge.live { border-color:var(--red); color:var(--red); }
+  main { display:grid; grid-template-columns: 420px 1fr; gap:20px; padding:20px 24px; }
+  section { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:20px; }
+  h2 { font-size:13px; letter-spacing:2px; color:var(--gold); margin:0 0 12px; text-transform:uppercase; }
+  button { font:inherit; border:1px solid var(--line); background:#2b323d; color:var(--text);
+           border-radius:8px; padding:8px 14px; cursor:pointer; }
+  button:hover { border-color:var(--gold); }
+  button.big { width:100%; padding:14px; font-size:17px; font-weight:600; margin-bottom:10px; }
+  button.primary { background:var(--gold); color:#14181f; border-color:var(--gold); }
+  button.danger { border-color:var(--red); color:var(--red); background:transparent; }
+  button.small { padding:3px 9px; font-size:13px; }
+  button:disabled { opacity:.35; cursor:default; }
+  input, select { font:inherit; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--line);
+                  background:#14181f; color:var(--text); margin:4px 0 10px; }
+  label { font-size:13px; color:var(--muted); }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:12px; color:var(--muted); font-weight:600; }
+  .ok { color:var(--green); } .no { color:var(--red); } .muted { color:var(--muted); }
+  .row { display:flex; gap:8px; align-items:center; }
+  .msg { min-height:22px; color:var(--gold); margin:6px 0 0; }
+  .report { padding:10px 0; border-bottom:1px solid var(--line); }
+  .report .head { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .report .reason { margin-top:4px; color:#cfc9bb; }
+  .blocked { opacity:.45; }
+  .stat { font-size:28px; font-weight:700; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  a { color:var(--gold); }
+</style>
+</head>
+<body>
+<header>
+  <h1>ZENTRALE · OPERATION SILVESTER</h1>
+  <span class="badge" id="phase">…</span>
+  <span class="badge" id="admin">…</span>
+  <span style="flex:1"></span>
+  <a href="/beamer" target="beamer">Beamer-Fenster öffnen ↗</a>
+</header>
+
+<main>
+<div>
+  <section>
+    <h2>Steuerung</h2>
+    <button class="big primary" id="btnStart" onclick="act('start','Spiel jetzt starten? Alle Handys bekommen die geheime Nachricht.')">▶ Spiel starten</button>
+    <button class="big primary" id="btnNext" onclick="act('next', nextConfirm())">Welle senden</button>
+    <button class="big" id="btnReveal" onclick="act('reveal','Auflösung starten? Danach sind keine Meldungen mehr möglich.')">🎬 Auflösung starten</button>
+    <div class="row" id="revealCtl" style="display:none">
+      <button onclick="post('step',{delta:-1})">◀ zurück</button>
+      <div style="flex:1;text-align:center" id="revealStep"></div>
+      <button class="primary" onclick="post('step',{delta:1})">weiter ▶</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </section>
+
+  <section>
+    <h2>Vorbereitung</h2>
+    <label>Spion</label>
+    <select id="spy" oninput="dirty=true"></select>
+    <label>Merkmal Welle 1 (häufig)</label>
+    <input id="hint_1" placeholder="z. B. Der Spion trägt eine Uhr." oninput="dirty=true">
+    <label>Merkmal Welle 2</label>
+    <input id="hint_2" placeholder="z. B. Der Spion trinkt gerne Cola." oninput="dirty=true">
+    <label>Merkmal Welle 3</label>
+    <input id="hint_3" placeholder="z. B. Der Spion trägt etwas Rotes." oninput="dirty=true">
+    <label>Merkmal Welle 4 (selten)</label>
+    <input id="hint_4" placeholder="z. B. Der Spion trägt bunte Socken." oninput="dirty=true">
+    <label>Welle 5: zweiter Name neben dem Spion (leer = Zufall)</label>
+    <select id="finale_other" oninput="dirty=true"></select>
+    <button class="primary" onclick="saveSettings()">Speichern</button>
+    <p class="muted" style="font-size:13px">Der Spion sieht seine Merkmale in seiner Akte. Merkmale bis zum Spielstart eintragen, danach nur noch Ersatz für Wellen, die noch nicht gesendet sind.</p>
+  </section>
+
+  <section>
+    <h2>Stand (geheim)</h2>
+    <div id="verdict"></div>
+    <table id="standings"></table>
+  </section>
+
+  <section>
+    <h2>Zurücksetzen</h2>
+    <div class="grid2">
+      <button class="danger" onclick="act('reset','Spiel zurücksetzen? Meldungen werden gelöscht, Anmeldungen und Fotos bleiben.',{all:false})">Nur Spiel</button>
+      <button class="danger" onclick="act('reset','ALLES löschen? Auch Anmeldungen und Fotos. Gut nach dem Test.',{all:true})">Alles inkl. Fotos</button>
+    </div>
+    <button style="margin-top:10px;width:100%" onclick="post('reload_guests',{})">gaeste.txt neu einlesen</button>
+  </section>
+</div>
+
+<div>
+  <section>
+    <h2>Wellen</h2>
+    <table id="waves"></table>
+  </section>
+  <section>
+    <h2>Meldungen <span class="muted" id="repCount"></span></h2>
+    <div id="reports"></div>
+  </section>
+  <section>
+    <h2>Gäste <span class="muted" id="guestCount"></span></h2>
+    <table id="guests"></table>
+  </section>
+</div>
+</main>
+
+<script>
+let S = null, dirty = false;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const escJs = s => esc(s).replace(/'/g, '’');
+const STEPS = ['Wartebild','Spion mit Foto','Stempel ENTTARNT/UNENTDECKT','Liveschaltung (Video)','Erkannt von …','Verschwörungstheorien','Rangliste'];
+
+async function post(path, body) {
+  const r = await fetch('/api/' + path, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{})});
+  const j = await r.json();
+  $('msg').textContent = j.ok ? (j.sent !== undefined ? `Gesendet an ${j.sent}` + (j.missed ? `, ${j.missed} haben die letzte Meldung verpasst` : '') : '✓') : '⚠ ' + j.error;
+  await load();
+  return j;
+}
+async function act(path, question, body) { if (!question || confirm(question)) await post(path, body); }
+function nextConfirm() {
+  const w = (S?.wave || 0) + 1;
+  const h = w < 5 ? S?.hints[w] : 'Finale: Spion + zweiter Name';
+  return `Welle ${w} senden?\n\n${h || '(kein Hinweis eingetragen)'}`;
+}
+async function saveSettings() {
+  const body = { spy_id: $('spy').value, finale_other: $('finale_other').value };
+  for (let i = 1; i <= 4; i++) body['hint_' + i] = $('hint_' + i).value;
+  if (S.phase !== 'anmeldung') delete body.spy_id;
+  dirty = false;
+  await post('settings', body);
+}
+
+function renderSettings() {
+  if (dirty || document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'SELECT') return;
+  const linked = S.guests.filter(g => g.linked);
+  const opts = (sel, none) => `<option value="0">${none}</option>` +
+    linked.map(g => `<option value="${g.id}" ${g.id == sel ? 'selected' : ''}>${esc(g.name)}</option>`).join('');
+  $('spy').innerHTML = opts(S.spy_id, '– bitte wählen –');
+  $('spy').disabled = S.phase !== 'anmeldung';
+  $('finale_other').innerHTML = opts(S.finale_other, 'Zufall');
+  for (let i = 1; i <= 4; i++) { $('hint_' + i).value = S.hints[i] || ''; $('hint_' + i).disabled = S.wave >= i; }
+}
+
+function render() {
+  const P = {anmeldung:'Anmeldung', laeuft:`Spiel läuft · Welle ${S.wave}/5`, aufloesung:'Auflösung'};
+  $('phase').textContent = P[S.phase]; $('phase').className = 'badge' + (S.phase === 'laeuft' ? ' live' : '');
+  $('admin').textContent = S.admin_connected ? '📱 Telegram-Meldungen an' : '📱 /zentrale PIN im Bot senden';
+  $('btnStart').disabled = S.phase !== 'anmeldung';
+  $('btnNext').disabled = S.phase !== 'laeuft' || S.wave >= 5;
+  $('btnNext').textContent = S.wave >= 5 ? 'Alle Wellen gesendet' : `📡 Welle ${S.wave + 1} senden`;
+  $('btnReveal').disabled = S.phase !== 'laeuft';
+  $('revealCtl').style.display = S.phase === 'aufloesung' ? 'flex' : 'none';
+  $('revealStep').textContent = `Schritt ${S.reveal_step}/${S.reveal_steps}: ${STEPS[S.reveal_step]}` +
+    (S.reveal_step === 3 && !S.video ? ' (kein Video in static/flucht.mp4)' : '');
+  renderSettings();
+
+  // Wellen
+  $('waves').innerHTML = '<tr><th>Welle</th><th>Hinweis</th><th>gesendet</th><th>Meldungen</th><th>richtig</th></tr>' +
+    S.wave_stats.map(w => `<tr ${w.wave === S.wave ? 'style="background:#2b323d"' : ''}><td>${w.wave}</td>
+      <td>${esc(S.hints[w.wave]) || '<span class="muted">–</span>'}</td><td>${w.sent_at || '–'}</td>
+      <td>${w.reports}</td><td>${w.reports ? Math.round(100 * w.correct / w.reports) + ' %' : '–'}</td></tr>`).join('');
+
+  // Meldungen
+  $('repCount').textContent = `(${S.reports.length})`;
+  const blocked = new Set(S.guests.filter(g => g.blocked).map(g => g.id));
+  $('reports').innerHTML = S.reports.map(r => `<div class="report ${blocked.has(r.reporter_id) ? 'blocked' : ''}">
+      <div class="head"><b>W${r.wave}</b><span class="muted">${r.time}</span>
+      <span>${esc(r.reporter)} → <b>${esc(r.suspect)}</b></span>
+      <span class="${r.correct ? 'ok' : 'no'}">${r.correct ? '✔ richtig' : '✘'}</span>
+      ${r.by_spy ? '<span class="badge">vom Spion</span>' : ''}
+      <span style="flex:1"></span>
+      <button class="small" onclick="post('fav',{id:${r.id}})">${r.favorite ? '⭐ Favorit' : '☆ Verschwörungstheorie'}</button>
+      <button class="small danger" onclick="act('block','${escJs(r.reporter)} sperren? Bekommt ab der nächsten Welle keine Hinweise mehr.',{id:${r.reporter_id},blocked:${!blocked.has(r.reporter_id)}})">${blocked.has(r.reporter_id) ? 'entsperren' : 'sperren'}</button></div>
+      <div class="reason">${esc(r.reason)}</div></div>`).join('') || '<p class="muted">Noch keine Meldungen.</p>';
+
+  // Gäste
+  const linkedN = S.guests.filter(g => g.linked).length;
+  $('guestCount').textContent = `(${linkedN} von ${S.guests.length} angemeldet)`;
+  const sorted = [...S.guests].sort((a, b) => a.linked - b.linked);
+  $('guests').innerHTML = '<tr><th>Name</th><th>angemeldet</th><th>Foto</th><th>Akte</th><th></th></tr>' +
+    sorted.map(g => `<tr class="${g.blocked ? 'blocked' : ''}"><td>${esc(g.name)} ${g.is_spy ? '🕵️' : ''}</td>
+      <td>${g.linked ? '<span class="ok">✔</span>' : '<span class="no">fehlt</span>'}</td>
+      <td>${g.photo ? '✔' : (g.linked ? '<span class="muted">ohne</span>' : '')}</td>
+      <td>${g.opened ? '✔' : ''}</td>
+      <td>${g.blocked ? 'gesperrt ' : ''}${g.linked && S.phase === 'anmeldung' ? `<button class="small" onclick="act('unlink','Anmeldung von ${escJs(g.name)} lösen? (falscher Name gewählt)',{id:${g.id}})">lösen</button>` : ''}</td></tr>`).join('');
+
+  // Stand
+  const v = S.verdict;
+  $('verdict').innerHTML = `<p>Welle 5: <b>${v.correct}</b> von <b>${v.total}</b> richtig →
+    ${v.total ? (v.enttarnt ? '<span class="ok">ENTTARNT</span>' : '<span class="no">UNENTDECKT</span>') : '<span class="muted">noch offen</span>'}</p>`;
+  $('standings').innerHTML = '<tr><th>#</th><th>Agent</th><th>Punkte</th></tr>' +
+    S.standings.slice(0, 10).map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.name)}</td><td>${r.points}</td></tr>`).join('');
+}
+
+async function load() {
+  try { S = await (await fetch('/api/state')).json(); render(); }
+  catch (e) { $('phase').textContent = '⚠ Bot nicht erreichbar'; }
+}
+load(); setInterval(load, 3000);
+</script>
+</body>
+</html>

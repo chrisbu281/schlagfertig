@@ -1,4 +1,6 @@
 node_modules/
+agentenspiel/einstellungen.ini
+agentenspiel/static/flucht.mp4
 package-lock.json
 package.json
 __pycache__/

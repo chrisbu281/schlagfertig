@@ -1,0 +1,6 @@
+# Ein Name pro Zeile, so wie er im Bot als Knopf erscheinen soll.
+# Zeilen mit # werden ignoriert. Für den Test: nur die Orga-Gruppe eintragen.
+Christoph
+Test-Agent 1
+Test-Agent 2
+Test-Agent 3

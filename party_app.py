@@ -81,6 +81,25 @@ def _start_quiz():
     _quiz_proc = subprocess.Popen([sys.executable, quiz_path], env=env, cwd=BASIS)
     print("✓  Quiz-Server gestartet (Port 8080)")
 
+_agent_proc = None
+
+def _start_agentenspiel():
+    global _agent_proc
+    bot_path = os.path.join(BASIS, 'agentenspiel', 'bot.py')
+    ini_path  = os.path.join(BASIS, 'agentenspiel', 'einstellungen.ini')
+    if not os.path.exists(bot_path):
+        print("⚠  agentenspiel/bot.py nicht gefunden – Agentenspiel nicht gestartet")
+        return
+    if not os.path.exists(ini_path):
+        print("⚠  agentenspiel/einstellungen.ini fehlt – Agentenspiel nicht gestartet")
+        print("   → Kopiere einstellungen.beispiel.ini → einstellungen.ini und trage Token ein")
+        return
+    _agent_proc = subprocess.Popen(
+        [sys.executable, bot_path],
+        cwd=os.path.join(BASIS, 'agentenspiel'),
+    )
+    print("✓  Agentenspiel-Bot gestartet (Port 8090)")
+
 @app.route('/api/scene')
 def api_scene():
     return jsonify(_scene)
@@ -90,13 +109,16 @@ if __name__ == '__main__':
     PORT = 5000
     URL = f'http://localhost:{PORT}'
     _start_quiz()
+    _start_agentenspiel()
 
     print(f"""
 🎉  Schlagfertig Party Hub
 
     Steuerzentrale (Dashboard):  {URL}/dashboard
     Beamer-Fenster (Display):    {URL}/display
-    Zufallsgenerator:            {URL}/zufall""")
+    Zufallsgenerator:            {URL}/zufall
+    Agentenspiel Zentrale:       http://localhost:8090
+    Agentenspiel Beamer:         http://localhost:8090/beamer""")
 
     if _has_100leute:
         print(f"""\

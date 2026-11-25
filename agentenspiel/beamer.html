@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Operation Silvester</title>
+<style>
+  * { box-sizing:border-box; margin:0; }
+  html, body { height:100%; background:#0d1015; color:#ece6d8; font-family: system-ui, sans-serif; overflow:hidden; cursor:none; }
+  #stage { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+           gap:3vh; padding:6vh 6vw; text-align:center; }
+  .label { font-family:"Courier New", monospace; letter-spacing:.4em; color:#d9a441; font-size:2.2vw; }
+  .title { font-size:8vw; font-weight:800; letter-spacing:.08em; line-height:1; }
+  .sub { font-size:2.4vw; color:#9aa3ae; }
+  .photo { height:52vh; aspect-ratio:5/6; object-fit:cover; border-radius:1.5vw; border:.4vw solid #2b323d; }
+  .name { font-size:5vw; font-weight:800; }
+  .wrap { position:relative; display:inline-block; }
+  .stamp { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) rotate(-14deg);
+           font-family:"Courier New", monospace; font-weight:900; font-size:6vw; padding:1vh 2vw;
+           border:.7vw solid currentColor; border-radius:1vw; background:rgba(13,16,21,.55);
+           animation:hit .35s ease-out; white-space:nowrap; }
+  .stamp.red { color:#e0574a; } .stamp.gold { color:#d9a441; }
+  @keyframes hit { from { transform:translate(-50%,-50%) rotate(-14deg) scale(2.4); opacity:0; } }
+  video { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; }
+  .list { display:flex; flex-direction:column; gap:2vh; font-size:3vw; }
+  .list .w { color:#d9a441; font-weight:700; margin-right:1.5vw; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(28vw, 1fr)); gap:2vw; width:100%; }
+  .card { background:#1f252f; border-radius:1.2vw; padding:2.5vh 2vw; text-align:left; }
+  .card .q { font-size:2.1vw; line-height:1.35; }
+  .card .by { margin-top:1.5vh; color:#9aa3ae; font-size:1.5vw; }
+  table { font-size:2.6vw; border-collapse:collapse; min-width:50vw; }
+  td { padding:.8vh 2vw; border-bottom:1px solid #2b323d; text-align:left; }
+  td.pts { text-align:right; color:#d9a441; font-weight:800; }
+  tr.first td { font-size:3.4vw; color:#fff; }
+  .fade { animation:fade .6s ease-out; }
+  @keyframes fade { from { opacity:0; transform:translateY(2vh); } }
+  #arm { position:fixed; inset:0; background:#000c; display:flex; align-items:center; justify-content:center;
+         font-size:2vw; color:#d9a441; cursor:pointer; z-index:9; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="arm" onclick="this.remove()">Einmal klicken, damit das Video später mit Ton läuft · danach F11 für Vollbild</div>
+<script>
+const $s = document.getElementById('stage');
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let last = '';
+
+function view(d) {
+  if (d.phase !== 'aufloesung' || d.step === 0) {
+    return `<div class="label">STRENG GEHEIM</div><div class="title">OPERATION<br>SILVESTER</div>` +
+      (d.phase === 'laeuft' && d.wave ? `<div class="sub">Welle ${d.wave} von 5 läuft</div>` : '');
+  }
+  const s = d.spy;
+  if (d.step <= 2) {
+    const stamp = d.step === 2
+      ? `<div class="stamp ${d.verdict.enttarnt ? 'red' : 'gold'}">${d.verdict.enttarnt ? 'ENTTARNT' : 'UNENTDECKT'}</div>` : '';
+    const note = d.step === 2 ? `<div class="sub">${d.verdict.correct} von ${d.verdict.total} Agenten lagen in der letzten Welle richtig</div>` : '';
+    return `<div class="label">DER SPION IST …</div>
+      <div class="wrap"><img class="photo" src="/foto/${s.id}">${stamp}</div>
+      <div class="name">${esc(s.name)}</div>${note}`;
+  }
+  if (d.step === 3) {
+    return d.video ? `<video src="/static/flucht.mp4" autoplay></video>`
+      : `<div class="label">LIVESCHALTUNG</div><div class="title" style="font-size:6vw">Verbindung wird hergestellt …</div>`;
+  }
+  if (d.step === 4) {
+    const rows = d.erkannt.map(e => `<div><span class="w">Welle ${e.wave}</span>${e.names.map(esc).join(', ')}</div>`).join('');
+    return `<div class="label">ERKANNT VON</div><div class="list">${rows || '<div>Niemand. Der Spion war zu gut.</div>'}</div>`;
+  }
+  if (d.step === 5) {
+    const cards = d.theorien.map(t => `<div class="card"><div class="q">„${esc(t.reason)}“</div>
+      <div class="by">${esc(t.reporter)} über ${esc(t.suspect)} · Welle ${t.wave}</div></div>`).join('');
+    return `<div class="label">BESTE VERSCHWÖRUNGSTHEORIEN</div><div class="cards">${cards || '<div class="sub">(keine ausgewählt)</div>'}</div>`;
+  }
+  const rows = d.rangliste.map((r, i) => `<tr class="${i === 0 ? 'first' : ''}"><td>${i + 1}.</td><td>${esc(r.name)}</td><td class="pts">${r.points}</td></tr>`).join('');
+  return `<div class="label">RANGLISTE</div><table>${rows}</table>`;
+}
+
+async function tick() {
+  try {
+    const d = await (await fetch('/api/beamer')).json();
+    const key = JSON.stringify(d);
+    if (key !== last) { last = key; $s.innerHTML = view(d); $s.className = 'fade'; void $s.offsetWidth; }
+  } catch (e) { /* Bot kurz weg: altes Bild stehen lassen */ }
+}
+tick(); setInterval(tick, 1500);
+</script>
+</body>
+</html>
