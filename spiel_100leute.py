@@ -705,4 +705,44 @@ def init_app(app, socketio, stop_pygame=None, start_pygame=None):
         if state.get("phase") == "fastfive":
             _ff_beenden_intern()
 
+    # ── Setup-Wizard + Fragen-API ──────────────────────────────
+    from flask import request as flask_request
+
+    @app.route("/100leute/setup")
+    def _setup_wizard():
+        return send_from_directory(BASIS, "setup_100leute.html")
+
+    @app.route("/api/100leute/fragen-info")
+    def _fragen_info():
+        return jsonify({"haupt": anzahl_verfuegbar("haupt"),
+                        "fastfive": anzahl_verfuegbar("fastfive")})
+
+    @app.route("/api/100leute/fragen-upload", methods=["POST"])
+    def _fragen_upload():
+        pool = flask_request.args.get("pool", "haupt")
+        pfad = CSV_HAUPT if pool == "haupt" else CSV_FASTFIVE
+        if "file" not in flask_request.files:
+            return jsonify({"error": "Keine Datei"}), 400
+        flask_request.files["file"].save(pfad)
+        return jsonify({"anzahl": len(lade_fragen(pfad))})
+
+    # ── Alle restlichen Antworten aufdecken ────────────────────
+    @socketio.on("hauptrunde_rest_aufdecken", namespace=NAMESPACE)
+    def _on_hauptrunde_rest_aufdecken(data=None):
+        af = state.get("aktive_frage")
+        if state.get("phase") != "hauptrunde" or not af:
+            return
+        geaendert = False
+        for a in af["antworten"]:
+            if not a.get("auf"):
+                a["auf"] = True
+                a["rest"] = True
+                geaendert = True
+        if not geaendert:
+            return
+        _aktualisiere_rundentopf()
+        if all(a["auf"] for a in af["antworten"]):
+            _runde_beenden(state.get("aktives_team") or "A")
+        _broadcast()
+
     print("100leute: Routen + SocketIO registriert")

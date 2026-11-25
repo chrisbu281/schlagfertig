@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>100 Leute – Einrichtung</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%;background:#0a0a14;color:#fff;font-family:'Inter',sans-serif;font-size:15px}
+
+:root{--card:#13131f;--border:rgba(255,255,255,.08);--gold:#f59e0b;
+  --blau:#3b82f6;--orange:#f97316;--dim:rgba(255,255,255,.4);}
+
+/* ── Layout ── */
+.wizard{max-width:520px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;min-height:100vh}
+
+/* ── Stepper ── */
+.stepper{display:flex;align-items:center;margin-bottom:28px}
+.si{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}
+.si-dot{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+  color:rgba(255,255,255,.25);transition:.2s;flex-shrink:0}
+.si-dot.aktiv{border-color:var(--gold);color:var(--gold);background:rgba(245,158,11,.1)}
+.si-dot.ok{border-color:#22c55e;background:rgba(34,197,94,.12);color:#22c55e}
+.si-lbl{font-size:10px;color:rgba(255,255,255,.25);text-align:center;white-space:nowrap;transition:.2s}
+.si-lbl.aktiv,.si-lbl.ok{color:rgba(255,255,255,.6)}
+.sl{flex:0 0 24px;height:2px;background:rgba(255,255,255,.07);margin-bottom:20px;transition:.2s}
+.sl.ok{background:rgba(34,197,94,.35)}
+
+/* ── Karte ── */
+.karte{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px}
+.karte-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.28);font-weight:700;margin-bottom:14px}
+
+/* ── Step content ── */
+.sc{display:none;flex-direction:column}
+.sc.aktiv{display:flex}
+
+/* ── Team Cards ── */
+.team-reihe{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.team-card{background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:16px;text-align:center}
+.team-card.A{border-color:rgba(59,130,246,.22)}
+.team-card.B{border-color:rgba(249,115,22,.22)}
+
+.foto-kreis{width:76px;height:76px;border-radius:50%;margin:0 auto 12px;cursor:pointer;
+  background:rgba(255,255,255,.05);border:2.5px dashed rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  overflow:hidden;position:relative;transition:.2s}
+.foto-kreis:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.08)}
+.foto-kreis img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.foto-kreis input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.foto-hint{font-size:10px;color:rgba(255,255,255,.25);margin-bottom:10px}
+
+.inp{background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:9px;
+  padding:10px 12px;color:#fff;font-family:inherit;font-size:14px;width:100%;transition:.2s;
+  font-weight:600;text-align:center}
+.inp:focus{outline:none;border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.08)}
+.inp-lbl{font-size:10px;color:rgba(255,255,255,.3);margin-bottom:5px;text-transform:uppercase;
+  letter-spacing:.8px;text-align:center}
+.inp.links{text-align:left}
+
+/* ── Buttons ── */
+.btn{padding:14px 20px;border-radius:11px;border:none;font-family:inherit;font-size:14px;
+  font-weight:700;cursor:pointer;transition:.12s;display:flex;align-items:center;
+  justify-content:center;gap:7px;text-decoration:none}
+.btn:active{opacity:.85}
+.btn.gold{background:var(--gold);color:#000}
+.btn.gruen{background:#16a34a;color:#fff}
+.btn.dunkel{background:rgba(255,255,255,.07);color:rgba(255,255,255,.75);border:1.5px solid rgba(255,255,255,.1)}
+.btn.sm{padding:10px 14px;font-size:12px}
+.btn.block{width:100%}
+
+/* ── Nav ── */
+.nav{display:flex;gap:10px;margin-top:16px}
+.nav .weiter{flex:1}
+.nav .zurueck{width:112px;flex-shrink:0}
+
+/* ── Upload ── */
+.fragen-cnt{padding:10px 14px;background:rgba(255,255,255,.04);border-radius:8px;
+  font-size:13px;color:rgba(255,255,255,.45);text-align:center;margin-bottom:14px}
+.upload-box{padding:14px;border:2px dashed rgba(255,255,255,.1);border-radius:10px;
+  text-align:center;cursor:pointer;position:relative;transition:.15s;margin-bottom:6px}
+.upload-box:hover{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.03)}
+.upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-box-txt{font-size:13px;color:rgba(255,255,255,.35);pointer-events:none}
+.upload-ok{font-size:12px;color:#4ade80;margin-bottom:12px;padding:4px 0}
+.upload-ok.unsichtbar{visibility:hidden}
+
+/* ── Trennlinie ── */
+.div{height:1px;background:rgba(255,255,255,.07);margin:14px 0}
+
+/* ── Info ── */
+.info{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.18);
+  border-radius:9px;padding:11px 14px;font-size:12px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:12px}
+
+/* ── Meldung ── */
+.meldung{font-size:12px;min-height:18px;padding:3px 0;transition:.2s;color:rgba(255,255,255,.4)}
+.meldung.ok{color:#4ade80}
+.meldung.err{color:#f87171}
+</style>
+</head>
+<body>
+<div class="wizard">
+
+  <!-- ── Stepper ── -->
+  <div class="stepper" id="stepper">
+    <div class="si" onclick="gotoStep(0)">
+      <div class="si-dot aktiv" id="dot-0">1</div>
+      <div class="si-lbl aktiv" id="lbl-0">Teams</div>
+    </div>
+    <div class="sl" id="sl-01"></div>
+    <div class="si" onclick="gotoStep(1)">
+      <div class="si-dot" id="dot-1">2</div>
+      <div class="si-lbl" id="lbl-1">Fragen</div>
+    </div>
+    <div class="sl" id="sl-12"></div>
+    <div class="si" onclick="gotoStep(2)">
+      <div class="si-dot" id="dot-2">3</div>
+      <div class="si-lbl" id="lbl-2">Einstellungen</div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 0: Teams ══ -->
+  <div class="sc aktiv" id="sc-0">
+    <div class="team-reihe">
+      <div class="team-card A">
+        <div class="foto-kreis" id="fp-A">
+          <span id="fi-A">👥</span>
+          <img id="fimg-A" src="" alt="" style="display:none">
+          <input type="file" accept="image/*" onchange="fotoWaehlen('A',this)">
+        </div>
+        <div class="foto-hint">Foto antippen</div>
+        <div class="inp-lbl">Team A</div>
+        <input class="inp" id="tn-A" placeholder="Team A" value="Team A" style="color:#60a5fa">
+      </div>
+      <div class="team-card B">
+        <div class="foto-kreis" id="fp-B">
+          <span id="fi-B">👥</span>
+          <img id="fimg-B" src="" alt="" style="display:none">
+          <input type="file" accept="image/*" onchange="fotoWaehlen('B',this)">
+        </div>
+        <div class="foto-hint">Foto antippen</div>
+        <div class="inp-lbl">Team B</div>
+        <input class="inp" id="tn-B" placeholder="Team B" value="Team B" style="color:#fb923c">
+      </div>
+    </div>
+
+    <div class="nav">
+      <button class="btn dunkel zurueck" onclick="zurueck()">← Abbrechen</button>
+      <button class="btn gold weiter" onclick="next()">Weiter →</button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 1: Fragen ══ -->
+  <div class="sc" id="sc-1">
+    <div class="karte">
+      <div class="karte-title">Fragenbibliothek</div>
+      <div class="fragen-cnt" id="fragen-cnt">Lädt…</div>
+
+      <div class="inp-lbl" style="text-align:left;margin-bottom:7px">Hauptrunde</div>
+      <div class="upload-box">
+        <div class="upload-box-txt">📂 CSV-Datei hochladen</div>
+        <input type="file" accept=".csv" onchange="uploadFragen(this,'haupt')">
+      </div>
+      <div class="upload-ok unsichtbar" id="uok-haupt">✓ <span id="ucnt-haupt">0</span> Fragen geladen</div>
+
+      <div class="div"></div>
+
+      <div class="inp-lbl" style="text-align:left;margin-bottom:7px">Fast Five <span style="opacity:.4">(optional)</span></div>
+      <div class="upload-box">
+        <div class="upload-box-txt">📂 CSV-Datei hochladen</div>
+        <input type="file" accept=".csv" onchange="uploadFragen(this,'fastfive')">
+      </div>
+      <div class="upload-ok unsichtbar" id="uok-ff">✓ <span id="ucnt-ff">0</span> Fragen geladen</div>
+    </div>
+
+    <div class="info">
+      CSV-Format: <code>Frage, Antwort1, Punkte1, Antwort2, Punkte2 …</code><br>
+      Bis zu 6 Antworten pro Zeile. Eine Kopfzeile wird automatisch übersprungen.
+    </div>
+
+    <div class="meldung" id="fragen-meldung"></div>
+
+    <div class="nav">
+      <button class="btn dunkel zurueck" onclick="prev()">← Zurück</button>
+      <button class="btn gold weiter" onclick="next()">Weiter →</button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 2: Einstellungen ══ -->
+  <div class="sc" id="sc-2">
+    <div class="karte">
+      <div class="karte-title">Spielkonfiguration</div>
+      <div style="margin-bottom:14px">
+        <div class="inp-lbl" style="text-align:left;margin-bottom:5px">Runden</div>
+        <input class="inp links" id="cfg-runden" type="number" min="1" max="10" value="3">
+      </div>
+
+      <div class="div"></div>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px">
+        <input type="checkbox" id="cfg-ff" checked
+          style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0"
+          onchange="document.getElementById('ff-felder').style.display=this.checked?'block':'none'">
+        <span style="font-size:14px;font-weight:600">⚡ Fast Five Runde spielen</span>
+      </label>
+      <div id="ff-felder">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div class="inp-lbl" style="text-align:left;margin-bottom:4px">FF Timer Runde 1 (s)</div>
+            <input class="inp links" id="cfg-ff1" type="number" min="10" max="60" value="20">
+          </div>
+          <div>
+            <div class="inp-lbl" style="text-align:left;margin-bottom:4px">FF Timer Runde 2 (s)</div>
+            <input class="inp links" id="cfg-ff2" type="number" min="10" max="60" value="25">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-title">Buzzer-Zuordnung</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div class="inp-lbl" style="text-align:left;margin-bottom:4px">Team A = Spieler-Nr.</div>
+          <input class="inp links" id="cfg-buz-a" type="number" min="1" max="8" value="1">
+        </div>
+        <div>
+          <div class="inp-lbl" style="text-align:left;margin-bottom:4px">Team B = Spieler-Nr.</div>
+          <input class="inp links" id="cfg-buz-b" type="number" min="1" max="8" value="2">
+        </div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button class="btn dunkel zurueck" onclick="prev()">← Zurück</button>
+      <button class="btn gruen weiter" onclick="starten()">▶ Spiel starten</button>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:20px">
+    <a href="/moderator/100leute" style="font-size:12px;color:rgba(255,255,255,.2);text-decoration:none">
+      → Direkt zum Moderator (ohne Assistent)
+    </a>
+  </div>
+
+</div>
+
+<script>
+let step = 0;
+const fotoData = {A: null, B: null};
+
+// ── Stepper ────────────────────────────────────────────────────
+function stepper() {
+  for (let i = 0; i < 3; i++) {
+    const dot = document.getElementById('dot-' + i);
+    const lbl = document.getElementById('lbl-' + i);
+    dot.className = 'si-dot'; lbl.className = 'si-lbl';
+    if (i < step) { dot.classList.add('ok'); dot.textContent = '✓'; lbl.classList.add('ok'); }
+    else if (i === step) { dot.classList.add('aktiv'); dot.textContent = i + 1; lbl.classList.add('aktiv'); }
+    else { dot.textContent = i + 1; }
+  }
+  document.getElementById('sl-01').className = 'sl' + (step > 0 ? ' ok' : '');
+  document.getElementById('sl-12').className = 'sl' + (step > 1 ? ' ok' : '');
+  document.querySelectorAll('.sc').forEach((el, i) => el.classList.toggle('aktiv', i === step));
+}
+
+function next() { if (step < 2) { step++; stepper(); if (step === 1) ladeInfo(); window.scrollTo(0,0); } }
+function prev() { if (step > 0) { step--; stepper(); window.scrollTo(0,0); } }
+function gotoStep(n) { if (n <= step) { step = n; stepper(); window.scrollTo(0,0); } }
+function zurueck() { window.location.href = '/editor'; }
+
+// ── Fotos ──────────────────────────────────────────────────────
+function fotoWaehlen(team, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    const size = 400;
+    c.width = c.height = size;
+    const r = Math.min(size / img.width, size / img.height);
+    c.getContext('2d').drawImage(img, (size - img.width*r)/2, (size - img.height*r)/2, img.width*r, img.height*r);
+    const data = c.toDataURL('image/jpeg', 0.82);
+    fotoData[team] = data;
+    const imgEl = document.getElementById('fimg-' + team);
+    imgEl.src = data; imgEl.style.display = 'block';
+    document.getElementById('fi-' + team).style.display = 'none';
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+// ── Fragen ─────────────────────────────────────────────────────
+async function ladeInfo() {
+  try {
+    const d = await (await fetch('/api/100leute/fragen-info')).json();
+    document.getElementById('fragen-cnt').textContent =
+      `Hauptrunde: ${d.haupt} Fragen  ·  Fast Five: ${d.fastfive} Fragen`;
+  } catch(_) { document.getElementById('fragen-cnt').textContent = '(Fragen-Info nicht verfügbar)'; }
+}
+
+async function uploadFragen(input, pool) {
+  const file = input.files[0]; if (!file) return;
+  const isH = pool === 'haupt';
+  const mel = document.getElementById('fragen-meldung');
+  mel.textContent = '⏳ Hochladen…'; mel.className = 'meldung';
+  const fd = new FormData(); fd.append('file', file);
+  try {
+    const r = await fetch(`/api/100leute/fragen-upload?pool=${pool}`, {method:'POST', body:fd});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Fehler');
+    document.getElementById(`ucnt-${isH?'haupt':'ff'}`).textContent = d.anzahl;
+    const ok = document.getElementById(`uok-${isH?'haupt':'ff'}`);
+    ok.classList.remove('unsichtbar');
+    mel.textContent = `✓ ${d.anzahl} Fragen geladen`; mel.className = 'meldung ok';
+    ladeInfo();
+  } catch(e) {
+    mel.textContent = '✗ ' + e.message; mel.className = 'meldung err';
+  }
+  input.value = '';
+}
+
+// ── Starten ────────────────────────────────────────────────────
+function starten() {
+  const cfg = {
+    config: {
+      runden:   parseInt(document.getElementById('cfg-runden').value) || 3,
+      ff_aktiv: document.getElementById('cfg-ff').checked,
+      ff_timer: true,
+      ff_zeit1: parseInt(document.getElementById('cfg-ff1').value) || 20,
+      ff_zeit2: parseInt(document.getElementById('cfg-ff2').value) || 25,
+      ff_ziel:  400,
+      buzzer_a: parseInt(document.getElementById('cfg-buz-a').value) || 1,
+      buzzer_b: parseInt(document.getElementById('cfg-buz-b').value) || 2,
+    },
+    teams: {
+      A: {name: document.getElementById('tn-A').value.trim() || 'Team A'},
+      B: {name: document.getElementById('tn-B').value.trim() || 'Team B'},
+    }
+  };
+  try {
+    localStorage.setItem('hundert_wizard_config', JSON.stringify(cfg));
+    if (fotoData.A) localStorage.setItem('hundert_foto_A', fotoData.A);
+    if (fotoData.B) localStorage.setItem('hundert_foto_B', fotoData.B);
+  } catch(e) { console.warn('localStorage:', e); }
+  window.location.href = '/moderator/100leute';
+}
+
+stepper();
+</script>
+</body>
+</html>

@@ -55,6 +55,12 @@
     color:#fff;letter-spacing:.5px;}
   .tile-back .t-pkt{font-size:clamp(22px,3vw,34px);font-weight:900;color:var(--gold);
     font-variant-numeric:tabular-nums;}
+  /* Rest-aufgedeckte Antworten (wurden nicht von Spielern erraten) */
+  .tile.rest-reveal .tile-back{
+    background:rgba(60,60,80,.4);border-color:rgba(255,255,255,.18);
+    box-shadow:none;}
+  .tile.rest-reveal .tile-back .t-text{opacity:.5;}
+  .tile.rest-reveal .tile-back .t-pkt{opacity:.3;color:rgba(255,255,255,.5);}
   .duell-status{margin-top:18px;min-height:1.2em;}
   #meme-popup{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     background:rgba(5,7,13,.82);opacity:0;pointer-events:none;transition:opacity .25s;z-index:50;}
@@ -436,7 +442,12 @@ function syncTiles(af){
   af.antworten.forEach((a,i) => {
     const t = document.getElementById('tile-'+i);
     if(!t) return;
-    if(a.auf) t.classList.add('open'); else t.classList.remove('open');
+    if(a.auf){
+      t.classList.add('open');
+      t.classList.toggle('rest-reveal', !!a.rest);
+    } else {
+      t.classList.remove('open','rest-reveal');
+    }
   });
 }
 function duellStatusHTML(d){

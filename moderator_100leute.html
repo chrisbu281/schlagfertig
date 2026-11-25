@@ -425,7 +425,7 @@ function renderSetup(el, teams, cfg) {
     <div id="fragen-meldung" style="margin-top:10px;font-size:12px;color:#4ade80;min-height:16px"></div>
   </div>
 
-  <button class="btn gelb" onclick="beamerStarten()">📺 Beamer starten</button>
+  <a href="/100leute/setup" class="btn dunkel" style="text-align:center;text-decoration:none;margin-bottom:4px">🧙 Einrichtungsassistent</a>
   <button class="btn primaer" onclick="spielStarten()">▶ Spiel starten</button>
   <a href="/editor" style="display:block;text-align:center;margin-top:12px;font-size:13px;color:rgba(255,255,255,.35);text-decoration:none">← Startseite</a>
   `;
@@ -671,6 +671,10 @@ function renderHauptrunde(el, teams) {
     </div>
   </div>
 
+  ${(af && af.antworten && af.antworten.some(a => !a.auf)) ? `
+  <button class="btn dunkel" style="width:100%;border-color:rgba(255,255,255,.12);font-size:13px;padding:12px;margin-top:4px"
+    onclick="restAufdecken()">🃏 Alle restlichen Antworten aufdecken</button>` : ''}
+
   <div style="font-size:12px;color:rgba(255,255,255,.3);text-align:center;padding:4px">
     Topf: ${S.rundentopf||0} Pts
   </div>
@@ -679,6 +683,7 @@ function renderHauptrunde(el, teams) {
 
 function aufdecken(idx) { emit('hauptrunde_aufdecken', {idx}); }
 function strike() { emit('hauptrunde_strike'); }
+function restAufdecken() { emit('hauptrunde_rest_aufdecken'); }
 
 // ══ STEHLEN-PHASE ══
 function renderStehlen(el, teams) {
