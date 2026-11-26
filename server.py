@@ -1496,6 +1496,20 @@ def hundert_fragen_upload():
         out.write(content)
     return jsonify({"status": "ok", "anzahl": len(rows) - 1})
 
+@app.route("/api/100leute/fragen-sync", methods=["POST"])
+def hundert_fragen_sync():
+    """Lädt Fragen aus der Cloud-DB und speichert als lokale CSV."""
+    cfg   = lese_cloud_config()
+    token = cfg.get("access_token") or None
+    try:
+        fragen = _sb_familienduell_fragen(token)
+        if not fragen:
+            return jsonify({"status": "leer", "anzahl": 0})
+        n = _speichere_familienduell_csv(fragen)
+        return jsonify({"status": "ok", "anzahl": n})
+    except Exception as e:
+        return jsonify({"status": "fehler", "meldung": str(e)}), 500
+
 @app.route("/api/100leute/fragen-db-test")
 def hundert_fragen_db_test():
     """Diagnose + Sync: lädt fragen_familienduell und speichert als CSV."""

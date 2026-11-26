@@ -97,6 +97,29 @@ html,body{min-height:100%;background:#0a0a14;color:#fff;font-family:'Inter',sans
 .meldung{font-size:12px;min-height:18px;padding:3px 0;transition:.2s;color:rgba(255,255,255,.4)}
 .meldung.ok{color:#4ade80}
 .meldung.err{color:#f87171}
+/* ── Fragenbibliothek ── */
+.fragen-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.fragen-suche{width:100%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);
+  border-radius:9px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;margin-bottom:8px}
+.fragen-suche:focus{outline:none;border-color:rgba(255,255,255,.28)}
+.auswahl-zeile{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.auswahl-cnt{flex:1;font-size:12px;color:rgba(255,255,255,.4)}
+.fragen-liste{max-height:280px;overflow-y:auto;border:1px solid rgba(255,255,255,.07);
+  border-radius:9px;background:rgba(0,0,0,.2)}
+.fragen-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;
+  border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:.1s}
+.fragen-item:last-child{border-bottom:none}
+.fragen-item:hover{background:rgba(255,255,255,.04)}
+.fragen-item input[type=checkbox]{width:17px;height:17px;accent-color:var(--gold);
+  flex-shrink:0;cursor:pointer;margin-top:2px}
+.fragen-item-text{flex:1;font-size:13px;line-height:1.4;color:rgba(255,255,255,.8)}
+.fragen-item-cnt{font-size:11px;color:rgba(255,255,255,.25);flex-shrink:0;white-space:nowrap;padding-top:3px}
+.fragen-leer{text-align:center;padding:24px;font-size:13px;color:rgba(255,255,255,.25)}
+.sync-btn{padding:8px 14px;background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.22);
+  border-radius:8px;color:#60a5fa;font-family:inherit;font-size:12px;font-weight:700;
+  cursor:pointer;transition:.12s;white-space:nowrap;flex-shrink:0}
+.sync-btn:hover{background:rgba(59,130,246,.2)}
+.sync-btn:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
@@ -154,29 +177,35 @@ html,body{min-height:100%;background:#0a0a14;color:#fff;font-family:'Inter',sans
   <!-- ══ STEP 1: Fragen ══ -->
   <div class="sc" id="sc-1">
     <div class="karte">
-      <div class="karte-title">Fragenbibliothek</div>
-      <div class="fragen-cnt" id="fragen-cnt">Lädt…</div>
+      <div class="karte-title">Hauptrunde – Fragenbibliothek</div>
 
-      <div class="inp-lbl" style="text-align:left;margin-bottom:7px">Hauptrunde</div>
-      <div class="upload-box">
-        <div class="upload-box-txt">📂 CSV-Datei hochladen</div>
-        <input type="file" accept=".csv" onchange="uploadFragen(this,'haupt')">
+      <div class="fragen-top">
+        <span id="fragen-pool-cnt" style="flex:1;font-size:12px;color:rgba(255,255,255,.35)">–</span>
+        <button class="sync-btn" id="sync-btn" onclick="syncFragen()">☁ Sync</button>
       </div>
-      <div class="upload-ok unsichtbar" id="uok-haupt">✓ <span id="ucnt-haupt">0</span> Fragen geladen</div>
 
-      <div class="div"></div>
+      <input class="fragen-suche" id="fragen-suche" placeholder="🔍 Fragen suchen…"
+        oninput="suchText=this.value;renderFragenliste()">
 
-      <div class="inp-lbl" style="text-align:left;margin-bottom:7px">Fast Five <span style="opacity:.4">(optional)</span></div>
-      <div class="upload-box">
-        <div class="upload-box-txt">📂 CSV-Datei hochladen</div>
-        <input type="file" accept=".csv" onchange="uploadFragen(this,'fastfive')">
+      <div class="auswahl-zeile">
+        <span class="auswahl-cnt" id="auswahl-cnt">0 Fragen ausgewählt</span>
+        <button class="btn dunkel sm" onclick="alleWaehlenFragen(true)">Alle</button>
+        <button class="btn dunkel sm" onclick="alleWaehlenFragen(false)">Keine</button>
       </div>
-      <div class="upload-ok unsichtbar" id="uok-ff">✓ <span id="ucnt-ff">0</span> Fragen geladen</div>
+
+      <div id="fragen-liste" class="fragen-liste">
+        <div class="fragen-leer">Fragen werden geladen…</div>
+      </div>
     </div>
 
-    <div class="info">
-      CSV-Format: <code>Frage, Antwort1, Punkte1, Antwort2, Punkte2 …</code><br>
-      Bis zu 6 Antworten pro Zeile. Eine Kopfzeile wird automatisch übersprungen.
+    <div class="karte">
+      <div class="karte-title">Fast Five <span style="opacity:.4">(optional)</span></div>
+      <div class="fragen-cnt" id="fragen-cnt-ff">–</div>
+      <div class="upload-box">
+        <div class="upload-box-txt">📂 CSV-Datei hochladen</div>
+        <input type="file" accept=".csv" onchange="uploadFragenFF(this)">
+      </div>
+      <div class="upload-ok unsichtbar" id="uok-ff">✓ <span id="ucnt-ff">0</span> Fragen geladen</div>
     </div>
 
     <div class="meldung" id="fragen-meldung"></div>
@@ -248,6 +277,9 @@ html,body{min-height:100%;background:#0a0a14;color:#fff;font-family:'Inter',sans
 <script>
 let step = 0;
 const fotoData = {A: null, B: null};
+let fragenData = [];
+let selectedIds = new Set();
+let suchText = '';
 
 // ── Stepper ────────────────────────────────────────────────────
 function stepper() {
@@ -264,7 +296,7 @@ function stepper() {
   document.querySelectorAll('.sc').forEach((el, i) => el.classList.toggle('aktiv', i === step));
 }
 
-function next() { if (step < 2) { step++; stepper(); if (step === 1) ladeInfo(); window.scrollTo(0,0); } }
+function next() { if (step < 2) { step++; stepper(); if (step === 1) ladeFragenListe(); window.scrollTo(0,0); } }
 function prev() { if (step > 0) { step--; stepper(); window.scrollTo(0,0); } }
 function gotoStep(n) { if (n <= step) { step = n; stepper(); window.scrollTo(0,0); } }
 function zurueck() { window.location.href = '/editor'; }
@@ -289,30 +321,104 @@ function fotoWaehlen(team, input) {
   img.src = URL.createObjectURL(file);
 }
 
-// ── Fragen ─────────────────────────────────────────────────────
-async function ladeInfo() {
+// ── Fragenbibliothek ───────────────────────────────────────────
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function ladeFragenListe() {
+  const liste = document.getElementById('fragen-liste');
+  liste.innerHTML = '<div class="fragen-leer">Lädt…</div>';
   try {
-    const d = await (await fetch('/api/100leute/fragen-info')).json();
-    document.getElementById('fragen-cnt').textContent =
-      `Hauptrunde: ${d.haupt} Fragen  ·  Fast Five: ${d.fastfive} Fragen`;
-  } catch(_) { document.getElementById('fragen-cnt').textContent = '(Fragen-Info nicht verfügbar)'; }
+    const r = await fetch('/api/100leute/fragen-liste');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    fragenData = await r.json();
+    if (selectedIds.size === 0 && fragenData.length > 0) {
+      selectedIds = new Set(fragenData.map(f => f.id));
+    }
+    renderFragenliste();
+    updateAuswahlCnt();
+    const pc = document.getElementById('fragen-pool-cnt');
+    if (pc) pc.textContent = fragenData.length + ' Fragen im Pool';
+    // FF-Info
+    try {
+      const fi = await (await fetch('/api/100leute/fragen-info')).json();
+      const el = document.getElementById('fragen-cnt-ff');
+      if (el) el.textContent = fi.fastfive > 0 ? fi.fastfive + ' Fast-Five-Fragen gespeichert' : 'Noch keine Fast-Five-Fragen';
+    } catch(_) {}
+  } catch(e) {
+    liste.innerHTML = `<div class="fragen-leer">Fehler: ${escH(e.message)}</div>`;
+  }
 }
 
-async function uploadFragen(input, pool) {
+function renderFragenliste() {
+  const liste = document.getElementById('fragen-liste');
+  const such = suchText.toLowerCase();
+  const gefiltert = such ? fragenData.filter(f => f.frage.toLowerCase().includes(such)) : fragenData;
+  if (!gefiltert.length) {
+    liste.innerHTML = '<div class="fragen-leer">Keine Fragen gefunden</div>';
+    return;
+  }
+  liste.innerHTML = gefiltert.map(f => `
+    <label class="fragen-item">
+      <input type="checkbox" ${selectedIds.has(f.id) ? 'checked' : ''}
+        onchange="toggleFrage('${escH(f.id)}',this.checked)">
+      <span class="fragen-item-text">${escH(f.frage)}</span>
+      <span class="fragen-item-cnt">${f.anzahl}✓</span>
+    </label>`).join('');
+}
+
+function toggleFrage(id, checked) {
+  if (checked) selectedIds.add(id); else selectedIds.delete(id);
+  updateAuswahlCnt();
+}
+
+function alleWaehlenFragen(an) {
+  const such = suchText.toLowerCase();
+  const gefiltert = such ? fragenData.filter(f => f.frage.toLowerCase().includes(such)) : fragenData;
+  if (an) gefiltert.forEach(f => selectedIds.add(f.id));
+  else gefiltert.forEach(f => selectedIds.delete(f.id));
+  renderFragenliste();
+  updateAuswahlCnt();
+}
+
+function updateAuswahlCnt() {
+  const el = document.getElementById('auswahl-cnt');
+  if (el) el.textContent = `${selectedIds.size} von ${fragenData.length} Fragen ausgewählt`;
+}
+
+async function syncFragen() {
+  const btn = document.getElementById('sync-btn');
+  const mel = document.getElementById('fragen-meldung');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  try {
+    const r = await fetch('/api/100leute/fragen-sync', {method:'POST'});
+    const d = await r.json();
+    if (d.status === 'ok') {
+      mel.textContent = `✓ ${d.anzahl} Fragen aus Cloud geladen`; mel.className = 'meldung ok';
+      selectedIds = new Set();
+      await ladeFragenListe();
+    } else {
+      mel.textContent = '✗ ' + (d.meldung || 'Sync fehlgeschlagen'); mel.className = 'meldung err';
+    }
+  } catch(e) {
+    mel.textContent = '✗ ' + e.message; mel.className = 'meldung err';
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '☁ Sync'; }
+}
+
+async function uploadFragenFF(input) {
   const file = input.files[0]; if (!file) return;
-  const isH = pool === 'haupt';
   const mel = document.getElementById('fragen-meldung');
   mel.textContent = '⏳ Hochladen…'; mel.className = 'meldung';
   const fd = new FormData(); fd.append('file', file);
   try {
-    const r = await fetch(`/api/100leute/fragen-upload?pool=${pool}`, {method:'POST', body:fd});
+    const r = await fetch('/api/100leute/fragen-upload?pool=fastfive', {method:'POST', body:fd});
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'Fehler');
-    document.getElementById(`ucnt-${isH?'haupt':'ff'}`).textContent = d.anzahl;
-    const ok = document.getElementById(`uok-${isH?'haupt':'ff'}`);
-    ok.classList.remove('unsichtbar');
-    mel.textContent = `✓ ${d.anzahl} Fragen geladen`; mel.className = 'meldung ok';
-    ladeInfo();
+    document.getElementById('ucnt-ff').textContent = d.anzahl;
+    document.getElementById('uok-ff').classList.remove('unsichtbar');
+    const el = document.getElementById('fragen-cnt-ff');
+    if (el) el.textContent = d.anzahl + ' Fast-Five-Fragen gespeichert';
+    mel.textContent = `✓ ${d.anzahl} Fast-Five-Fragen hochgeladen`; mel.className = 'meldung ok';
   } catch(e) {
     mel.textContent = '✗ ' + e.message; mel.className = 'meldung err';
   }
@@ -337,6 +443,7 @@ function starten() {
       B: {name: document.getElementById('tn-B').value.trim() || 'Team B'},
     }
   };
+  if (fragenData.length > 0) cfg.fragen_ids = [...selectedIds];
   try {
     localStorage.setItem('hundert_wizard_config', JSON.stringify(cfg));
     if (fotoData.A) localStorage.setItem('hundert_foto_A', fotoData.A);
